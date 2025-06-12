@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import useAuth from '@/hooks/useAuth';
 import { UserRole } from '@/types';
-import { Avatar, Menu, UnstyledButton } from '@mantine/core';
+import { Avatar, Menu, UnstyledButton, Burger, Drawer, Group, Text } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconLogout, IconUser, IconChevronDown } from '@tabler/icons-react';
 
 const Navbar: React.FC = () => {
   const { user, logout, hasRole } = useAuth();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
+  const [userMenuOpened, setUserMenuOpened] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -44,6 +47,18 @@ const Navbar: React.FC = () => {
   const filteredNavItems = navItems.filter(item => 
     item.roles.some(role => hasRole(role))
   );
+  
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return '?';
+    
+    const nameParts = user.name.split(' ');
+    if (nameParts.length >= 2) {
+      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+    }
+    
+    return user.name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <nav className="bg-white shadow">
@@ -71,32 +86,50 @@ const Navbar: React.FC = () => {
               ))}
             </div>
           </div>
+          
+          {/* User menu (desktop) */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {user ? (
-              <Menu position="bottom-end" shadow="md" width={200}>
+              <Menu 
+                width={200} 
+                position="bottom-end" 
+                transitionProps={{ transition: 'pop-top-right' }}
+                onClose={() => setUserMenuOpened(false)}
+                onOpen={() => setUserMenuOpened(true)}
+              >
                 <Menu.Target>
                   <UnstyledButton className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <span className="sr-only">Open user menu</span>
-                    <Avatar
-                      size="sm"
-                      radius="xl"
-                      color="blue"
-                      src={null}
-                    >
-                      {user.firstName.charAt(0) + user.lastName.charAt(0)}
-                    </Avatar>
-                    <span className="ml-2 text-gray-700">
-                      {user.firstName} {user.lastName}
-                    </span>
+                    <Group gap={7}>
+                      <Avatar
+                        src={user.picture}
+                        alt={user.name}
+                        radius="xl"
+                        size={30}
+                        color="blue"
+                      >
+                        {getUserInitials()}
+                      </Avatar>
+                      <Text fw={500} size="sm" className="hidden md:block">
+                        {user.name}
+                      </Text>
+                      <IconChevronDown size={12} stroke={1.5} className={userMenuOpened ? 'rotate-180' : ''} />
+                    </Group>
                   </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  <Menu.Label>Account</Menu.Label>
-                  <Menu.Item component={Link} to="/profile">
+                  <Menu.Item
+                    leftSection={<IconUser size={14} stroke={1.5} />}
+                    component={Link}
+                    to="/profile"
+                  >
                     Profile
                   </Menu.Item>
                   <Menu.Divider />
-                  <Menu.Item onClick={logout} color="red">
+                  <Menu.Item
+                    leftSection={<IconLogout size={14} stroke={1.5} />}
+                    onClick={logout}
+                    color="red"
+                  >
                     Logout
                   </Menu.Item>
                 </Menu.Dropdown>
@@ -110,117 +143,94 @@ const Navbar: React.FC = () => {
               </Link>
             )}
           </div>
-          <div className="-mr-2 flex items-center sm:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
+          
+          {/* Mobile menu button */}
+          <div className="flex items-center sm:hidden">
+            <Burger
+              opened={drawerOpened}
+              onClick={toggleDrawer}
+              className="m-2"
+              size="sm"
+              aria-label="Toggle navigation"
+            />
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
+      {/* Mobile menu drawer */}
+      <Drawer
+        opened={drawerOpened}
+        onClose={closeDrawer}
+        size="100%"
+        padding="md"
+        title="Navigation"
+        zIndex={1000}
+        position="right"
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex-grow">
             {filteredNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                className={`block px-4 py-3 mb-1 rounded-md text-base font-medium ${
                   isActive(item.path)
-                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                    : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
                 }`}
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeDrawer}
               >
                 {item.name}
               </Link>
             ))}
           </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          
+          {/* User section at bottom of drawer */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
             {user ? (
               <>
-                <div className="flex items-center px-4">
-                  <div className="flex-shrink-0">
-                    <Avatar
-                      size="md"
-                      radius="xl"
-                      color="blue"
-                      src={null}
-                    >
-                      {user.firstName.charAt(0) + user.lastName.charAt(0)}
-                    </Avatar>
-                  </div>
+                <div className="flex items-center px-4 mb-4">
+                  <Avatar
+                    src={user.picture}
+                    alt={user.name}
+                    radius="xl"
+                    size={40}
+                    color="blue"
+                  >
+                    {getUserInitials()}
+                  </Avatar>
                   <div className="ml-3">
-                    <div className="text-base font-medium text-gray-800">
-                      {user.firstName} {user.lastName}
-                    </div>
-                    <div className="text-sm font-medium text-gray-500">
-                      {user.email}
-                    </div>
+                    <Text fw={500} size="sm">{user.name}</Text>
+                    <Text size="xs" c="dimmed">{user.email}</Text>
                   </div>
                 </div>
-                <div className="mt-3 space-y-1">
+                <div className="space-y-1">
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center px-4 py-3 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-md"
+                    onClick={closeDrawer}
                   >
+                    <IconUser size={18} className="mr-2" />
                     Profile
                   </Link>
                   <button
                     onClick={() => {
                       logout();
-                      setIsMenuOpen(false);
+                      closeDrawer();
                     }}
-                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                    className="flex items-center w-full text-left px-4 py-3 text-base font-medium text-red-500 hover:text-red-700 hover:bg-gray-100 rounded-md"
                   >
+                    <IconLogout size={18} className="mr-2" />
                     Logout
                   </button>
                 </div>
               </>
             ) : (
-              <div className="mt-3 space-y-1">
+              <div className="px-4">
                 <Link
                   to="/login"
-                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={closeDrawer}
                 >
                   Login
                 </Link>
@@ -228,7 +238,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
         </div>
-      )}
+      </Drawer>
     </nav>
   );
 };
