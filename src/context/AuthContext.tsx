@@ -37,33 +37,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getAccessTokenSilently,
   } = useAuth0();
 
-  // Fetch user profile from API when authenticated
+  // Use Auth0 user information directly
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const setupUserProfile = async () => {
       if (isAuthenticated && auth0User) {
         try {
           // Get token and store it
           const token = await getAccessTokenSilently();
           localStorage.setItem('auth_token', token);
 
-          // Fetch user profile from API
-          const response = await api.get<User>('/users/me');
+          // Extract roles from Auth0 user metadata or token claims
+          // This assumes Auth0 is configured to include roles in the token
+          // You may need to adjust this based on your Auth0 configuration
+          const roles = auth0User['https://mwap.com/roles'] || [];
+          
+          // Create user object from Auth0 user
+          const user: User = {
+            id: auth0User.sub || '',
+            email: auth0User.email || '',
+            name: auth0User.name || '',
+            roles: Array.isArray(roles) ? roles : [],
+            picture: auth0User.picture || '',
+          };
 
-          if (response.success && response.data) {
-            setState({
-              isAuthenticated: true,
-              isLoading: false,
-              user: response.data,
-              error: null,
-            });
-          } else {
-            setState({
-              isAuthenticated: true,
-              isLoading: false,
-              user: null,
-              error: new Error('Failed to fetch user profile'),
-            });
-          }
+          setState({
+            isAuthenticated: true,
+            isLoading: false,
+            user: user,
+            error: null,
+          });
         } catch (error) {
           setState({
             isAuthenticated: true,
@@ -82,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    fetchUserProfile();
+    setupUserProfile();
   }, [isAuthenticated, auth0User, auth0Loading, auth0Error, getAccessTokenSilently]);
 
   // Login function

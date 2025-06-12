@@ -14,12 +14,10 @@ export enum UserRole {
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
+  picture?: string;
   roles: UserRole[];
   tenantId?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface AuthState {
