@@ -1,3 +1,42 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Lock files - uncomment if you want to ignore them
+# Generally, it's better to commit package-lock.json for consistent installs
+# yarn.lock
+# package-lock.json
+# pnpm-lock.yaml
+
+# Testing
+/coverage
+/cypress/videos/
+/cypress/screenshots/
+/.nyc_output
+
+# Production
+/build
+/dist
+/dist-ssr
+/.next/
+/out/
+/storybook-static
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env*.local
+*.pem
+.npmrc
+.yarnrc
+
 # Logs
 logs
 *.log
@@ -7,18 +46,54 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Cache and temp files
+.cache/
+.temp/
+.tmp/
+.eslintcache
+.stylelintcache
+.turbo
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Local files
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Debug
+.chrome/
+.vscode-test/
+.vscode-test-web/
+
+# Misc
+.sass-cache/
+connect.lock
+libpeerconnection.log
+testem.log
+typings/
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.history/
+.vercel
+.netlify
