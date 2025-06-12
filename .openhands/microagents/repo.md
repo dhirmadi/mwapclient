@@ -1,69 +1,73 @@
-# MWAP Repository Overview
+# MWAP Frontend Repository Overview
 
-## 📌 Repository Purpose
+## 🎯 Repository Purpose
 
-This repository hosts the backend and frontend of the Modular Web Application Platform (MWAP). It is designed to manage multi-tenant projects with fine-grained RBAC, powered by Node.js, MongoDB, React, and Auth0.
+This repository contains the **frontend client** for the Modular Web Application Platform (MWAP).  
+It is built using React and TypeScript, and is designed to allow users to interact with the MWAP API based on their role (SuperAdmin, TenantOwner, ProjectMember).
 
-MWAP includes:
-- RESTful API (v3) for tenants, projects, cloud providers, integrations
-- Zod-validated schemas and clean architecture patterns
-- React frontend with role-based dashboards and CRUD workflows
+This frontend consumes the MWAP backend via a RESTful API defined in `docs/v3-api.md`, providing role-aware dashboards, project tools, and tenant administration.
 
 ---
 
 ## ⚙️ Setup Instructions
 
-### Backend
 ```bash
 # Install dependencies
-cd mwapserver
 npm install
 
-# Create .env file and configure Auth0 + MongoDB URI
+# Configure environment variables
+cp .env.example .env
 
-# Run server
+# Start development server
 npm run dev
 ```
 
-### Frontend (Planned)
-```bash
-cd mwapclient
-npm install
-npm run dev
-```
+> Ensure the MWAP backend and Auth0 tenant are configured as described in `docs/authentication.md`.
 
 ---
 
-## 🧱 Repository Structure
+## 🧱 Repository Structure (Planned)
 
 ```txt
-.
-├── src/
-│   ├── features/               # Domain logic (tenants, projects, cloud-integrations)
-│   ├── schemas/                # Zod validation schemas
-│   ├── middleware/             # JWT, RBAC, error handling
-│   ├── utils/                  # Response and validation helpers
-│   ├── routes/                 # API v1 routers
-│   └── server.ts               # App entrypoint
-├── tests/                      # API integration test suite (apitest.py)
-├── .github/workflows/          # CI pipelines
-└── openhands/microagents/     # Microagents for OpenHands tasks
+src/
+  features/                # Feature-based modules (projects, tenants, auth, etc.)
+  components/              # Shared UI components (tables, modals, etc.)
+  lib/                     # API client, hooks, auth logic
+  router/                  # Route definitions with role-based protection
+  pages/                   # Entry points per route
+  app.tsx                  # App entry and layout
+  index.tsx                # Mount point
 ```
 
 ---
 
 ## 🧪 CI/CD Workflows
 
-- `.github/workflows/node.yml`: Lints and tests server code on PR
-- `.github/workflows/test.yml`: Runs Python-based API integration tests
-- Coming soon: deploy frontend to Vercel or Netlify
+```txt
+.github/workflows/
+  lint.yml     # Lint TypeScript, styles
+  test.yml     # Run Vitest or Playwright tests
+  deploy.yml   # (planned) Deploy to Vercel or Netlify
+```
 
 ---
 
-## 🧑‍💻 Development Guidelines
+## 📐 Development Guidelines
 
-- Follow modular `feature-pattern.md` for organizing code
-- Use Zod for all validation logic
-- Commit new endpoints to `v3-api.md`
-- Define reusable logic in OpenHands microagents
-- Always test API changes via `/tests/apitest.py`
+- Follow feature-based folder structure (`/features/{domain}`)
+- All forms use Zod + React Hook Form
+- All API interaction goes through Axios + React Query hooks
+- Auth0 provides authentication and role resolution
+- Role-aware routing via `<RoleRoute>` wrappers
+- Reuse microagents where possible for consistency
+- Align with `docs/component-structure.md`, `docs/architecture.md`, and `docs/rbac.md`
+
+---
+
+## 📚 References
+
+- [`docs/frontend.md`](./frontend.md)
+- [`docs/v3-api.md`](./v3-api.md)
+- [`docs/rbac.md`](./rbac.md)
+- [`docs/component-structure.md`](./component-structure.md)
+- [`docs/authentication.md`](./authentication.md)
