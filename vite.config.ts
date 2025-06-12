@@ -15,8 +15,13 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
+    proxy: {
+      '/api': {
+        target: 'https://mwapss.shibari.photo',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
     },
   },
 })
