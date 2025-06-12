@@ -2,16 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --primary-glow: conic-gradient(
+    from 180deg at 50% 50%,
+    #3b82f6 0deg,
+    #8b5cf6 55deg,
+    #10b981 120deg,
+    #3b82f6 160deg,
+    transparent 360deg
+  );
+  --secondary-glow: radial-gradient(
+    rgba(59, 130, 246, 0.2),
+    rgba(139, 92, 246, 0.1)
+  );
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: linear-gradient(to bottom, #0f172a, #1e293b);
+  color: #f8fafc;
+}
+
+/* Futuristic UI Components */
+@layer components {
+  .glass-panel {
+    @apply bg-dark-800/70 backdrop-blur-md border border-dark-700/50 rounded-lg shadow-lg;
+  }
+  
+  .glass-button {
+    @apply px-4 py-2 bg-primary-600/80 hover:bg-primary-500/90 backdrop-blur-sm text-white rounded-md 
+    transition-all duration-300 shadow-glow hover:shadow-glow-lg;
+  }
+  
+  .glass-input {
+    @apply bg-dark-800/50 border border-dark-700/50 text-white rounded-md px-4 py-2 
+    focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:outline-none
+    placeholder:text-dark-400;
+  }
+  
+  .glass-card {
+    @apply bg-dark-800/70 backdrop-blur-md border border-dark-700/50 rounded-lg overflow-hidden
+    shadow-lg hover:shadow-glow transition-all duration-300;
+  }
+  
+  .neon-border {
+    @apply border border-primary-500/50 shadow-glow;
+  }
+  
+  .futuristic-gradient {
+    @apply bg-gradient-to-r from-primary-600 via-accent-500 to-secondary-500;
+  }
+  
+  .futuristic-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-accent-300 to-secondary-400;
+  }
+}
+
+/* Animated background */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: var(--primary-glow);
+  animation: rotate 30s linear infinite;
+  opacity: 0.15;
+}
+
+.animated-bg::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: var(--secondary-glow);
+  animation: pulse-slow 15s ease infinite;
+  opacity: 0.2;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }

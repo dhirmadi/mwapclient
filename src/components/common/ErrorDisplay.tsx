@@ -14,7 +14,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, className }) => {
   const code = isApiError ? error.code : 'ERROR';
 
   return (
-    <div className={`bg-red-50 border border-red-200 text-red-800 rounded-md p-4 ${className || ''}`}>
+    <div className={`bg-red-900/30 backdrop-blur-sm border border-red-500/30 text-red-200 rounded-md p-4 shadow-glow ${className || ''}`}>
       <div className="flex items-start">
         <div className="flex-shrink-0">
           <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -26,11 +26,11 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, className }) => {
           </svg>
         </div>
         <div className="ml-3">
-          <h3 className="text-sm font-medium text-red-800">{code}</h3>
-          <div className="mt-1 text-sm text-red-700">{message}</div>
+          <h3 className="text-sm font-medium text-red-300">{code}</h3>
+          <div className="mt-1 text-sm text-red-200">{message}</div>
           {isApiError && error.details && (
-            <div className="mt-2 text-xs text-red-600">
-              <pre className="whitespace-pre-wrap">
+            <div className="mt-2 text-xs text-red-300/80">
+              <pre className="whitespace-pre-wrap bg-red-950/30 p-2 rounded border border-red-500/20">
                 {JSON.stringify(error.details, null, 2)}
               </pre>
             </div>

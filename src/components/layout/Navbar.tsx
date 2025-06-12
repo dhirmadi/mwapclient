@@ -2,15 +2,26 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
 import { UserRole } from '@/types';
-import { Avatar, Menu, UnstyledButton, Burger, Drawer, Group, Text } from '@mantine/core';
+import { Avatar, Menu, UnstyledButton, Burger, Drawer, Group, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconLogout, IconUser, IconChevronDown } from '@tabler/icons-react';
+import { 
+  IconLogout, 
+  IconUser, 
+  IconChevronDown, 
+  IconDashboard, 
+  IconBuildingSkyscraper, 
+  IconFolder, 
+  IconCloud, 
+  IconTemplate, 
+  IconMenu2
+} from '@tabler/icons-react';
 
 const Navbar: React.FC = () => {
   const { user, logout, hasRole } = useAuth();
   const location = useLocation();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
+  const [navMenuOpened, setNavMenuOpened] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -20,26 +31,31 @@ const Navbar: React.FC = () => {
     {
       name: 'Dashboard',
       path: '/',
+      icon: <IconDashboard size={20} stroke={1.5} />,
       roles: [UserRole.SUPER_ADMIN, UserRole.TENANT_OWNER, UserRole.TENANT_ADMIN, UserRole.PROJECT_ADMIN, UserRole.PROJECT_MEMBER],
     },
     {
       name: 'Tenants',
       path: '/tenants',
+      icon: <IconBuildingSkyscraper size={20} stroke={1.5} />,
       roles: [UserRole.SUPER_ADMIN],
     },
     {
       name: 'Projects',
       path: '/projects',
+      icon: <IconFolder size={20} stroke={1.5} />,
       roles: [UserRole.TENANT_OWNER, UserRole.TENANT_ADMIN, UserRole.PROJECT_ADMIN, UserRole.PROJECT_MEMBER],
     },
     {
       name: 'Cloud Providers',
       path: '/cloud-providers',
+      icon: <IconCloud size={20} stroke={1.5} />,
       roles: [UserRole.SUPER_ADMIN],
     },
     {
       name: 'Project Types',
       path: '/project-types',
+      icon: <IconTemplate size={20} stroke={1.5} />,
       roles: [UserRole.SUPER_ADMIN],
     },
   ];
@@ -61,98 +77,140 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow">
+    <nav className="glass-panel sticky top-0 z-50 backdrop-blur-md border-b border-primary-500/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-xl font-bold text-blue-600">
-                MWAP
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {filteredNavItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive(item.path)
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
+          {/* Logo */}
+          <div className="flex-shrink-0 flex items-center">
+            <Link to="/" className="flex items-center">
+              <span className="text-xl font-bold futuristic-text">MWAP</span>
+              <span className="ml-1 text-xs text-primary-300 font-light">PLATFORM</span>
+            </Link>
           </div>
           
-          {/* User menu (desktop) */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {user ? (
+          {/* Right side navigation and user menu */}
+          <div className="flex items-center space-x-4">
+            {/* Navigation menu (desktop) */}
+            <div className="hidden md:flex md:items-center md:space-x-1">
               <Menu 
-                width={200} 
+                width={220} 
                 position="bottom-end" 
                 transitionProps={{ transition: 'pop-top-right' }}
-                onClose={() => setUserMenuOpened(false)}
-                onOpen={() => setUserMenuOpened(true)}
+                onClose={() => setNavMenuOpened(false)}
+                onOpen={() => setNavMenuOpened(true)}
               >
                 <Menu.Target>
-                  <UnstyledButton className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  <UnstyledButton className="px-3 py-2 rounded-md text-dark-200 hover:text-white transition-colors duration-300">
                     <Group gap={7}>
-                      <Avatar
-                        src={user.picture}
-                        alt={user.name}
-                        radius="xl"
-                        size={30}
-                        color="blue"
-                      >
-                        {getUserInitials()}
-                      </Avatar>
-                      <Text fw={500} size="sm" className="hidden md:block">
-                        {user.name}
+                      <IconMenu2 size={20} stroke={1.5} />
+                      <Text fw={500} size="sm">
+                        Navigation
                       </Text>
-                      <IconChevronDown size={12} stroke={1.5} className={userMenuOpened ? 'rotate-180' : ''} />
+                      <IconChevronDown size={12} stroke={1.5} className={navMenuOpened ? 'rotate-180 transition-transform duration-300' : 'transition-transform duration-300'} />
                     </Group>
                   </UnstyledButton>
                 </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconUser size={14} stroke={1.5} />}
-                    component={Link}
-                    to="/profile"
-                  >
-                    Profile
-                  </Menu.Item>
-                  <Menu.Divider />
-                  <Menu.Item
-                    leftSection={<IconLogout size={14} stroke={1.5} />}
-                    onClick={logout}
-                    color="red"
-                  >
-                    Logout
-                  </Menu.Item>
+                <Menu.Dropdown className="glass-panel border border-primary-500/30">
+                  {filteredNavItems.map((item) => (
+                    <Menu.Item
+                      key={item.path}
+                      leftSection={item.icon}
+                      component={Link}
+                      to={item.path}
+                      className={isActive(item.path) ? 'bg-primary-600/30' : ''}
+                    >
+                      {item.name}
+                    </Menu.Item>
+                  ))}
                 </Menu.Dropdown>
               </Menu>
-            ) : (
-              <Link
-                to="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Login
-              </Link>
-            )}
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
-            <Burger
-              opened={drawerOpened}
-              onClick={toggleDrawer}
-              className="m-2"
-              size="sm"
-              aria-label="Toggle navigation"
-            />
+              
+              {/* Individual nav items for larger screens */}
+              <div className="hidden lg:flex lg:items-center lg:space-x-1">
+                {filteredNavItems.map((item) => (
+                  <Tooltip key={item.path} label={item.name} position="bottom" withArrow>
+                    <Link
+                      to={item.path}
+                      className={`p-2 rounded-md transition-all duration-300 ${
+                        isActive(item.path)
+                          ? 'text-white bg-primary-600/50 shadow-glow'
+                          : 'text-dark-200 hover:text-white hover:bg-dark-700/50'
+                      }`}
+                    >
+                      {item.icon}
+                    </Link>
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+            
+            {/* User menu (desktop) */}
+            <div className="hidden sm:flex sm:items-center">
+              {user ? (
+                <Menu 
+                  width={200} 
+                  position="bottom-end" 
+                  transitionProps={{ transition: 'pop-top-right' }}
+                  onClose={() => setUserMenuOpened(false)}
+                  onOpen={() => setUserMenuOpened(true)}
+                >
+                  <Menu.Target>
+                    <UnstyledButton className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500/50 p-1">
+                      <Group gap={7}>
+                        <Avatar
+                          src={user.picture}
+                          alt={user.name}
+                          radius="xl"
+                          size={32}
+                          className="border-2 border-primary-500/50 shadow-glow"
+                        >
+                          {getUserInitials()}
+                        </Avatar>
+                        <Text fw={500} size="sm" className="hidden lg:block text-dark-200">
+                          {user.name}
+                        </Text>
+                        <IconChevronDown size={12} stroke={1.5} className={`text-dark-200 ${userMenuOpened ? 'rotate-180 transition-transform duration-300' : 'transition-transform duration-300'}`} />
+                      </Group>
+                    </UnstyledButton>
+                  </Menu.Target>
+                  <Menu.Dropdown className="glass-panel border border-primary-500/30">
+                    <Menu.Item
+                      leftSection={<IconUser size={14} stroke={1.5} />}
+                      component={Link}
+                      to="/profile"
+                    >
+                      Profile
+                    </Menu.Item>
+                    <Menu.Divider className="border-dark-700" />
+                    <Menu.Item
+                      leftSection={<IconLogout size={14} stroke={1.5} />}
+                      onClick={logout}
+                      color="red"
+                    >
+                      Logout
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              ) : (
+                <Link
+                  to="/login"
+                  className="glass-button"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+            
+            {/* Mobile menu button */}
+            <div className="flex items-center md:hidden">
+              <Burger
+                opened={drawerOpened}
+                onClick={toggleDrawer}
+                className="text-dark-200"
+                size="sm"
+                aria-label="Toggle navigation"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -163,7 +221,13 @@ const Navbar: React.FC = () => {
         onClose={closeDrawer}
         size="100%"
         padding="md"
-        title="Navigation"
+        title={<span className="futuristic-text text-lg font-bold">MWAP Navigation</span>}
+        classNames={{
+          content: 'glass-panel border-l border-primary-500/30',
+          header: 'border-b border-primary-500/30',
+          title: 'text-white',
+          close: 'text-white',
+        }}
         zIndex={1000}
         position="right"
       >
@@ -173,20 +237,21 @@ const Navbar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block px-4 py-3 mb-1 rounded-md text-base font-medium ${
+                className={`flex items-center px-4 py-3 mb-2 rounded-md text-base font-medium transition-all duration-300 ${
                   isActive(item.path)
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                    ? 'bg-primary-600/30 text-white shadow-glow'
+                    : 'text-dark-200 hover:bg-dark-700/50 hover:text-white'
                 }`}
                 onClick={closeDrawer}
               >
+                <span className="mr-3">{item.icon}</span>
                 {item.name}
               </Link>
             ))}
           </div>
           
           {/* User section at bottom of drawer */}
-          <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="border-t border-primary-500/30 pt-4 mt-4">
             {user ? (
               <>
                 <div className="flex items-center px-4 mb-4">
@@ -195,19 +260,19 @@ const Navbar: React.FC = () => {
                     alt={user.name}
                     radius="xl"
                     size={40}
-                    color="blue"
+                    className="border-2 border-primary-500/50 shadow-glow"
                   >
                     {getUserInitials()}
                   </Avatar>
                   <div className="ml-3">
-                    <Text fw={500} size="sm">{user.name}</Text>
+                    <Text fw={500} size="sm" className="text-white">{user.name}</Text>
                     <Text size="xs" c="dimmed">{user.email}</Text>
                   </div>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <Link
                     to="/profile"
-                    className="flex items-center px-4 py-3 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-md"
+                    className="flex items-center px-4 py-3 text-base font-medium text-dark-200 hover:text-white hover:bg-dark-700/50 rounded-md transition-all duration-300"
                     onClick={closeDrawer}
                   >
                     <IconUser size={18} className="mr-2" />
@@ -218,7 +283,7 @@ const Navbar: React.FC = () => {
                       logout();
                       closeDrawer();
                     }}
-                    className="flex items-center w-full text-left px-4 py-3 text-base font-medium text-red-500 hover:text-red-700 hover:bg-gray-100 rounded-md"
+                    className="flex items-center w-full text-left px-4 py-3 text-base font-medium text-red-400 hover:text-red-300 hover:bg-dark-700/50 rounded-md transition-all duration-300"
                   >
                     <IconLogout size={18} className="mr-2" />
                     Logout
@@ -229,7 +294,7 @@ const Navbar: React.FC = () => {
               <div className="px-4">
                 <Link
                   to="/login"
-                  className="flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="glass-button w-full flex items-center justify-center"
                   onClick={closeDrawer}
                 >
                   Login

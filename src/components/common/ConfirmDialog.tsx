@@ -27,7 +27,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   const variantStyles = {
     danger: {
       icon: (
-        <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -37,10 +37,13 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </svg>
       ),
       confirmColor: 'red',
+      bgColor: 'bg-red-900/20',
+      borderColor: 'border-red-500/30',
+      glowColor: 'shadow-red-500/20',
     },
     warning: {
       icon: (
-        <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -50,10 +53,13 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </svg>
       ),
       confirmColor: 'yellow',
+      bgColor: 'bg-yellow-900/20',
+      borderColor: 'border-yellow-500/30',
+      glowColor: 'shadow-yellow-500/20',
     },
     info: {
       icon: (
-        <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-6 w-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -63,25 +69,45 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </svg>
       ),
       confirmColor: 'blue',
+      bgColor: 'bg-primary-900/20',
+      borderColor: 'border-primary-500/30',
+      glowColor: 'shadow-primary-500/20',
     },
   };
 
-  const { icon, confirmColor } = variantStyles[variant];
+  const { icon, confirmColor, bgColor, borderColor, glowColor } = variantStyles[variant];
 
   return (
-    <Modal opened={isOpen} onClose={onClose} title={title} centered>
-      <div className="flex items-start mb-4">
-        <div className="flex-shrink-0 mr-3">{icon}</div>
-        <Text size="sm">{message}</Text>
+    <Modal 
+      opened={isOpen} 
+      onClose={onClose} 
+      title={<span className="futuristic-text text-lg">{title}</span>}
+      centered
+      classNames={{
+        content: `glass-panel ${bgColor} border ${borderColor} shadow-lg ${glowColor}`,
+        header: 'border-b border-dark-700/50',
+        title: 'text-white',
+        close: 'text-white',
+      }}
+    >
+      <div className="flex items-start mb-6 p-2">
+        <div className="flex-shrink-0 mr-4">{icon}</div>
+        <Text size="sm" className="text-dark-200">{message}</Text>
       </div>
       <Group justify="flex-end" mt="md">
-        <Button variant="subtle" onClick={onClose} disabled={isLoading}>
+        <Button 
+          variant="subtle" 
+          onClick={onClose} 
+          disabled={isLoading}
+          className="text-dark-300 hover:bg-dark-700/50 hover:text-white"
+        >
           {cancelText}
         </Button>
         <Button
           color={confirmColor}
           onClick={onConfirm}
           loading={isLoading}
+          className="glass-button"
         >
           {confirmText}
         </Button>

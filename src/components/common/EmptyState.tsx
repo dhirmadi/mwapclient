@@ -19,13 +19,22 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`text-center py-12 px-4 ${className}`}>
-      {icon && <div className="mx-auto flex justify-center">{icon}</div>}
-      <h3 className="mt-4 text-lg font-medium text-gray-900">{title}</h3>
-      <p className="mt-1 text-sm text-gray-500">{description}</p>
+    <div className={`glass-panel text-center py-12 px-8 rounded-xl ${className}`}>
+      {icon && (
+        <div className="mx-auto flex justify-center text-primary-400 opacity-80">
+          {icon}
+        </div>
+      )}
+      <h3 className="mt-4 text-lg font-medium text-white">{title}</h3>
+      <p className="mt-2 text-sm text-dark-300">{description}</p>
       {actionText && onAction && (
         <div className="mt-6">
-          <Button onClick={onAction}>{actionText}</Button>
+          <Button 
+            onClick={onAction}
+            className="glass-button"
+          >
+            {actionText}
+          </Button>
         </div>
       )}
     </div>

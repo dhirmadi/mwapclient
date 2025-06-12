@@ -17,18 +17,23 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   children,
 }) => {
   return (
-    <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
+    <div className="pb-6 mb-6 border-b border-primary-500/20 sm:flex sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-          {title}
+        <h1 className="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
+          <span className="futuristic-text">{title}</span>
         </h1>
         {description && (
-          <p className="mt-1 text-sm text-gray-500">{description}</p>
+          <p className="mt-2 text-sm text-dark-300">{description}</p>
         )}
       </div>
-      <div className="mt-3 sm:mt-0 sm:ml-4 flex items-center space-x-3">
+      <div className="mt-4 sm:mt-0 sm:ml-4 flex items-center space-x-3">
         {actionText && onAction && (
-          <Button onClick={onAction}>{actionText}</Button>
+          <Button 
+            onClick={onAction}
+            className="glass-button"
+          >
+            {actionText}
+          </Button>
         )}
         {children}
       </div>
