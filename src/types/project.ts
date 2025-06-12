@@ -8,6 +8,12 @@ import { Tenant } from './tenant';
 import { CloudProvider } from './cloud-provider';
 import { ProjectType } from './project-type';
 
+export interface ProjectMember {
+  userId: string;
+  role: ProjectMemberRole;
+  addedAt: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -20,6 +26,7 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   archived: boolean;
+  members: ProjectMember[];
 }
 
 export enum ProjectStatus {
@@ -30,7 +37,7 @@ export enum ProjectStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
-export interface ProjectMember {
+export interface ProjectMemberDetail {
   id: string;
   user: User;
   project: Project;
