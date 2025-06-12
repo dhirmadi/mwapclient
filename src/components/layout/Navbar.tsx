@@ -77,7 +77,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="glass-panel sticky top-0 z-50 backdrop-blur-md border-b border-primary-500/20">
+    <nav className="glass-panel sticky top-0 z-50 backdrop-blur-md border-b border-primary-500 border-opacity-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
@@ -100,7 +100,7 @@ const Navbar: React.FC = () => {
                 onOpen={() => setNavMenuOpened(true)}
               >
                 <Menu.Target>
-                  <UnstyledButton className="px-3 py-2 rounded-md text-dark-200 hover:text-white transition-colors duration-300">
+                  <UnstyledButton className="px-3 py-2 rounded-md text-gray-300 hover:text-white transition-colors duration-300">
                     <Group gap={7}>
                       <IconMenu2 size={20} stroke={1.5} />
                       <Text fw={500} size="sm">
@@ -110,14 +110,14 @@ const Navbar: React.FC = () => {
                     </Group>
                   </UnstyledButton>
                 </Menu.Target>
-                <Menu.Dropdown className="glass-panel border border-primary-500/30">
+                <Menu.Dropdown className="glass-panel border border-primary-500 border-opacity-30">
                   {filteredNavItems.map((item) => (
                     <Menu.Item
                       key={item.path}
                       leftSection={item.icon}
                       component={Link}
                       to={item.path}
-                      className={isActive(item.path) ? 'bg-primary-600/30' : ''}
+                      className={isActive(item.path) ? 'bg-primary-600 bg-opacity-30' : ''}
                     >
                       {item.name}
                     </Menu.Item>
@@ -133,8 +133,8 @@ const Navbar: React.FC = () => {
                       to={item.path}
                       className={`p-2 rounded-md transition-all duration-300 ${
                         isActive(item.path)
-                          ? 'text-white bg-primary-600/50 shadow-glow'
-                          : 'text-dark-200 hover:text-white hover:bg-dark-700/50'
+                          ? 'text-white bg-primary-600 bg-opacity-50 shadow-glow'
+                          : 'text-gray-300 hover:text-white hover:bg-gray-700 hover:bg-opacity-50'
                       }`}
                     >
                       {item.icon}
@@ -155,25 +155,25 @@ const Navbar: React.FC = () => {
                   onOpen={() => setUserMenuOpened(true)}
                 >
                   <Menu.Target>
-                    <UnstyledButton className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500/50 p-1">
+                    <UnstyledButton className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 p-1">
                       <Group gap={7}>
                         <Avatar
                           src={user.picture}
                           alt={user.name}
                           radius="xl"
                           size={32}
-                          className="border-2 border-primary-500/50 shadow-glow"
+                          className="border-2 border-primary-500 border-opacity-50 shadow-glow"
                         >
                           {getUserInitials()}
                         </Avatar>
-                        <Text fw={500} size="sm" className="hidden lg:block text-dark-200">
+                        <Text fw={500} size="sm" className="hidden lg:block text-gray-300">
                           {user.name}
                         </Text>
-                        <IconChevronDown size={12} stroke={1.5} className={`text-dark-200 ${userMenuOpened ? 'rotate-180 transition-transform duration-300' : 'transition-transform duration-300'}`} />
+                        <IconChevronDown size={12} stroke={1.5} className={`text-gray-300 ${userMenuOpened ? 'rotate-180 transition-transform duration-300' : 'transition-transform duration-300'}`} />
                       </Group>
                     </UnstyledButton>
                   </Menu.Target>
-                  <Menu.Dropdown className="glass-panel border border-primary-500/30">
+                  <Menu.Dropdown className="glass-panel border border-primary-500 border-opacity-30">
                     <Menu.Item
                       leftSection={<IconUser size={14} stroke={1.5} />}
                       component={Link}
@@ -181,7 +181,7 @@ const Navbar: React.FC = () => {
                     >
                       Profile
                     </Menu.Item>
-                    <Menu.Divider className="border-dark-700" />
+                    <Menu.Divider className="border-gray-700" />
                     <Menu.Item
                       leftSection={<IconLogout size={14} stroke={1.5} />}
                       onClick={logout}
@@ -206,7 +206,7 @@ const Navbar: React.FC = () => {
               <Burger
                 opened={drawerOpened}
                 onClick={toggleDrawer}
-                className="text-dark-200"
+                className="text-gray-300"
                 size="sm"
                 aria-label="Toggle navigation"
               />
@@ -223,8 +223,8 @@ const Navbar: React.FC = () => {
         padding="md"
         title={<span className="futuristic-text text-lg font-bold">MWAP Navigation</span>}
         classNames={{
-          content: 'glass-panel border-l border-primary-500/30',
-          header: 'border-b border-primary-500/30',
+          content: 'glass-panel border-l border-primary-500 border-opacity-30',
+          header: 'border-b border-primary-500 border-opacity-30',
           title: 'text-white',
           close: 'text-white',
         }}
@@ -239,8 +239,8 @@ const Navbar: React.FC = () => {
                 to={item.path}
                 className={`flex items-center px-4 py-3 mb-2 rounded-md text-base font-medium transition-all duration-300 ${
                   isActive(item.path)
-                    ? 'bg-primary-600/30 text-white shadow-glow'
-                    : 'text-dark-200 hover:bg-dark-700/50 hover:text-white'
+                    ? 'bg-primary-600 bg-opacity-30 text-white shadow-glow'
+                    : 'text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white'
                 }`}
                 onClick={closeDrawer}
               >
@@ -251,7 +251,7 @@ const Navbar: React.FC = () => {
           </div>
           
           {/* User section at bottom of drawer */}
-          <div className="border-t border-primary-500/30 pt-4 mt-4">
+          <div className="border-t border-primary-500 border-opacity-30 pt-4 mt-4">
             {user ? (
               <>
                 <div className="flex items-center px-4 mb-4">
@@ -260,7 +260,7 @@ const Navbar: React.FC = () => {
                     alt={user.name}
                     radius="xl"
                     size={40}
-                    className="border-2 border-primary-500/50 shadow-glow"
+                    className="border-2 border-primary-500 border-opacity-50 shadow-glow"
                   >
                     {getUserInitials()}
                   </Avatar>
@@ -272,7 +272,7 @@ const Navbar: React.FC = () => {
                 <div className="space-y-2">
                   <Link
                     to="/profile"
-                    className="flex items-center px-4 py-3 text-base font-medium text-dark-200 hover:text-white hover:bg-dark-700/50 rounded-md transition-all duration-300"
+                    className="flex items-center px-4 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700 hover:bg-opacity-50 rounded-md transition-all duration-300"
                     onClick={closeDrawer}
                   >
                     <IconUser size={18} className="mr-2" />
@@ -283,7 +283,7 @@ const Navbar: React.FC = () => {
                       logout();
                       closeDrawer();
                     }}
-                    className="flex items-center w-full text-left px-4 py-3 text-base font-medium text-red-400 hover:text-red-300 hover:bg-dark-700/50 rounded-md transition-all duration-300"
+                    className="flex items-center w-full text-left px-4 py-3 text-base font-medium text-red-400 hover:text-red-300 hover:bg-gray-700 hover:bg-opacity-50 rounded-md transition-all duration-300"
                   >
                     <IconLogout size={18} className="mr-2" />
                     Logout

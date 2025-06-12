@@ -17,13 +17,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   children,
 }) => {
   return (
-    <div className="pb-6 mb-6 border-b border-primary-500/20 sm:flex sm:items-center sm:justify-between">
+    <div className="pb-6 mb-6 border-b border-primary-500 border-opacity-20 sm:flex sm:items-center sm:justify-between">
       <div>
         <h1 className="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
           <span className="futuristic-text">{title}</span>
         </h1>
         {description && (
-          <p className="mt-2 text-sm text-dark-300">{description}</p>
+          <p className="mt-2 text-sm text-gray-300">{description}</p>
         )}
       </div>
       <div className="mt-4 sm:mt-0 sm:ml-4 flex items-center space-x-3">

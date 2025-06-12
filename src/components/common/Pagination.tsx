@@ -32,7 +32,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           key={1}
           onClick={() => onPageChange(1)}
-          className="px-3 py-1 rounded-md text-sm font-medium text-dark-300 hover:bg-dark-700/50 hover:text-white transition-colors duration-300"
+          className="px-3 py-1 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white transition-colors duration-300"
         >
           1
         </button>
@@ -40,7 +40,7 @@ const Pagination: React.FC<PaginationProps> = ({
       
       if (startPage > 2) {
         pages.push(
-          <span key="ellipsis-start" className="px-2 py-1 text-dark-400">
+          <span key="ellipsis-start" className="px-2 py-1 text-gray-400">
             ...
           </span>
         );
@@ -55,8 +55,8 @@ const Pagination: React.FC<PaginationProps> = ({
           onClick={() => onPageChange(i)}
           className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-300 ${
             i === currentPage
-              ? 'bg-primary-600/50 text-white shadow-glow'
-              : 'text-dark-300 hover:bg-dark-700/50 hover:text-white'
+              ? 'bg-primary-600 bg-opacity-50 text-white shadow-glow'
+              : 'text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white'
           }`}
         >
           {i}
@@ -68,7 +68,7 @@ const Pagination: React.FC<PaginationProps> = ({
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) {
         pages.push(
-          <span key="ellipsis-end" className="px-2 py-1 text-dark-400">
+          <span key="ellipsis-end" className="px-2 py-1 text-gray-400">
             ...
           </span>
         );
@@ -78,7 +78,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           key={totalPages}
           onClick={() => onPageChange(totalPages)}
-          className="px-3 py-1 rounded-md text-sm font-medium text-dark-300 hover:bg-dark-700/50 hover:text-white transition-colors duration-300"
+          className="px-3 py-1 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white transition-colors duration-300"
         >
           {totalPages}
         </button>
@@ -95,8 +95,8 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === 1}
         className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-300 ${
           currentPage === 1
-            ? 'text-dark-500 cursor-not-allowed opacity-50'
-            : 'text-dark-300 hover:bg-dark-700/50 hover:text-white'
+            ? 'text-gray-500 cursor-not-allowed opacity-50'
+            : 'text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white'
         }`}
       >
         Previous
@@ -109,8 +109,8 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === totalPages}
         className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-300 ${
           currentPage === totalPages
-            ? 'text-dark-500 cursor-not-allowed opacity-50'
-            : 'text-dark-300 hover:bg-dark-700/50 hover:text-white'
+            ? 'text-gray-500 cursor-not-allowed opacity-50'
+            : 'text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white'
         }`}
       >
         Next

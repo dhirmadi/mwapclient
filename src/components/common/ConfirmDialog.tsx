@@ -37,9 +37,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </svg>
       ),
       confirmColor: 'red',
-      bgColor: 'bg-red-900/20',
-      borderColor: 'border-red-500/30',
-      glowColor: 'shadow-red-500/20',
+      bgColor: 'bg-red-900 bg-opacity-20',
+      borderColor: 'border-red-500 border-opacity-30',
+      glowColor: 'shadow-red-500 shadow-opacity-20',
     },
     warning: {
       icon: (
@@ -53,9 +53,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </svg>
       ),
       confirmColor: 'yellow',
-      bgColor: 'bg-yellow-900/20',
-      borderColor: 'border-yellow-500/30',
-      glowColor: 'shadow-yellow-500/20',
+      bgColor: 'bg-yellow-900 bg-opacity-20',
+      borderColor: 'border-yellow-500 border-opacity-30',
+      glowColor: 'shadow-yellow-500 shadow-opacity-20',
     },
     info: {
       icon: (
@@ -69,9 +69,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </svg>
       ),
       confirmColor: 'blue',
-      bgColor: 'bg-primary-900/20',
-      borderColor: 'border-primary-500/30',
-      glowColor: 'shadow-primary-500/20',
+      bgColor: 'bg-primary-900 bg-opacity-20',
+      borderColor: 'border-primary-500 border-opacity-30',
+      glowColor: 'shadow-primary-500 shadow-opacity-20',
     },
   };
 
@@ -85,21 +85,21 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       centered
       classNames={{
         content: `glass-panel ${bgColor} border ${borderColor} shadow-lg ${glowColor}`,
-        header: 'border-b border-dark-700/50',
+        header: 'border-b border-gray-700 border-opacity-50',
         title: 'text-white',
         close: 'text-white',
       }}
     >
       <div className="flex items-start mb-6 p-2">
         <div className="flex-shrink-0 mr-4">{icon}</div>
-        <Text size="sm" className="text-dark-200">{message}</Text>
+        <Text size="sm" className="text-gray-300">{message}</Text>
       </div>
       <Group justify="flex-end" mt="md">
         <Button 
           variant="subtle" 
           onClick={onClose} 
           disabled={isLoading}
-          className="text-dark-300 hover:bg-dark-700/50 hover:text-white"
+          className="text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 hover:text-white"
         >
           {cancelText}
         </Button>

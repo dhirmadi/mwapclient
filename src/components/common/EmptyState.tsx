@@ -26,7 +26,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </div>
       )}
       <h3 className="mt-4 text-lg font-medium text-white">{title}</h3>
-      <p className="mt-2 text-sm text-dark-300">{description}</p>
+      <p className="mt-2 text-sm text-gray-300">{description}</p>
       {actionText && onAction && (
         <div className="mt-6">
           <Button 
