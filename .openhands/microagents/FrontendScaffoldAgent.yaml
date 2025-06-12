@@ -1,0 +1,32 @@
+id: FrontendScaffoldAgent
+description: Orchestrates creation of a complete frontend feature module (UI, API, forms, routing, RBAC) for MWAP.
+input: Feature name, user role, and CRUD requirements
+output: A fully integrated React feature module
+dependencies:
+  - AuthContextAgent
+  - ProtectedRouteAgent
+  - ApiClientAgent
+  - FormSchemaAgent
+  - FeatureDashboardAgent
+implementation: |
+  You are scaffolding a new domain feature module in the MWAP React frontend based on role-based access control.
+
+  Input:
+  - Feature: e.g. Project, Tenant, Integration
+  - Role: e.g. SuperAdmin, TenantOwner
+  - CRUD: define which operations are enabled (create/read/update/delete)
+
+  Output:
+  - `/features/{feature}/` folder containing:
+    - {Feature}List.tsx (data table)
+    - {Feature}Form.tsx (Zod + RHF)
+    - {Feature}Detail.tsx
+    - routes.tsx (with RoleRoute protection)
+  - Connected to:
+    - Axios + React Query client
+    - AuthContext for role detection
+    - API endpoints as defined in OpenAPI or v3-api.md
+
+  This agent should combine the outputs of all listed dependencies and handle naming, imports, routing, and RBAC.
+
+  Result: a plug-and-play module ready to be registered in the main app router and sidebar.

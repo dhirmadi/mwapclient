@@ -1,0 +1,29 @@
+id: AuthContextAgent
+description: Creates an Auth0-aware React Context to manage authentication and user roles.
+input: null
+output: A complete React context module with provider, hook, and role utilities.
+dependencies: []
+implementation: |
+  You are building the authentication layer for the MWAP frontend using React, Auth0, and TypeScript.
+
+  Implement a modular Auth context with the following structure:
+  - `AuthProvider`: wraps the app, initializes Auth0 client, handles login/logout
+  - `useAuth()`: returns auth state and role utilities
+  - Role detection: parse Auth0 ID token for roles (e.g., via `sub` and `permissions` or `app_metadata`)
+  - Expose: `user`, `isAuthenticated`, `isSuperAdmin`, `isTenantOwner`, `isProjectMember`, `getAccessToken()`
+
+  Technical stack:
+  - React Context API
+  - Auth0 SPA SDK
+  - TypeScript
+  - Optional: React Query or Zustand integration
+
+  Structure the code under `/features/auth/` with files:
+  - `AuthContext.tsx`
+  - `AuthProvider.tsx`
+  - `useAuth.ts`
+
+  This should support:
+  - Token storage and renewal
+  - Role-based rendering logic
+  - Type-safe access to Auth0 claims

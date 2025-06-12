@@ -1,0 +1,21 @@
+id: ProtectedRouteAgent
+description: Creates role-aware protected routes for React Router, based on Auth context roles.
+input: null
+output: A reusable <RoleRoute> component and route protection pattern.
+dependencies: [AuthContextAgent]
+implementation: |
+  You are building a secure routing layer for the MWAP React frontend using React Router v6 and Auth0.
+
+  Define a reusable RoleRoute component that wraps <Route> and checks user roles from the Auth context.
+
+  Requirements:
+  - <RoleRoute roles={['SuperAdmin']} element={<AdminDashboard />} />
+  - Redirect unauthorized users to a generic "Access Denied" page
+  - Fallback UI for unauthenticated users (optional loading state)
+  - Uses useAuth() from AuthContextAgent to read roles
+
+  File structure:
+  - /features/auth/RoleRoute.tsx
+  - /pages/AccessDenied.tsx
+
+  Bonus: export utility hooks like `useHasRole(role)` for conditional rendering inside components.
