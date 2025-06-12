@@ -1,7 +1,8 @@
 import React from 'react';
-import { useAuth } from '@/hooks';
+import useAuth from '@/hooks/useAuth';
 import { PageHeader } from '@/components/layout';
 import { Card, Avatar, Text, Group, Badge, Button } from '@mantine/core';
+import { IconLogout } from '@tabler/icons-react';
 
 const Profile: React.FC = () => {
   const { user, logout } = useAuth();
@@ -26,6 +27,18 @@ const Profile: React.FC = () => {
         return 'gray';
     }
   };
+  
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return '?';
+    
+    const nameParts = user.name.split(' ');
+    if (nameParts.length >= 2) {
+      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+    }
+    
+    return user.name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <div>
@@ -38,13 +51,13 @@ const Profile: React.FC = () => {
               size="xl"
               radius="xl"
               color="blue"
-              src={null}
+              src={user.picture}
             >
-              {user.firstName.charAt(0) + user.lastName.charAt(0)}
+              {getUserInitials()}
             </Avatar>
             <div>
               <Text size="xl" fw={700}>
-                {user.firstName} {user.lastName}
+                {user.name}
               </Text>
               <Text size="sm" c="dimmed">
                 {user.email}
@@ -58,7 +71,12 @@ const Profile: React.FC = () => {
               </Group>
             </div>
           </Group>
-          <Button color="red" variant="outline" onClick={logout}>
+          <Button 
+            color="red" 
+            variant="outline" 
+            onClick={logout}
+            leftSection={<IconLogout size={16} />}
+          >
             Logout
           </Button>
         </Group>
@@ -77,20 +95,22 @@ const Profile: React.FC = () => {
                 <dt className="text-sm font-medium text-gray-500">Email</dt>
                 <dd className="text-sm text-gray-900 col-span-2">{user.email}</dd>
               </div>
+              {user.tenantId && (
+                <div className="py-3 grid grid-cols-3 gap-4">
+                  <dt className="text-sm font-medium text-gray-500">Tenant ID</dt>
+                  <dd className="text-sm text-gray-900 col-span-2">{user.tenantId}</dd>
+                </div>
+              )}
               <div className="py-3 grid grid-cols-3 gap-4">
-                <dt className="text-sm font-medium text-gray-500">Tenant ID</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{user.tenantId || 'N/A'}</dd>
-              </div>
-              <div className="py-3 grid grid-cols-3 gap-4">
-                <dt className="text-sm font-medium text-gray-500">Created At</dt>
+                <dt className="text-sm font-medium text-gray-500">Roles</dt>
                 <dd className="text-sm text-gray-900 col-span-2">
-                  {new Date(user.createdAt).toLocaleString()}
-                </dd>
-              </div>
-              <div className="py-3 grid grid-cols-3 gap-4">
-                <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-                <dd className="text-sm text-gray-900 col-span-2">
-                  {new Date(user.updatedAt).toLocaleString()}
+                  <Group gap="xs">
+                    {user.roles.map((role) => (
+                      <Badge key={role} color={getRoleBadgeColor(role)}>
+                        {role.replace('_', ' ')}
+                      </Badge>
+                    ))}
+                  </Group>
                 </dd>
               </div>
             </dl>
