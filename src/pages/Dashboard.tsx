@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks';
 import { UserRole } from '@/types';
 import { PageHeader } from '@/components/layout';
 import { Card, SimpleGrid, Text, Title } from '@mantine/core';
@@ -20,25 +20,22 @@ const Dashboard: React.FC = () => {
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={3} spacing="lg" breakpoints={[
-          { maxWidth: 'md', cols: 2, spacing: 'md' },
-          { maxWidth: 'sm', cols: 1, spacing: 'sm' },
-        ]}>
+        <SimpleGrid cols={3}>
           {isSuperAdmin && (
             <>
               <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenants">
                 <Title order={3} mb="md">Tenants</Title>
-                <Text color="dimmed">Manage platform tenants</Text>
+                <Text c="dimmed">Manage platform tenants</Text>
               </Card>
               
               <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/cloud-providers">
                 <Title order={3} mb="md">Cloud Providers</Title>
-                <Text color="dimmed">Configure cloud provider integrations</Text>
+                <Text c="dimmed">Configure cloud provider integrations</Text>
               </Card>
               
               <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/project-types">
                 <Title order={3} mb="md">Project Types</Title>
-                <Text color="dimmed">Manage available project templates</Text>
+                <Text c="dimmed">Manage available project templates</Text>
               </Card>
             </>
           )}
@@ -46,13 +43,13 @@ const Dashboard: React.FC = () => {
           {(isTenantUser || isProjectUser) && (
             <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
               <Title order={3} mb="md">Projects</Title>
-              <Text color="dimmed">View and manage your projects</Text>
+              <Text c="dimmed">View and manage your projects</Text>
             </Card>
           )}
           
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/profile">
             <Title order={3} mb="md">Profile</Title>
-            <Text color="dimmed">Manage your account settings</Text>
+            <Text c="dimmed">Manage your account settings</Text>
           </Card>
         </SimpleGrid>
       </div>

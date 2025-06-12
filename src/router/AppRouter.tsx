@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserRole } from '@/types';
 import ProtectedRoute from './ProtectedRoute';
 import { MainLayout } from '@/components/layout';

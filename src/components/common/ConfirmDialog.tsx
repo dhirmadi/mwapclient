@@ -74,7 +74,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className="flex-shrink-0 mr-3">{icon}</div>
         <Text size="sm">{message}</Text>
       </div>
-      <Group position="right" mt="md">
+      <Group justify="flex-end" mt="md">
         <Button variant="subtle" onClick={onClose} disabled={isLoading}>
           {cancelText}
         </Button>

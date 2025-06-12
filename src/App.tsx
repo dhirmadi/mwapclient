@@ -1,4 +1,3 @@
-import React from 'react';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
@@ -29,7 +28,7 @@ function App() {
     >
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <MantineProvider withGlobalStyles withNormalizeCSS>
+          <MantineProvider>
             <Notifications position="top-right" />
             <AppRouter />
             <ReactQueryDevtools initialIsOpen={false} />

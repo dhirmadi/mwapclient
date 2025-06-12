@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks';
 import { PageHeader } from '@/components/layout';
 import { Card, Avatar, Text, Group, Badge, Button } from '@mantine/core';
 
@@ -32,7 +32,7 @@ const Profile: React.FC = () => {
       <PageHeader title="Profile" description="Manage your account settings" />
 
       <Card shadow="sm" p="lg" radius="md" withBorder className="mt-6">
-        <Group position="apart" align="flex-start">
+        <Group justify="apart" align="flex-start">
           <Group>
             <Avatar
               size="xl"
@@ -43,13 +43,13 @@ const Profile: React.FC = () => {
               {user.firstName.charAt(0) + user.lastName.charAt(0)}
             </Avatar>
             <div>
-              <Text size="xl" weight={700}>
+              <Text size="xl" fw={700}>
                 {user.firstName} {user.lastName}
               </Text>
-              <Text size="sm" color="dimmed">
+              <Text size="sm" c="dimmed">
                 {user.email}
               </Text>
-              <Group spacing="xs" mt="md">
+              <Group gap="xs" mt="md">
                 {user.roles.map((role) => (
                   <Badge key={role} color={getRoleBadgeColor(role)}>
                     {role.replace('_', ' ')}
@@ -64,7 +64,7 @@ const Profile: React.FC = () => {
         </Group>
 
         <div className="mt-6">
-          <Text size="sm" color="dimmed" mb="xs">
+          <Text size="sm" c="dimmed" mb="xs">
             Account Information
           </Text>
           <div className="border-t border-gray-200 pt-4">
