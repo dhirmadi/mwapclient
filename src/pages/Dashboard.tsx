@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { PageHeader } from '../components/layout';
+import { useAuth } from '../../context/AuthContext';
+import { PageHeader } from '../../components/layout';
 import { Card, SimpleGrid, Text, Title } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { LoadingSpinner } from '../components/common';
+import { LoadingSpinner } from '../../components/common';
 
 // SuperAdmin Dashboard Component
 const SuperAdminDashboard: React.FC = () => {

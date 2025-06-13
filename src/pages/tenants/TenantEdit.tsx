@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTenant, useUpdateTenant } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay } from '@/components/common';
+import { useTenant, useUpdateTenant } from '../../../hooks';
+import { PageHeader } from '../../../components/layout';
+import { LoadingSpinner, ErrorDisplay } from '../../../components/common';
 import { Button, TextInput, Switch, Card, Group } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { z } from 'zod';

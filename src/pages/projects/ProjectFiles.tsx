@@ -33,13 +33,13 @@ import {
   IconFilter, 
   IconEye 
 } from '@tabler/icons-react';
-import { PageHeader } from '../../components/layout';
-import { useAuth } from '../../context/AuthContext';
-import useFiles from '../../hooks/useFiles';
-import { useProjects } from '../../hooks/useProjects';
-import { File } from '../../types/file';
-import { Project } from '../../types/project';
-import { LoadingSpinner } from '../../components/common';
+import { PageHeader } from '../../../../components/layout';
+import { useAuth } from '../../../../context/AuthContext';
+import useFiles from '../../../../hooks/useFiles';
+import { useProjects } from '../../../../hooks/useProjects';
+import { File } from '../../../../types/file';
+import { Project } from '../../../../types/project';
+import { LoadingSpinner } from '../../../../components/common';
 
 const ProjectFiles: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();

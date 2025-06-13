@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateProject, useProjectTypes } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { ErrorDisplay, LoadingSpinner } from '@/components/common';
+import { useCreateProject, useProjectTypes } from '../../../hooks';
+import { PageHeader } from '../../../components/layout';
+import { ErrorDisplay, LoadingSpinner } from '../../../components/common';
 import { Button, TextInput, Textarea, Select, Card, Group } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { z } from 'zod';

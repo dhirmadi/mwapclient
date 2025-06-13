@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProjects } from '@/hooks';
-import useProjectAccess from '@/hooks/useProjectAccess';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '@/components/common';
+import { useProjects } from '../../../hooks';
+import useProjectAccess from '../../../hooks/useProjectAccess';
+import { PageHeader } from '../../../components/layout';
+import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '../../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text, Tooltip } from '@mantine/core';
 import { IconEdit, IconTrash, IconEye, IconShield } from '@tabler/icons-react';
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCloudProviders } from '../../hooks/useCloudProviders';
-import { PageHeader } from '../../components/layout';
-import { LoadingSpinner } from '../../components/common';
+import { useCloudProviders } from '../../../../hooks/useCloudProviders';
+import { PageHeader } from '../../../../components/layout';
+import { LoadingSpinner } from '../../../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconEdit, IconTrash, IconEye, IconPlus } from '@tabler/icons-react';

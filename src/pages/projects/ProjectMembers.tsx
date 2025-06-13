@@ -26,11 +26,11 @@ import {
   IconMail, 
   IconUser 
 } from '@tabler/icons-react';
-import { PageHeader } from '../../components/layout';
-import { useAuth } from '../../context/AuthContext';
-import { useProjects } from '../../hooks/useProjects';
-import { ProjectMember } from '../../types/project';
-import { LoadingSpinner } from '../../components/common';
+import { PageHeader } from '../../../../components/layout';
+import { useAuth } from '../../../../context/AuthContext';
+import { useProjects } from '../../../../hooks/useProjects';
+import { ProjectMember } from '../../../../types/project';
+import { LoadingSpinner } from '../../../../components/common';
 
 interface User {
   _id: string;

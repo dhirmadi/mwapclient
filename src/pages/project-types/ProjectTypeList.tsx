@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProjectTypes } from '../../hooks/useProjectTypes';
-import { PageHeader } from '../../components/layout';
-import { LoadingSpinner } from '../../components/common';
+import { useProjectTypes } from '../../../../hooks/useProjectTypes';
+import { PageHeader } from '../../../../components/layout';
+import { LoadingSpinner } from '../../../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
-import { ProjectType } from '../../types/project-type';
+import { ProjectType } from '../../../../types/project-type';
 
 const ProjectTypeList: React.FC = () => {
   const navigate = useNavigate();

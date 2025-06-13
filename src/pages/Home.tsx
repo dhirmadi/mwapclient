@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Title, Text, Button, Group } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Home: React.FC = () => {
   const { isAuthenticated, user, isSuperAdmin, isTenantOwner } = useAuth();
