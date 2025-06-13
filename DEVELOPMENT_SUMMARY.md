@@ -4,10 +4,11 @@
 
 ### Completed Tasks
 
-1. **Removed Mock Data**
+1. **API Integration**
    - Updated API client to use real API endpoints
-   - Removed development mode forcing in AuthContext
+   - Added development fallback for user roles API
    - Fixed function name mismatch (fetchUserRoles → getUserRoles)
+   - Configured proper proxy settings for API requests
 
 2. **SuperAdmin Functions**
    - Complete access to all tenants and projects
