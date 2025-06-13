@@ -4,3 +4,8 @@ export { default as useTenants } from './useTenants';
 export { default as useCloudProviders } from './useCloudProviders';
 export { default as useProjectTypes } from './useProjectTypes';
 export { default as useProjectFiles } from './useFiles';
+export { default as useFiles } from './useFiles';
+export { default as useCreateProject } from './useCreateProject';
+export { default as useUpdateProject } from './useUpdateProject';
+export { default as useCreateTenant } from './useCreateTenant';
+export { default as useUpdateTenant } from './useUpdateTenant';

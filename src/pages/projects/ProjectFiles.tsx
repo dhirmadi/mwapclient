@@ -35,7 +35,7 @@ import {
 } from '@tabler/icons-react';
 import { PageHeader } from '../../components/layout';
 import { useAuth } from '../../context/AuthContext';
-import { useFiles } from '../../hooks/useFiles';
+import useFiles from '../../hooks/useFiles';
 import { useProjects } from '../../hooks/useProjects';
 import { File } from '../../types/file';
 import { Project } from '../../types/project';

@@ -3,10 +3,8 @@ import api from '../utils/api';
 import { File, FileListParams } from '../types/file';
 import axios from 'axios';
 
-/**
- * Hook for fetching files by project ID
- */
-export const useProjectFiles = (projectId?: string, params: FileListParams = {}) => {
+// Private implementation functions
+const fetchProjectFiles = (projectId?: string, params: FileListParams = {}) => {
   return useQuery({
     queryKey: ['project-files', projectId, params],
     queryFn: () => api.fetchProjectFiles(projectId!, params),
@@ -14,10 +12,7 @@ export const useProjectFiles = (projectId?: string, params: FileListParams = {})
   });
 };
 
-/**
- * Hook for uploading a file
- */
-export const useUploadFile = () => {
+const useUploadFileMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -27,7 +22,7 @@ export const useUploadFile = () => {
       folder = '/' 
     }: { 
       projectId: string; 
-      file: File; 
+      file: Blob; // Changed from File to Blob to fix type error
       folder?: string 
     }) => {
       const formData = new FormData();
@@ -58,10 +53,7 @@ export const useUploadFile = () => {
   });
 };
 
-/**
- * Hook for deleting a file
- */
-export const useDeleteFile = () => {
+const useDeleteFileMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -94,4 +86,35 @@ export const useDeleteFile = () => {
   });
 };
 
-export default useProjectFiles;
+/**
+ * Hook for fetching files by project ID
+ */
+export const useProjectFiles = (projectId?: string, params: FileListParams = {}) => {
+  return fetchProjectFiles(projectId, params);
+};
+
+/**
+ * Combined hook for managing project files
+ */
+const useFiles = (projectId: string) => {
+  const filesQuery = fetchProjectFiles(projectId);
+  const uploadMutation = useUploadFileMutation();
+  const deleteMutation = useDeleteFileMutation();
+
+  return {
+    files: filesQuery.data || [],
+    isLoading: filesQuery.isLoading,
+    error: filesQuery.error,
+    refetch: filesQuery.refetch,
+    uploadFile: (file: Blob, folder = '/') => 
+      uploadMutation.mutate({ projectId, file, folder }),
+    isUploading: uploadMutation.isPending,
+    uploadError: uploadMutation.error,
+    deleteFile: (fileId: string) => 
+      deleteMutation.mutate({ projectId, fileId }),
+    isDeleting: deleteMutation.isPending,
+    deleteError: deleteMutation.error,
+  };
+};
+
+export default useFiles;
