@@ -1,15 +1,23 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types';
-import { LoadingSpinner } from '@/components/common';
+import { useAuth } from '../context/AuthContext';
+import { ProjectRole } from '../types/auth';
+import { LoadingSpinner } from '../components/common';
 
 interface ProtectedRouteProps {
-  requiredRoles?: UserRole[];
+  requireSuperAdmin?: boolean;
+  requireTenantOwner?: boolean;
+  requireProjectRole?: ProjectRole;
+  projectId?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles }) => {
-  const { isAuthenticated, isLoading, user, hasRole } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  requireSuperAdmin,
+  requireTenantOwner,
+  requireProjectRole,
+  projectId,
+}) => {
+  const { isAuthenticated, isLoading, isSuperAdmin, isTenantOwner, hasProjectRole } = useAuth();
 
   if (isLoading) {
     return (
@@ -23,10 +31,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRoles && requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some(role => hasRole(role));
-    
-    if (!hasRequiredRole) {
+  // Check for super admin requirement
+  if (requireSuperAdmin && !isSuperAdmin) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Check for tenant owner requirement
+  if (requireTenantOwner && !isTenantOwner) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Check for project role requirement
+  if (requireProjectRole && projectId) {
+    if (!hasProjectRole(projectId, requireProjectRole)) {
       return <Navigate to="/unauthorized" replace />;
     }
   }

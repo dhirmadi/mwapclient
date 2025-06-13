@@ -1,24 +1,24 @@
-/**
- * Project Type Types
- * These types define the structure of project type-related data
- */
-
 export interface ProjectType {
-  id: string;
+  _id: string;
   name: string;
   description: string;
-  active: boolean;
+  configSchema: Record<string, unknown>;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
 }
 
-export interface CreateProjectTypeDto {
+export interface ProjectTypeCreate {
   name: string;
   description: string;
+  configSchema: Record<string, unknown>;
+  isActive: boolean;
 }
 
-export interface UpdateProjectTypeDto {
+export interface ProjectTypeUpdate {
   name?: string;
   description?: string;
-  active?: boolean;
+  configSchema?: Record<string, unknown>;
+  isActive?: boolean;
 }

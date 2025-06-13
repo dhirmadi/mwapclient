@@ -1,68 +1,37 @@
-/**
- * Project Types
- * These types define the structure of project-related data
- */
-
-import { User } from './auth';
-import { Tenant } from './tenant';
-import { CloudProvider } from './cloud-provider';
-import { ProjectType } from './project-type';
+import { ProjectRole } from './auth';
 
 export interface ProjectMember {
   userId: string;
-  role: ProjectMemberRole;
-  addedAt: string;
+  role: ProjectRole;
 }
 
 export interface Project {
-  id: string;
+  _id: string;
+  tenantId: string;
+  projectTypeId: string;
+  cloudIntegrationId: string;
+  folderpath: string;
   name: string;
   description: string;
-  status: ProjectStatus;
-  tenant: Tenant;
-  projectType: ProjectType;
-  cloudProvider: CloudProvider;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
   archived: boolean;
+  members: ProjectMember[];
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+}
+
+export interface ProjectCreate {
+  tenantId: string;
+  projectTypeId: string;
+  cloudIntegrationId: string;
+  folderpath: string;
+  name: string;
+  description?: string;
   members: ProjectMember[];
 }
 
-export enum ProjectStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
-  PAUSED = 'PAUSED',
-  COMPLETED = 'COMPLETED',
-  ARCHIVED = 'ARCHIVED',
-}
-
-export interface ProjectMemberDetail {
-  id: string;
-  user: User;
-  project: Project;
-  role: ProjectMemberRole;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export enum ProjectMemberRole {
-  ADMIN = 'ADMIN',
-  MEMBER = 'MEMBER',
-  VIEWER = 'VIEWER',
-}
-
-export interface CreateProjectDto {
-  name: string;
-  description: string;
-  tenantId: string;
-  projectTypeId: string;
-  cloudProviderId: string;
-}
-
-export interface UpdateProjectDto {
+export interface ProjectUpdate {
   name?: string;
   description?: string;
-  status?: ProjectStatus;
   archived?: boolean;
 }

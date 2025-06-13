@@ -1,14 +1,16 @@
-/**
- * Authentication Types
- * These types define the structure of authentication-related data
- */
+export type ProjectRole = 'OWNER' | 'DEPUTY' | 'MEMBER';
 
-export enum UserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  TENANT_OWNER = 'TENANT_OWNER',
-  TENANT_ADMIN = 'TENANT_ADMIN',
-  PROJECT_ADMIN = 'PROJECT_ADMIN',
-  PROJECT_MEMBER = 'PROJECT_MEMBER',
+export interface ProjectRoleInfo {
+  projectId: string;
+  role: ProjectRole;
+}
+
+export interface UserRolesResponse {
+  userId: string;
+  isSuperAdmin: boolean;
+  isTenantOwner: boolean;
+  tenantId: string | null;
+  projectRoles: ProjectRoleInfo[];
 }
 
 export interface User {
@@ -16,14 +18,13 @@ export interface User {
   email: string;
   name: string;
   picture?: string;
-  roles: UserRole[];
-  tenantId?: string;
 }
 
 export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
+  roles: UserRolesResponse | null;
   error: Error | null;
 }
 
@@ -31,5 +32,7 @@ export interface AuthContextType extends AuthState {
   login: () => void;
   logout: () => void;
   getAccessToken: () => Promise<string | null>;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
+  isSuperAdmin: boolean;
+  isTenantOwner: boolean;
+  hasProjectRole: (projectId: string, requiredRole: ProjectRole) => boolean;
 }

@@ -1,18 +1,21 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { AuthContextType, AuthState, User, UserRole } from '@/types/auth';
-import api from '@/utils/api';
+import { AuthContextType, AuthState, User, UserRolesResponse, ProjectRole } from '../types/auth';
+import axios from 'axios';
 
 // Create the auth context with default values
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   user: null,
+  roles: null,
   error: null,
   login: () => {},
   logout: () => {},
   getAccessToken: async () => null,
-  hasRole: () => false,
+  isSuperAdmin: false,
+  isTenantOwner: false,
+  hasProjectRole: () => false,
 });
 
 // Custom hook to use the auth context
@@ -24,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: false,
     isLoading: true,
     user: null,
+    roles: null,
     error: null,
   });
 
@@ -37,40 +41,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getAccessTokenSilently,
   } = useAuth0();
 
-  // Use Auth0 user information directly
+  // Fetch user roles from API
   useEffect(() => {
-    const setupUserProfile = async () => {
+    const fetchUserRoles = async () => {
       if (isAuthenticated && auth0User) {
         try {
-          // Get token and store it
+          // Get token
           const token = await getAccessTokenSilently();
           localStorage.setItem('auth_token', token);
 
-          // Extract roles from Auth0 user metadata or token claims
-          // This assumes Auth0 is configured to include roles in the token
-          // You may need to adjust this based on your Auth0 configuration
-          const roles = auth0User['https://mwap.com/roles'] || [];
-          
           // Create user object from Auth0 user
           const user: User = {
             id: auth0User.sub || '',
             email: auth0User.email || '',
             name: auth0User.name || '',
-            roles: Array.isArray(roles) ? roles : [],
             picture: auth0User.picture || '',
           };
+
+          // Fetch user roles from API
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const response = await axios.get<UserRolesResponse>(`${apiUrl}/api/v1/users/me/roles`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const userRoles = response.data;
 
           setState({
             isAuthenticated: true,
             isLoading: false,
-            user: user,
+            user,
+            roles: userRoles,
             error: null,
           });
         } catch (error) {
+          console.error('Failed to fetch user roles:', error);
           setState({
             isAuthenticated: true,
             isLoading: false,
             user: null,
+            roles: null,
             error: error instanceof Error ? error : new Error('An unknown error occurred'),
           });
         }
@@ -79,12 +90,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isAuthenticated: false,
           isLoading: false,
           user: null,
+          roles: null,
           error: auth0Error || null,
         });
       }
     };
 
-    setupUserProfile();
+    fetchUserRoles();
   }, [isAuthenticated, auth0User, auth0Loading, auth0Error, getAccessTokenSilently]);
 
   // Login function
@@ -108,15 +120,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check if user has a specific role
-  const hasRole = (role: UserRole | UserRole[]) => {
-    if (!state.user) return false;
+  // Check if user has a specific project role
+  const hasProjectRole = (projectId: string, requiredRole: ProjectRole) => {
+    if (!state.roles) return false;
     
-    if (Array.isArray(role)) {
-      return role.some(r => state.user?.roles.includes(r));
-    }
+    const projectRole = state.roles.projectRoles.find(pr => pr.projectId === projectId);
+    if (!projectRole) return false;
     
-    return state.user.roles.includes(role);
+    const roleHierarchy = { 'OWNER': 3, 'DEPUTY': 2, 'MEMBER': 1 };
+    return roleHierarchy[projectRole.role] >= roleHierarchy[requiredRole];
   };
 
   // Provide auth context to children
@@ -127,7 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         getAccessToken,
-        hasRole,
+        isSuperAdmin: state.roles?.isSuperAdmin || false,
+        isTenantOwner: state.roles?.isTenantOwner || false,
+        hasProjectRole,
       }}
     >
       {children}

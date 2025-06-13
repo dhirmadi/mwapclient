@@ -1,8 +1,6 @@
-export * from './useApi';
-export * from './useTenants';
-export * from './useProjects';
-export * from './useCloudProviders';
-export * from './useProjectTypes';
-export * from './useFiles';
 export { default as useAuth } from './useAuth';
-export { default as useProjectAccess } from './useProjectAccess';
+export { default as useProjects } from './useProjects';
+export { default as useTenants } from './useTenants';
+export { default as useCloudProviders } from './useCloudProviders';
+export { default as useProjectTypes } from './useProjectTypes';
+export { default as useProjectFiles } from './useFiles';

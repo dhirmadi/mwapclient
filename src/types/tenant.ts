@@ -1,48 +1,17 @@
-/**
- * Tenant Types
- * These types define the structure of tenant-related data
- */
-
-import { User } from './auth';
-
 export interface Tenant {
-  id: string;
+  _id: string;
+  ownerId: string;
   name: string;
-  description: string;
-  status: TenantStatus;
-  owner: User;
   createdAt: string;
-  updatedAt: string;
+  archived: boolean;
+  integrations: string[];
 }
 
-export enum TenantStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  SUSPENDED = 'SUSPENDED',
-}
-
-export interface TenantMember {
-  id: string;
-  user: User;
-  tenant: Tenant;
-  role: TenantMemberRole;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export enum TenantMemberRole {
-  OWNER = 'OWNER',
-  ADMIN = 'ADMIN',
-  MEMBER = 'MEMBER',
-}
-
-export interface CreateTenantDto {
+export interface TenantCreate {
   name: string;
-  description: string;
 }
 
-export interface UpdateTenantDto {
+export interface TenantUpdate {
   name?: string;
-  description?: string;
-  status?: TenantStatus;
+  archived?: boolean;
 }

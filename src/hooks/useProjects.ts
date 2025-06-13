@@ -1,196 +1,124 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Project, CreateProjectDto, UpdateProjectDto, PaginatedResponse } from '@/types';
-import api from '@/utils/api';
+import api from '../utils/api';
+import { Project, ProjectCreate, ProjectUpdate } from '../types/project';
+import { ProjectMember } from '../types/project';
 import useAuth from './useAuth';
 
-/**
- * Hook for fetching all projects the current user has access to
- */
-export const useProjects = (page = 1, pageSize = 10) => {
+export const useProjects = () => {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['projects', page, pageSize, user?.id],
-    queryFn: async () => {
-      const response = await api.get<PaginatedResponse<Project>>('/projects', { page, pageSize });
-      
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to fetch projects');
-      }
-      
-      // Filter projects to only include those where the user is a member
-      if (user) {
-        const filteredProjects = response.data.items.filter(project => 
-          project.members && project.members.some(member => member.userId === user.id)
-        );
-        
-        return {
-          ...response.data,
-          items: filteredProjects,
-          total: filteredProjects.length,
-          pages: Math.ceil(filteredProjects.length / pageSize)
-        };
-      }
-      
-      return response.data;
-    },
-    enabled: !!user,
-  });
-};
 
-/**
- * Hook for fetching projects by tenant ID that the current user has access to
- */
-export const useTenantProjects = (tenantId: string, page = 1, pageSize = 10) => {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['tenant-projects', tenantId, page, pageSize, user?.id],
-    queryFn: async () => {
-      const response = await api.get<PaginatedResponse<Project>>('/projects', { 
-        tenantId, 
-        page, 
-        pageSize 
-      });
-      
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to fetch tenant projects');
-      }
-      
-      // Filter projects to only include those where the user is a member
-      if (user) {
-        const filteredProjects = response.data.items.filter(project => 
-          project.members && project.members.some(member => member.userId === user.id)
-        );
-        
-        return {
-          ...response.data,
-          items: filteredProjects,
-          total: filteredProjects.length,
-          pages: Math.ceil(filteredProjects.length / pageSize)
-        };
-      }
-      
-      return response.data;
-    },
-    enabled: !!tenantId && !!user,
+  // Fetch all projects
+  const { 
+    data: projects, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.fetchProjects(),
   });
-};
 
-/**
- * Hook for fetching a single project by ID
- * Throws an error if the user doesn't have access to the project
- */
-export const useProject = (id: string) => {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['project', id, user?.id],
-    queryFn: async () => {
-      const response = await api.get<Project>(`/projects/${id}`);
-      
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to fetch project');
-      }
-      
-      // Check if the user has access to this project
-      if (user && response.data.members) {
-        const hasAccess = response.data.members.some(member => member.userId === user.id);
-        
-        if (!hasAccess) {
-          throw new Error('You do not have access to this project');
-        }
-      }
-      
-      return response.data;
-    },
-    enabled: !!id && !!user,
-  });
-};
+  // Fetch a single project by ID
+  const useProject = (id?: string) => {
+    return useQuery({
+      queryKey: ['project', id],
+      queryFn: () => api.fetchProjectById(id!),
+      enabled: !!id,
+    });
+  };
 
-/**
- * Hook for creating a new project
- */
-export const useCreateProject = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: CreateProjectDto) => {
-      const response = await api.post<Project>('/projects', data);
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to create project');
-      }
-      return response.data;
-    },
-    onSuccess: (data) => {
+  // Create a new project
+  const createProjectMutation = useMutation({
+    mutationFn: (newProject: ProjectCreate) => api.createProject(newProject),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-projects', data.tenant.id] });
     },
   });
+
+  // Update an existing project
+  const updateProjectMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ProjectUpdate }) => 
+      api.updateProject(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.id] });
+    },
+  });
+
+  // Delete a project
+  const deleteProjectMutation = useMutation({
+    mutationFn: (id: string) => api.deleteProject(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  // Project members
+  const useProjectMembers = (projectId?: string) => {
+    return useQuery({
+      queryKey: ['project-members', projectId],
+      queryFn: () => api.fetchProjectMembers(projectId!),
+      enabled: !!projectId,
+    });
+  };
+
+  // Add project member
+  const addProjectMemberMutation = useMutation({
+    mutationFn: ({ projectId, data }: { projectId: string; data: ProjectMember }) => 
+      api.addProjectMember(projectId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['project-members', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+    },
+  });
+
+  // Update project member
+  const updateProjectMemberMutation = useMutation({
+    mutationFn: ({ projectId, userId, role }: { projectId: string; userId: string; role: string }) => 
+      api.updateProjectMember(projectId, userId, role),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['project-members', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+    },
+  });
+
+  // Remove project member
+  const removeProjectMemberMutation = useMutation({
+    mutationFn: ({ projectId, userId }: { projectId: string; userId: string }) => 
+      api.removeProjectMember(projectId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['project-members', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+    },
+  });
+
+  return {
+    // Projects
+    projects,
+    isLoading,
+    error,
+    refetch,
+    useProject,
+    createProject: createProjectMutation.mutate,
+    updateProject: updateProjectMutation.mutate,
+    deleteProject: deleteProjectMutation.mutate,
+    isCreating: createProjectMutation.isPending,
+    isUpdating: updateProjectMutation.isPending,
+    isDeleting: deleteProjectMutation.isPending,
+    createError: createProjectMutation.error,
+    updateError: updateProjectMutation.error,
+    deleteError: deleteProjectMutation.error,
+    
+    // Project members
+    useProjectMembers,
+    addProjectMember: addProjectMemberMutation.mutate,
+    updateProjectMember: updateProjectMemberMutation.mutate,
+    removeProjectMember: removeProjectMemberMutation.mutate,
+    isAddingMember: addProjectMemberMutation.isPending,
+    isUpdatingMember: updateProjectMemberMutation.isPending,
+    isRemovingMember: removeProjectMemberMutation.isPending,
+  };
 };
 
-/**
- * Hook for updating a project
- */
-export const useUpdateProject = (id: string) => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: UpdateProjectDto) => {
-      const response = await api.patch<Project>(`/projects/${id}`, data);
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to update project');
-      }
-      return response.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['project', id] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-projects', data.tenant.id] });
-    },
-  });
-};
-
-/**
- * Hook for archiving a project
- */
-export const useArchiveProject = (id: string) => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async () => {
-      const response = await api.patch<Project>(`/projects/${id}`, { archived: true });
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to archive project');
-      }
-      return response.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['project', id] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-projects', data.tenant.id] });
-    },
-  });
-};
-
-/**
- * Hook for deleting a project
- */
-export const useDeleteProject = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await api.delete<void>(`/projects/${id}`);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to delete project');
-      }
-      return id;
-    },
-    onSuccess: (id, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      // We don't know the tenant ID here, so we need to invalidate all tenant-projects queries
-      queryClient.invalidateQueries({ queryKey: ['tenant-projects'] });
-    },
-  });
-};
+export default useProjects;

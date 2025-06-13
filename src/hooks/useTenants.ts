@@ -1,97 +1,105 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Tenant, CreateTenantDto, UpdateTenantDto, PaginatedResponse } from '@/types';
-import api from '@/utils/api';
+import api from '../utils/api';
+import { Tenant, TenantCreate, TenantUpdate } from '../types/tenant';
+import { useAuth } from '../context/AuthContext';
 
-/**
- * Hook for fetching all tenants
- */
-export const useTenants = (page = 1, pageSize = 10) => {
-  return useQuery({
-    queryKey: ['tenants', page, pageSize],
-    queryFn: async () => {
-      const response = await api.get<PaginatedResponse<Tenant>>('/tenants', { page, pageSize });
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to fetch tenants');
-      }
-      return response.data;
-    },
-  });
-};
-
-/**
- * Hook for fetching a single tenant by ID
- */
-export const useTenant = (id: string) => {
-  return useQuery({
-    queryKey: ['tenant', id],
-    queryFn: async () => {
-      const response = await api.get<Tenant>(`/tenants/${id}`);
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to fetch tenant');
-      }
-      return response.data;
-    },
-    enabled: !!id,
-  });
-};
-
-/**
- * Hook for creating a new tenant
- */
-export const useCreateTenant = () => {
+export const useTenants = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: CreateTenantDto) => {
-      const response = await api.post<Tenant>('/tenants', data);
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to create tenant');
-      }
-      return response.data;
-    },
+  const { isSuperAdmin } = useAuth();
+
+  // Fetch all tenants (SuperAdmin only)
+  const { 
+    data: tenants, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: () => api.fetchTenants(),
+    enabled: isSuperAdmin,
+  });
+
+  // Fetch current tenant (TenantOwner)
+  const { 
+    data: currentTenant, 
+    isLoading: isLoadingCurrentTenant,
+    error: currentTenantError,
+    refetch: refetchCurrentTenant
+  } = useQuery({
+    queryKey: ['tenant-current'],
+    queryFn: () => api.fetchTenant(),
+    enabled: !isSuperAdmin,
+  });
+
+  // Fetch a single tenant by ID
+  const useTenant = (id?: string) => {
+    return useQuery({
+      queryKey: ['tenant', id],
+      queryFn: () => api.fetchTenantById(id!),
+      enabled: !!id && isSuperAdmin,
+    });
+  };
+
+  // Create a new tenant
+  const createTenantMutation = useMutation({
+    mutationFn: (data: TenantCreate) => api.createTenant(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
     },
   });
-};
 
-/**
- * Hook for updating a tenant
- */
-export const useUpdateTenant = (id: string) => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: UpdateTenantDto) => {
-      const response = await api.patch<Tenant>(`/tenants/${id}`, data);
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to update tenant');
-      }
-      return response.data;
-    },
-    onSuccess: (data) => {
+  // Update a tenant
+  const updateTenantMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: TenantUpdate }) => 
+      api.updateTenant(id, data),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant', id] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
     },
   });
-};
 
-/**
- * Hook for deleting a tenant
- */
-export const useDeleteTenant = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await api.delete<void>(`/tenants/${id}`);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to delete tenant');
-      }
-      return id;
-    },
+  // Delete a tenant
+  const deleteTenantMutation = useMutation({
+    mutationFn: (id: string) => api.deleteTenant(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
     },
   });
+
+  // Tenant integrations
+  const useTenantIntegrations = (tenantId?: string) => {
+    return useQuery({
+      queryKey: ['tenant-integrations', tenantId],
+      queryFn: () => api.fetchTenantIntegrations(tenantId!),
+      enabled: !!tenantId,
+    });
+  };
+
+  return {
+    // Tenants
+    tenants,
+    currentTenant,
+    isLoading,
+    isLoadingCurrentTenant,
+    error,
+    currentTenantError,
+    refetch,
+    refetchCurrentTenant,
+    useTenant,
+    createTenant: createTenantMutation.mutate,
+    updateTenant: updateTenantMutation.mutate,
+    deleteTenant: deleteTenantMutation.mutate,
+    isCreating: createTenantMutation.isPending,
+    isUpdating: updateTenantMutation.isPending,
+    isDeleting: deleteTenantMutation.isPending,
+    createError: createTenantMutation.error,
+    updateError: updateTenantMutation.error,
+    deleteError: deleteTenantMutation.error,
+    
+    // Tenant integrations
+    useTenantIntegrations,
+  };
 };
+
+export default useTenants;
