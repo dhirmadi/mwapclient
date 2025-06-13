@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           try {
             // Fetch user roles
-            const userRoles = await api.fetchUserRoles();
+            const userRoles = await api.getUserRoles();
             setRoles(userRoles);
             
             // Set role flags
