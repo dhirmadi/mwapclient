@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Avatar, Menu, UnstyledButton, Burger, Drawer, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconLogout, IconUser, IconChevronDown } from '@tabler/icons-react';
+import { 
+  IconLogout, 
+  IconUser, 
+  IconChevronDown, 
+  IconDashboard, 
+  IconBuildingSkyscraper, 
+  IconFolder, 
+  IconCloud, 
+  IconTemplate, 
+  IconSettings, 
+  IconUsers 
+} from '@tabler/icons-react';
 
 const Navbar: React.FC = () => {
   const { user, logout, isSuperAdmin, isTenantOwner } = useAuth();
@@ -15,31 +26,56 @@ const Navbar: React.FC = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  // Define navigation items based on user roles
   const navItems = [
+    // Common items
     {
       name: 'Dashboard',
-      path: '/',
+      path: '/dashboard',
+      icon: <IconDashboard size={18} />,
       visible: true,
     },
+    
+    // SuperAdmin items
     {
       name: 'Tenants',
       path: '/admin/tenants',
+      icon: <IconBuildingSkyscraper size={18} />,
       visible: isSuperAdmin,
-    },
-    {
-      name: 'Projects',
-      path: '/projects',
-      visible: !isSuperAdmin || isTenantOwner,
     },
     {
       name: 'Cloud Providers',
       path: '/admin/cloud-providers',
+      icon: <IconCloud size={18} />,
       visible: isSuperAdmin,
     },
     {
       name: 'Project Types',
       path: '/admin/project-types',
+      icon: <IconTemplate size={18} />,
       visible: isSuperAdmin,
+    },
+    
+    // TenantOwner items
+    {
+      name: 'Tenant Settings',
+      path: '/tenant/settings',
+      icon: <IconSettings size={18} />,
+      visible: isTenantOwner && !isSuperAdmin,
+    },
+    {
+      name: 'Cloud Integrations',
+      path: '/tenant/integrations',
+      icon: <IconCloud size={18} />,
+      visible: isTenantOwner && !isSuperAdmin,
+    },
+    
+    // Project items (for TenantOwner and regular users)
+    {
+      name: 'Projects',
+      path: '/projects',
+      icon: <IconFolder size={18} />,
+      visible: !isSuperAdmin || isTenantOwner,
     },
   ];
 
@@ -78,6 +114,7 @@ const Navbar: React.FC = () => {
                       : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                   }`}
                 >
+                  <span className="mr-1">{item.icon}</span>
                   {item.name}
                 </Link>
               ))}
@@ -170,13 +207,14 @@ const Navbar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block px-4 py-3 mb-1 rounded-md text-base font-medium ${
+                className={`flex items-center px-4 py-3 mb-1 rounded-md text-base font-medium ${
                   isActive(item.path)
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
                 }`}
                 onClick={closeDrawer}
               >
+                <span className="mr-3">{item.icon}</span>
                 {item.name}
               </Link>
             ))}
