@@ -147,9 +147,9 @@ const CloudProviderCreate: React.FC = () => {
   };
 
   // Get icon for selected provider
-  const getProviderIcon = () => {
+  const renderProviderIcon = () => {
     const provider = PROVIDER_TYPES.find(p => p.value === selectedProviderType);
-    return provider?.icon || <IconCloud size={20} />;
+    return getProviderIcon(provider?.iconType || 'custom');
   };
 
   return (
@@ -188,7 +188,7 @@ const CloudProviderCreate: React.FC = () => {
                 placeholder="Enter provider name"
                 required
                 mb="md"
-                leftSection={getProviderIcon()}
+                leftSection={renderProviderIcon()}
                 {...form.getInputProps('name')}
               />
               
@@ -198,7 +198,7 @@ const CloudProviderCreate: React.FC = () => {
                 data={PROVIDER_TYPES.map(type => ({
                   value: type.value,
                   label: type.label,
-                  leftSection: type.icon
+                  leftSection: getProviderIcon(type.iconType)
                 }))}
                 value={selectedProviderType}
                 onChange={(value) => setSelectedProviderType(value || 'dropbox')}

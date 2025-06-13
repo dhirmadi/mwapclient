@@ -17,16 +17,37 @@ export const AUTH_TYPES = [
   { value: 'custom', label: 'Custom' }
 ];
 
-// Define provider types with icons
+// Define provider types with icons (using string identifiers instead of JSX)
 export const PROVIDER_TYPES = [
-  { value: 'dropbox', label: 'Dropbox', icon: <IconBrandDropbox size={20} /> },
-  { value: 'google_drive', label: 'Google Drive', icon: <IconBrandGoogleDrive size={20} /> },
-  { value: 'onedrive', label: 'Microsoft OneDrive', icon: <IconBrandOnedrive size={20} /> },
-  { value: 'aws_s3', label: 'Amazon S3', icon: <IconBrandAmazon size={20} /> },
-  { value: 'gcp_storage', label: 'Google Cloud Storage', icon: <IconBrandGoogle size={20} /> },
-  { value: 'azure_blob', label: 'Azure Blob Storage', icon: <IconBrandMicrosoft size={20} /> },
-  { value: 'custom', label: 'Custom Storage Provider', icon: <IconCloud size={20} /> }
+  { value: 'dropbox', label: 'Dropbox', iconType: 'dropbox' },
+  { value: 'google_drive', label: 'Google Drive', iconType: 'google_drive' },
+  { value: 'onedrive', label: 'Microsoft OneDrive', iconType: 'onedrive' },
+  { value: 'aws_s3', label: 'Amazon S3', iconType: 'aws_s3' },
+  { value: 'gcp_storage', label: 'Google Cloud Storage', iconType: 'gcp_storage' },
+  { value: 'azure_blob', label: 'Azure Blob Storage', iconType: 'azure_blob' },
+  { value: 'custom', label: 'Custom Storage Provider', iconType: 'custom' }
 ];
+
+// Function to get icon component (to be used in React components)
+export const getProviderIcon = (iconType: string, size = 20) => {
+  switch (iconType) {
+    case 'dropbox':
+      return React.createElement(IconBrandDropbox, { size });
+    case 'google_drive':
+      return React.createElement(IconBrandGoogleDrive, { size });
+    case 'onedrive':
+      return React.createElement(IconBrandOnedrive, { size });
+    case 'aws_s3':
+      return React.createElement(IconBrandAmazon, { size });
+    case 'gcp_storage':
+      return React.createElement(IconBrandGoogle, { size });
+    case 'azure_blob':
+      return React.createElement(IconBrandMicrosoft, { size });
+    case 'custom':
+    default:
+      return React.createElement(IconCloud, { size });
+  }
+};
 
 // Default schema templates for different provider types
 export const DEFAULT_SCHEMAS: Record<string, any> = {
