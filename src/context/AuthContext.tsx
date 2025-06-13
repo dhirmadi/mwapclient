@@ -100,7 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       setRolesLoading(false);
     }
-    }
   }, [isAuthenticated, user, getAccessTokenSilently]);
 
   // Login function
