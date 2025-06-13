@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import useAuth from '@/hooks/useAuth';
-import { UserRole } from '@/types';
+import { useAuth } from '../context/AuthContext';
 import { Avatar, Menu, UnstyledButton, Burger, Drawer, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconLogout, IconUser, IconChevronDown } from '@tabler/icons-react';
 
 const Navbar: React.FC = () => {
-  const { user, logout, hasRole } = useAuth();
+  const { user, logout, isSuperAdmin, isTenantOwner } = useAuth();
   const location = useLocation();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const [userMenuOpened, setUserMenuOpened] = useState(false);
@@ -20,33 +19,31 @@ const Navbar: React.FC = () => {
     {
       name: 'Dashboard',
       path: '/',
-      roles: [UserRole.SUPER_ADMIN, UserRole.TENANT_OWNER, UserRole.TENANT_ADMIN, UserRole.PROJECT_ADMIN, UserRole.PROJECT_MEMBER],
+      visible: true,
     },
     {
       name: 'Tenants',
-      path: '/tenants',
-      roles: [UserRole.SUPER_ADMIN],
+      path: '/admin/tenants',
+      visible: isSuperAdmin,
     },
     {
       name: 'Projects',
       path: '/projects',
-      roles: [UserRole.TENANT_OWNER, UserRole.TENANT_ADMIN, UserRole.PROJECT_ADMIN, UserRole.PROJECT_MEMBER],
+      visible: !isSuperAdmin || isTenantOwner,
     },
     {
       name: 'Cloud Providers',
-      path: '/cloud-providers',
-      roles: [UserRole.SUPER_ADMIN],
+      path: '/admin/cloud-providers',
+      visible: isSuperAdmin,
     },
     {
       name: 'Project Types',
-      path: '/project-types',
-      roles: [UserRole.SUPER_ADMIN],
+      path: '/admin/project-types',
+      visible: isSuperAdmin,
     },
   ];
 
-  const filteredNavItems = navItems.filter(item => 
-    item.roles.some(role => hasRole(role))
-  );
+  const filteredNavItems = navItems.filter(item => item.visible);
   
   // Get user initials for avatar
   const getUserInitials = () => {
