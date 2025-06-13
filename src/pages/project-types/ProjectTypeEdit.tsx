@@ -188,7 +188,7 @@ const ProjectTypeEdit: React.FC = () => {
       </Group>
 
       <Paper withBorder p="md" radius="md" pos="relative">
-        <LoadingOverlay visible={isUpdating} overlayBlur={2} />
+        <LoadingOverlay visible={isUpdating} />
         
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Tabs value={activeTab} onChange={setActiveTab}>

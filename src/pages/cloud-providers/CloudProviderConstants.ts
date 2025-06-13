@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  IconBrandDropbox,
+  IconBrandDrops,
   IconBrandGoogleDrive,
   IconBrandOnedrive,
   IconBrandAmazon,
   IconBrandGoogle,
-  IconBrandMicrosoft,
+  IconBrandMinecraft,
   IconCloud
 } from '@tabler/icons-react';
 
@@ -32,7 +32,7 @@ export const PROVIDER_TYPES = [
 export const getProviderIcon = (iconType: string, size = 20) => {
   switch (iconType) {
     case 'dropbox':
-      return React.createElement(IconBrandDropbox, { size });
+      return React.createElement(IconBrandDrops, { size });
     case 'google_drive':
       return React.createElement(IconBrandGoogleDrive, { size });
     case 'onedrive':
@@ -42,7 +42,7 @@ export const getProviderIcon = (iconType: string, size = 20) => {
     case 'gcp_storage':
       return React.createElement(IconBrandGoogle, { size });
     case 'azure_blob':
-      return React.createElement(IconBrandMicrosoft, { size });
+      return React.createElement(IconBrandMinecraft, { size });
     case 'custom':
     default:
       return React.createElement(IconCloud, { size });

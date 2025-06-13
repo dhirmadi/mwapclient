@@ -313,7 +313,7 @@ const TenantIntegrations: React.FC = () => {
         size="lg"
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
-          <LoadingOverlay visible={saving} overlayBlur={2} />
+          <LoadingOverlay visible={saving} />
           
           <Select
             label="Cloud Provider"

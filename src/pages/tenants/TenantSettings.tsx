@@ -110,7 +110,7 @@ const TenantSettings: React.FC = () => {
 
       <Paper withBorder p="md" mt="md" radius="md">
         <form onSubmit={form.onSubmit(handleSubmit)}>
-          <LoadingOverlay visible={saving} overlayBlur={2} />
+          <LoadingOverlay visible={saving} />
           
           <Title order={3} mb="md">General Information</Title>
           

@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 52769,
+    port: 5173,
     strictPort: true,
     cors: true,
     headers: {
@@ -22,7 +22,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://api.mwap.dev',
+        target: 'https://mwapss.shibari.photo',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api/v1'),

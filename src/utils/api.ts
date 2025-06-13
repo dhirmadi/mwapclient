@@ -9,7 +9,7 @@ import { File } from '../types/file';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.mwap.dev/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'https://mwapss.shibari.photo/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },

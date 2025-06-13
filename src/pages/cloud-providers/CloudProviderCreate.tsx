@@ -34,7 +34,8 @@ import {
   AUTH_TYPES, 
   PROVIDER_TYPES, 
   DEFAULT_SCHEMAS, 
-  AUTH_TYPE_FIELDS 
+  AUTH_TYPE_FIELDS,
+  getProviderIcon
 } from './CloudProviderConstants';
 
 const CloudProviderCreate: React.FC = () => {
@@ -170,7 +171,7 @@ const CloudProviderCreate: React.FC = () => {
       </Group>
 
       <Paper withBorder p="md" radius="md" pos="relative">
-        <LoadingOverlay visible={isCreating} overlayBlur={2} />
+        <LoadingOverlay visible={isCreating} />
         
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Tabs value={activeTab} onChange={setActiveTab}>

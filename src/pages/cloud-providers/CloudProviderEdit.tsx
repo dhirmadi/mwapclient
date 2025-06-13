@@ -24,12 +24,12 @@ import {
   IconCheck, 
   IconDeviceFloppy, 
   IconArrowLeft,
-  IconBrandDropbox,
+  IconBrandDrops,
   IconBrandGoogleDrive,
   IconBrandOnedrive,
   IconBrandAmazon,
   IconBrandGoogle,
-  IconBrandMicrosoft,
+  IconBrandMinecraft,
   IconCloud
 } from '@tabler/icons-react';
 import { PageHeader } from '../../components/layout';
@@ -42,7 +42,8 @@ import {
   AUTH_TYPES, 
   PROVIDER_TYPES, 
   DEFAULT_SCHEMAS, 
-  AUTH_TYPE_FIELDS 
+  AUTH_TYPE_FIELDS,
+  getProviderIcon
 } from './CloudProviderConstants';
 
 const CloudProviderEdit: React.FC = () => {
@@ -235,7 +236,7 @@ const CloudProviderEdit: React.FC = () => {
       </Group>
 
       <Paper withBorder p="md" radius="md" pos="relative">
-        <LoadingOverlay visible={isUpdating} overlayBlur={2} />
+        <LoadingOverlay visible={isUpdating} />
         
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Tabs value={activeTab} onChange={setActiveTab}>
