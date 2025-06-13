@@ -59,15 +59,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const token = await getAccessTokenSilently();
           localStorage.setItem('auth_token', token);
           
-          // Fetch user roles
-          const userRoles = await api.fetchUserRoles();
-          setRoles(userRoles);
-          
-          // Set role flags
-          setIsSuperAdmin(userRoles.isSuperAdmin || false);
-          setIsTenantOwner(userRoles.isTenantOwner || false);
+          try {
+            // Fetch user roles
+            const userRoles = await api.fetchUserRoles();
+            setRoles(userRoles);
+            
+            // Set role flags
+            setIsSuperAdmin(userRoles.isSuperAdmin || false);
+            setIsTenantOwner(userRoles.isTenantOwner || false);
+          } catch (error) {
+            console.error('Failed to fetch user roles:', error);
+            
+            // For development purposes, set default roles
+            const isDevelopment = import.meta.env.DEV;
+            if (isDevelopment) {
+              console.log('Using default roles for development');
+              const defaultRoles: UserRolesResponse = {
+                isSuperAdmin: true,
+                isTenantOwner: true,
+                tenantId: 'dev-tenant-id',
+                projectRoles: [
+                  { projectId: 'dev-project-id', role: 'OWNER' }
+                ]
+              };
+              setRoles(defaultRoles);
+              setIsSuperAdmin(true);
+              setIsTenantOwner(true);
+            }
+          }
         } catch (error) {
-          console.error('Failed to fetch user roles:', error);
+          console.error('Failed to get token:', error);
         } finally {
           setRolesLoading(false);
         }
@@ -76,6 +97,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (isAuthenticated) {
       fetchUserRoles();
+    } else if (import.meta.env.DEV) {
+      // For development, auto-authenticate with default roles
+      setRoles({
+        isSuperAdmin: true,
+        isTenantOwner: true,
+        tenantId: 'dev-tenant-id',
+        projectRoles: [
+          { projectId: 'dev-project-id', role: 'OWNER' }
+        ]
+      });
+      setIsSuperAdmin(true);
+      setIsTenantOwner(true);
+      setRolesLoading(false);
     }
   }, [isAuthenticated, user, getAccessTokenSilently]);
 
@@ -94,6 +128,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Get token function
   const getToken = async (): Promise<string> => {
+    // For development, return a dummy token
+    if (import.meta.env.DEV) {
+      const dummyToken = 'dev-token-123456789';
+      localStorage.setItem('auth_token', dummyToken);
+      return dummyToken;
+    }
+    
     try {
       const token = await getAccessTokenSilently();
       localStorage.setItem('auth_token', token);
@@ -119,13 +160,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRoleValue >= requiredRoleValue;
   };
 
+  // In development mode, we'll always be authenticated
+  const isDevelopment = import.meta.env.DEV;
+  const effectiveIsAuthenticated = isDevelopment ? true : isAuthenticated;
+  const effectiveUser = isDevelopment && !user ? { 
+    name: 'Development User',
+    email: 'dev@example.com',
+    sub: 'dev-user-id'
+  } : user;
+  
   // Provide auth context to children
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated,
+        isAuthenticated: effectiveIsAuthenticated,
         isLoading: auth0Loading || rolesLoading,
-        user,
+        user: effectiveUser,
         login,
         logout,
         isSuperAdmin,

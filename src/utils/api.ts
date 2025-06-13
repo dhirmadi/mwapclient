@@ -34,6 +34,91 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    // In development mode, we'll handle 404 errors differently
+    if (import.meta.env.DEV && error.response?.status === 404) {
+      console.warn(`API endpoint not found: ${error.config?.url}`);
+      
+      // For specific endpoints, return mock data
+      const url = error.config?.url || '';
+      
+      if (url.includes('/users/me/roles')) {
+        console.log('Returning mock user roles data');
+        return Promise.resolve({
+          data: {
+            isSuperAdmin: true,
+            isTenantOwner: true,
+            tenantId: 'dev-tenant-id',
+            projectRoles: [
+              { projectId: 'dev-project-id', role: 'OWNER' }
+            ]
+          }
+        });
+      }
+      
+      if (url.includes('/projects')) {
+        console.log('Returning mock projects data');
+        return Promise.resolve({
+          data: [
+            {
+              _id: 'dev-project-id',
+              name: 'Development Project',
+              description: 'A mock project for development',
+              tenantId: 'dev-tenant-id',
+              projectTypeId: 'dev-project-type-id',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ]
+        });
+      }
+      
+      if (url.includes('/tenants')) {
+        console.log('Returning mock tenants data');
+        return Promise.resolve({
+          data: [
+            {
+              _id: 'dev-tenant-id',
+              name: 'Development Tenant',
+              description: 'A mock tenant for development',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ]
+        });
+      }
+      
+      if (url.includes('/project-types')) {
+        console.log('Returning mock project types data');
+        return Promise.resolve({
+          data: [
+            {
+              _id: 'dev-project-type-id',
+              name: 'Development Project Type',
+              description: 'A mock project type for development',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ]
+        });
+      }
+      
+      if (url.includes('/cloud-providers')) {
+        console.log('Returning mock cloud providers data');
+        return Promise.resolve({
+          data: [
+            {
+              _id: 'dev-cloud-provider-id',
+              name: 'Development Cloud Provider',
+              type: 'DROPBOX',
+              description: 'A mock cloud provider for development',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ]
+        });
+      }
+    }
+    
     if (error.response) {
       // Handle specific error codes
       switch (error.response.status) {
