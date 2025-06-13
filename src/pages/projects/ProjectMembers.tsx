@@ -304,7 +304,7 @@ const ProjectMembers: React.FC = () => {
                   </Table.Td>
                   {isOwner && (
                     <Table.Td>
-                      <Menu position="bottom-end" withArrow>
+                      <Menu position={{ top: 'bottom', right: 'end' }} withArrow>
                         <Menu.Target>
                           <ActionIcon variant="subtle">
                             <IconDotsVertical size={16} />

@@ -62,7 +62,7 @@ const AppRouter: React.FC = () => {
       >
         <AuthProvider>
           <QueryClientProvider client={queryClient}>
-            <Notifications position="top-right" />
+            <Notifications position={{ top: 'top', right: 'right' }} />
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />

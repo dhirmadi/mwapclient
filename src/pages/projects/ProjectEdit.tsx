@@ -74,7 +74,7 @@ const ProjectEdit: React.FC = () => {
           title="Project Not Found"
           description="The requested project could not be found"
         >
-          <Button leftIcon={<IconArrowLeft size={16} />} onClick={() => navigate('/projects')}>
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/projects')}>
             Back to Projects
           </Button>
         </PageHeader>
@@ -88,7 +88,7 @@ const ProjectEdit: React.FC = () => {
         title={`Edit Project: ${project.name}`}
         description={`Project ID: ${project.id}`}
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
           Back
         </Button>
       </PageHeader>
@@ -132,7 +132,7 @@ const ProjectEdit: React.FC = () => {
             className="mb-6"
           />
 
-          <Group position="right">
+          <Group style={{ justifyContent: 'flex-end' }}>
             <Button
               type="button"
               variant="outline"
@@ -142,7 +142,7 @@ const ProjectEdit: React.FC = () => {
             </Button>
             <Button
               type="submit"
-              leftIcon={<IconDeviceFloppy size={16} />}
+              leftSection={<IconDeviceFloppy size={16} />}
               loading={isUpdating}
             >
               Save

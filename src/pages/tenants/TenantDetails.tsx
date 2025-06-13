@@ -34,7 +34,7 @@ const TenantDetails: React.FC = () => {
           title="Tenant Not Found"
           description="The requested tenant could not be found"
         >
-          <Button leftIcon={<IconArrowLeft size={16} />} onClick={handleBack}>
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
             Back to Tenants
           </Button>
         </PageHeader>
@@ -48,10 +48,10 @@ const TenantDetails: React.FC = () => {
         title={tenant.name}
         description={`Tenant ID: ${tenant.id}`}
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
           Back
         </Button>
-        <Button leftIcon={<IconEdit size={16} />} onClick={handleEdit}>
+        <Button leftSection={<IconEdit size={16} />} onClick={handleEdit}>
           Edit
         </Button>
       </PageHeader>

@@ -126,7 +126,7 @@ const Navbar: React.FC = () => {
             {user ? (
               <Menu 
                 width={200} 
-                position="bottom-end" 
+                position={{ top: 'bottom', right: 'end' }} 
                 transitionProps={{ transition: 'pop-top-right' }}
                 onClose={() => setUserMenuOpened(false)}
                 onOpen={() => setUserMenuOpened(true)}
@@ -199,7 +199,7 @@ const Navbar: React.FC = () => {
         padding="md"
         title="Navigation"
         zIndex={1000}
-        position="right"
+        style={{ justifyContent: 'flex-end' }}
       >
         <div className="flex flex-col h-full">
           <div className="flex-grow">

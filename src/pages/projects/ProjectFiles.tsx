@@ -499,7 +499,7 @@ const ProjectFiles: React.FC = () => {
                     {new Date(file.modifiedAt).toLocaleString()}
                   </Table.Td>
                   <Table.Td>
-                    <Menu position="bottom-end" withArrow>
+                    <Menu position={{ top: 'bottom', right: 'end' }} withArrow>
                       <Menu.Target>
                         <ActionIcon variant="subtle">
                           <IconDotsVertical size={16} />
