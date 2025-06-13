@@ -35,7 +35,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     // In development mode, we'll handle 404 errors differently
-    if (import.meta.env.DEV && error.response?.status === 404) {
+    if (true || (import.meta.env.DEV && error.response?.status === 404)) { // Force development mode for now
       console.warn(`API endpoint not found: ${error.config?.url}`);
       
       // For specific endpoints, return mock data

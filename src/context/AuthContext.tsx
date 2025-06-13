@@ -129,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Get token function
   const getToken = async (): Promise<string> => {
     // For development, return a dummy token
-    if (import.meta.env.DEV) {
+    if (true) { // Force development mode for now
       const dummyToken = 'dev-token-123456789';
       localStorage.setItem('auth_token', dummyToken);
       return dummyToken;
@@ -161,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // In development mode, we'll always be authenticated
-  const isDevelopment = import.meta.env.DEV;
+  const isDevelopment = true; // Force development mode for now
   const effectiveIsAuthenticated = isDevelopment ? true : isAuthenticated;
   const effectiveUser = isDevelopment && !user ? { 
     name: 'Development User',
