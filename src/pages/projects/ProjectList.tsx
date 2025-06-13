@@ -76,7 +76,7 @@ const ProjectList: React.FC = () => {
             {data.map((project) => (
               <Table.Tr key={project.id}>
                 <Table.Td>
-                  <Text weight={500}>{project.name}</Text>
+                  <Text fw={500}>{project.name}</Text>
                   <Text size="xs" color="dimmed">
                     {project.id}
                   </Text>
@@ -112,7 +112,7 @@ const ProjectList: React.FC = () => {
                   {new Date(project.createdAt).toLocaleDateString()}
                 </Table.Td>
                 <Table.Td>
-                  <Group spacing="xs">
+                  <Group gap="xs">
                     <Tooltip label="View project">
                       <ActionIcon
                         color="blue"
