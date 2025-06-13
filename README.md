@@ -1,30 +1,68 @@
 # MWAP Client
 
-Frontend client for the Modular Web Application Platform (MWAP).
+The Modular Web Application Platform (MWAP) Client is a comprehensive frontend application designed to provide a secure, role-based interface for managing cloud-based projects, tenants, and resources. This React-based application serves as the user interface for the MWAP ecosystem, enabling organizations to efficiently manage their cloud resources and project workflows.
 
-## Features
+## 🌟 Overview
 
-- User authentication with Auth0
-- Role-based access control
-- Tenant management
-- Project management
-- Cloud provider integration
-- Project type configuration
-- File management
+MWAP Client is built to support multi-tenant organizations with complex project management needs. It provides a secure, role-based interface that adapts to different user types:
 
-## Tech Stack
+- **Super Administrators**: Manage the entire platform, including tenants, cloud providers, and project types
+- **Tenant Owners**: Manage their organization's projects, cloud integrations, and team members
+- **Project Members**: Access and work with project resources based on their assigned roles
 
-- React
-- TypeScript
-- Vite
-- React Router
-- Mantine UI
-- TanStack Query (React Query)
-- Zod
-- Tailwind CSS
-- Auth0
+## 🔑 Key Features
 
-## Getting Started
+### Authentication & Authorization
+- **Secure Authentication**: Integration with Auth0 using Authorization Code + PKCE flow
+- **Role-Based Access Control (RBAC)**: Dynamic UI and permissions based on user roles
+- **Multi-level Authorization**: System-wide, tenant-level, and project-level permission enforcement
+
+### Tenant Management
+- **Tenant Creation & Configuration**: For new organizations joining the platform
+- **Tenant Settings**: Customize organization settings and preferences
+- **Cloud Provider Integrations**: Connect to various cloud storage providers
+
+### Project Management
+- **Project Creation & Configuration**: Set up new projects with specific types and cloud integrations
+- **Team Management**: Add and manage project members with different roles (Owner, Deputy, Member)
+- **Project Settings**: Configure project-specific settings and parameters
+
+### Resource Management
+- **File Explorer**: Browse, view, and manage files stored in connected cloud providers
+- **Virtual File System**: Access files across different cloud providers through a unified interface
+- **Metadata Management**: View and manage file metadata and properties
+
+### Administration
+- **Cloud Provider Management**: Configure and manage supported cloud storage providers
+- **Project Type Management**: Define and customize different project templates
+- **System Monitoring**: Monitor platform usage and performance (future feature)
+
+## 🛠️ Tech Stack
+
+### Frontend Framework
+- **React 18+**: Modern component-based UI library
+- **TypeScript**: Type-safe JavaScript for improved developer experience
+- **Vite**: Fast, modern build tool and development server
+
+### UI & Styling
+- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
+- **Mantine UI**: Component library with accessible, customizable elements
+- **Responsive Design**: Mobile-friendly interface that works across devices
+
+### State Management & Data Fetching
+- **React Context API**: For global state management
+- **TanStack Query (React Query)**: For efficient API data fetching, caching, and state management
+- **Zod**: Runtime type validation for API responses and form data
+
+### Routing & Navigation
+- **React Router v6**: Client-side routing with protected routes
+- **Role-based Navigation**: Dynamic navigation based on user permissions
+
+### Authentication
+- **Auth0 SDK**: Secure, standards-based authentication
+- **JWT Handling**: Secure token management and validation
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -36,7 +74,7 @@ Frontend client for the Modular Web Application Platform (MWAP).
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/mwapclient.git
+git clone https://github.com/dhirmadi/mwapclient.git
 cd mwapclient
 ```
 
@@ -76,25 +114,56 @@ npm run build
 yarn build
 ```
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 src/
-  ├── assets/           # Static assets
+  ├── assets/           # Static assets and images
   ├── components/       # Reusable UI components
-  │   ├── common/       # Common UI components
-  │   └── layout/       # Layout components
-  ├── context/          # React context providers
-  ├── features/         # Feature-based modules
-  ├── hooks/            # Custom React hooks
-  ├── pages/            # Page components
-  ├── router/           # Routing configuration
+  │   ├── common/       # Common UI components (buttons, forms, etc.)
+  │   └── layout/       # Layout components (navbar, footer, etc.)
+  ├── context/          # React context providers (auth, etc.)
+  ├── hooks/            # Custom React hooks for data fetching and logic
+  ├── pages/            # Page components organized by feature
+  │   ├── cloud-providers/  # Cloud provider management pages
+  │   ├── project-types/    # Project type management pages
+  │   ├── projects/         # Project management pages
+  │   └── tenants/          # Tenant management pages
+  ├── router/           # Routing configuration with protected routes
   ├── types/            # TypeScript type definitions
-  ├── utils/            # Utility functions
+  ├── utils/            # Utility functions and API client
   ├── App.tsx           # Main App component
-  └── main.tsx          # Entry point
+  └── main.tsx          # Application entry point
 ```
 
-## License
+## 🔄 User Flows
+
+### Authentication Flow
+1. User visits the application
+2. If unauthenticated, redirected to login page
+3. Auth0 handles authentication
+4. Upon successful login, user roles are fetched
+5. User is directed to appropriate dashboard based on role
+
+### Role-Based Experiences
+- **Super Admin**: Access to tenant management, cloud provider configuration, and project type management
+- **Tenant Owner**: Access to tenant settings, cloud integrations, and project management
+- **Project Member**: Access to assigned projects and their resources
+
+### Project Management Flow
+1. Tenant owner creates a new project
+2. Selects project type and cloud integration
+3. Assigns initial project members and roles
+4. Project is created and available to assigned members
+5. Members can access project resources based on their roles
+
+## 📚 Documentation
+
+Additional documentation is available in the `docs/` directory:
+- API specifications
+- User flow diagrams
+- Architecture documentation
+
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
