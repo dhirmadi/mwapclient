@@ -18,8 +18,8 @@ type ProjectFormValues = z.infer<typeof projectSchema>;
 
 const ProjectCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { mutate, isLoading: isCreating, error: createError } = useCreateProject();
-  const { data: projectTypes, isLoading: isLoadingTypes, error: typesError } = useProjectTypes();
+  const { createProject, isCreating, error: createError } = useCreateProject();
+  const { projectTypes, isLoading: isLoadingTypes, error: typesError } = useProjectTypes();
 
   const form = useForm<ProjectFormValues>({
     initialValues: {
@@ -31,7 +31,7 @@ const ProjectCreate: React.FC = () => {
   });
 
   const handleSubmit = (values: ProjectFormValues) => {
-    mutate(values, {
+    createProject(values, {
       onSuccess: () => {
         navigate('/projects');
       },
@@ -54,7 +54,7 @@ const ProjectCreate: React.FC = () => {
         title="Create Project"
         description="Add a new project"
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
           Back
         </Button>
       </PageHeader>
@@ -81,13 +81,13 @@ const ProjectCreate: React.FC = () => {
           <Select
             label="Project Type"
             placeholder="Select a project type"
-            data={projectTypes?.map(type => ({ value: type.id, label: type.name })) || []}
+            data={projectTypes?.map((type: any) => ({ value: type._id, label: type.name })) || []}
             {...form.getInputProps('projectTypeId')}
             className="mb-6"
             clearable
           />
 
-          <Group position="right">
+          <Group style={{ justifyContent: 'flex-end' }}>
             <Button
               type="button"
               variant="outline"
@@ -97,7 +97,7 @@ const ProjectCreate: React.FC = () => {
             </Button>
             <Button
               type="submit"
-              leftIcon={<IconDeviceFloppy size={16} />}
+              leftSection={<IconDeviceFloppy size={16} />}
               loading={isCreating}
             >
               Save

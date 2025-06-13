@@ -37,12 +37,11 @@ interface TenantIntegration {
 
 const TenantIntegrations: React.FC = () => {
   const { roles } = useAuth();
-  const { fetchCloudProviders } = useCloudProviders();
-  const { fetchTenantIntegrations, createTenantIntegration, deleteTenantIntegration } = useTenants();
+  const { cloudProviders, isLoading: loadingProviders } = useCloudProviders();
+  const { tenant, isLoading: loadingTenant } = useTenant(roles.tenantId);
   
-  const [cloudProviders, setCloudProviders] = useState<CloudProvider[]>([]);
   const [integrations, setIntegrations] = useState<TenantIntegration[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loading = loadingProviders || loadingTenant;
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<CloudProvider | null>(null);
@@ -95,7 +94,8 @@ const TenantIntegrations: React.FC = () => {
     if (selectedProvider) {
       // Reset credentials
       const initialCredentials: Record<string, string> = {};
-      selectedProvider.requiredCredentials.forEach(field => {
+      // Assuming requiredCredentials is an array of field names
+      (selectedProvider.credentials || []).forEach((field: any) => {
         initialCredentials[field.key] = '';
       });
       
@@ -325,7 +325,7 @@ const TenantIntegrations: React.FC = () => {
             required
             mb="md"
             {...form.getInputProps('cloudProviderId')}
-            onChange={handleProviderChange}
+            onChange={(value) => handleProviderChange(value || '')}
           />
           
           <TextInput
@@ -340,7 +340,7 @@ const TenantIntegrations: React.FC = () => {
             <>
               <Title order={4} mt="lg" mb="md">Credentials</Title>
               
-              {selectedProvider.requiredCredentials.map((field) => (
+              {(selectedProvider.credentials || []).map((field: any) => (
                 <TextInput
                   key={field.key}
                   label={field.label}

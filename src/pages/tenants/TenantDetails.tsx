@@ -58,9 +58,9 @@ const TenantDetails: React.FC = () => {
 
       <div className="mt-6">
         <Card shadow="sm" p="lg" radius="md" withBorder>
-          <Group position="apart" mb="md">
+          <Group style={{ justifyContent: 'space-between' }} mb="md">
             <div>
-              <Text weight={500} size="lg">Tenant Information</Text>
+              <Text fw={500} size="lg">Tenant Information</Text>
             </div>
             <Badge color={tenant.active ? 'green' : 'red'}>
               {tenant.active ? 'Active' : 'Inactive'}
@@ -94,8 +94,8 @@ const TenantDetails: React.FC = () => {
         <div className="mt-6">
           <Tabs defaultValue="users">
             <Tabs.List>
-              <Tabs.Tab value="users" icon={<IconUsers size={14} />}>Users</Tabs.Tab>
-              <Tabs.Tab value="settings" icon={<IconSettings size={14} />}>Settings</Tabs.Tab>
+              <Tabs.Tab value="users" leftSection={<IconUsers size={14} />}>Users</Tabs.Tab>
+              <Tabs.Tab value="settings" leftSection={<IconSettings size={14} />}>Settings</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="users" pt="xs">

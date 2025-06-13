@@ -10,9 +10,9 @@ import { LoadingSpinner } from '../../components/common';
 
 const TenantSettings: React.FC = () => {
   const { roles } = useAuth();
-  const { fetchTenant, updateTenant } = useTenants();
-  const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [loading, setLoading] = useState(true);
+  const tenantId = roles.tenantId;
+  const { updateTenant } = useUpdateTenant();
+  const { tenant, isLoading: loading } = useTenant(tenantId);
   const [saving, setSaving] = useState(false);
 
   const form = useForm({
@@ -78,7 +78,7 @@ const TenantSettings: React.FC = () => {
     
     try {
       setSaving(true);
-      await updateTenant(roles.tenantId, values);
+      await updateTenant({ id: tenantId, data: values });
       
       notifications.show({
         title: 'Success',
