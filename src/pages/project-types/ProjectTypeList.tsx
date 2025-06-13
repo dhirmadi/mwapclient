@@ -1,46 +1,95 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProjectTypes } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '@/components/common';
-import { Button, Table, ActionIcon, Group, Badge, Text } from '@mantine/core';
-import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
+import { useProjectTypes } from '../../hooks/useProjectTypes';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner } from '../../components/common';
+import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
+import { ProjectType } from '../../types/project-type';
 
 const ProjectTypeList: React.FC = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error, page, setPage, totalPages } = useProjectTypes();
+  const { projectTypes, isLoading, error, refetch, deleteProjectType } = useProjectTypes();
+  
+  const [types, setTypes] = useState<ProjectType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<ProjectType | null>(null);
+  const [confirmText, setConfirmText] = useState('');
+
+  useEffect(() => {
+    if (projectTypes) {
+      setTypes(projectTypes);
+      setLoading(false);
+    }
+  }, [projectTypes]);
 
   const handleCreateProjectType = () => {
-    navigate('/project-types/create');
+    navigate('/admin/project-types/create');
   };
 
   const handleEditProjectType = (id: string) => {
-    navigate(`/project-types/${id}/edit`);
+    navigate(`/admin/project-types/${id}/edit`);
   };
 
-  if (isLoading) {
-    return <LoadingSpinner size="xl" text="Loading project types..." />;
+  const openDeleteModal = (projectType: ProjectType) => {
+    setSelectedType(projectType);
+    setDeleteModalOpen(true);
+    setConfirmText('');
+  };
+
+  const handleDeleteProjectType = async () => {
+    if (!selectedType) return;
+    
+    try {
+      await deleteProjectType(selectedType._id);
+      
+      // Remove from local state
+      setTypes(prev => prev.filter(p => p._id !== selectedType._id));
+      
+      notifications.show({
+        title: 'Success',
+        message: `${selectedType.name} has been deleted`,
+        color: 'green',
+      });
+      
+      setDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Failed to delete project type:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete project type',
+        color: 'red',
+      });
+    }
+  };
+
+  if (loading || isLoading) {
+    return <LoadingSpinner />;
   }
 
-  if (error) {
-    return <ErrorDisplay error={error} />;
-  }
-
-  if (!data || data.length === 0) {
+  if (types.length === 0) {
     return (
       <div>
         <PageHeader
           title="Project Types"
           description="Manage project templates"
-          actionText="Create Project Type"
-          onAction={handleCreateProjectType}
         />
-        <EmptyState
-          title="No project types found"
-          description="Get started by creating your first project type"
-          actionText="Create Project Type"
-          onAction={handleCreateProjectType}
-        />
+        
+        <Paper withBorder p="xl" radius="md" mt="md">
+          <Text ta="center" c="dimmed" mb="md">
+            No project types found
+          </Text>
+          <Group justify="center">
+            <Button 
+              leftSection={<IconPlus size={16} />} 
+              onClick={handleCreateProjectType}
+            >
+              Create Project Type
+            </Button>
+          </Group>
+        </Paper>
       </div>
     );
   }
@@ -50,11 +99,18 @@ const ProjectTypeList: React.FC = () => {
       <PageHeader
         title="Project Types"
         description="Manage project templates"
-        actionText="Create Project Type"
-        onAction={handleCreateProjectType}
       />
 
-      <div className="mt-6">
+      <Group justify="flex-end" mb="md">
+        <Button 
+          leftSection={<IconPlus size={16} />} 
+          onClick={handleCreateProjectType}
+        >
+          Create Project Type
+        </Button>
+      </Group>
+
+      <Paper withBorder p="md" radius="md">
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
@@ -66,12 +122,12 @@ const ProjectTypeList: React.FC = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {data.map((projectType) => (
-              <Table.Tr key={projectType.id}>
+            {types.map((projectType) => (
+              <Table.Tr key={projectType._id}>
                 <Table.Td>
-                  <Text weight={500}>{projectType.name}</Text>
-                  <Text size="xs" color="dimmed">
-                    {projectType.id}
+                  <Text fw={500}>{projectType.name}</Text>
+                  <Text size="xs" c="dimmed">
+                    {projectType._id}
                   </Text>
                 </Table.Td>
                 <Table.Td>
@@ -79,27 +135,29 @@ const ProjectTypeList: React.FC = () => {
                 </Table.Td>
                 <Table.Td>
                   <Badge
-                    color={projectType.active ? 'green' : 'red'}
+                    color={projectType.isActive ? 'green' : 'red'}
                   >
-                    {projectType.active ? 'Active' : 'Inactive'}
+                    {projectType.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
                   {new Date(projectType.createdAt).toLocaleDateString()}
                 </Table.Td>
                 <Table.Td>
-                  <Group spacing="xs">
+                  <Group gap="xs">
                     <ActionIcon
-                      color="yellow"
-                      onClick={() => handleEditProjectType(projectType.id)}
+                      variant="light"
+                      color="blue"
+                      onClick={() => handleEditProjectType(projectType._id)}
                       title="Edit project type"
                     >
                       <IconEdit size={16} />
                     </ActionIcon>
                     <ActionIcon
+                      variant="light"
                       color="red"
                       title="Delete project type"
-                      disabled
+                      onClick={() => openDeleteModal(projectType)}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -109,17 +167,50 @@ const ProjectTypeList: React.FC = () => {
             ))}
           </Table.Tbody>
         </Table>
+      </Paper>
 
-        {totalPages > 1 && (
-          <div className="mt-4 flex justify-center">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+      {/* Delete Confirmation Modal */}
+      <Modal
+        opened={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Project Type"
+      >
+        {selectedType && (
+          <>
+            <Text mb="md">
+              Are you sure you want to delete <strong>{selectedType.name}</strong>? This action cannot be undone.
+            </Text>
+            
+            <Text mb="md" size="sm" c="dimmed">
+              This will remove the project type from the system. Any projects using this type will be affected.
+            </Text>
+            
+            <Text mb="md" fw={500}>
+              Type <strong>{selectedType.name}</strong> to confirm:
+            </Text>
+            
+            <TextInput
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.currentTarget.value)}
+              placeholder={selectedType.name}
+              mb="xl"
             />
-          </div>
+            
+            <Group justify="flex-end">
+              <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                color="red" 
+                onClick={handleDeleteProjectType}
+                disabled={confirmText !== selectedType.name}
+              >
+                Delete
+              </Button>
+            </Group>
+          </>
         )}
-      </div>
+      </Modal>
     </div>
   );
 };
