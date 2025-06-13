@@ -34,129 +34,28 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // In development mode, we'll handle 404 errors differently
-    if (true || (import.meta.env.DEV && error.response?.status === 404)) { // Force development mode for now
-      console.warn(`API endpoint not found: ${error.config?.url}`);
-      
-      // For specific endpoints, return mock data
-      const url = error.config?.url || '';
-      
-      if (url.includes('/users/me/roles')) {
-        console.log('Returning mock user roles data');
-        return Promise.resolve({
-          data: {
-            isSuperAdmin: true,
-            isTenantOwner: true,
-            tenantId: 'dev-tenant-id',
-            projectRoles: [
-              { projectId: 'dev-project-id', role: 'OWNER' }
-            ]
-          }
-        });
-      }
-      
-      if (url.includes('/projects')) {
-        console.log('Returning mock projects data');
-        return Promise.resolve({
-          data: [
-            {
-              _id: 'dev-project-id',
-              name: 'Development Project',
-              description: 'A mock project for development',
-              tenantId: 'dev-tenant-id',
-              projectTypeId: 'dev-project-type-id',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ]
-        });
-      }
-      
-      if (url.includes('/tenants')) {
-        console.log('Returning mock tenants data');
-        return Promise.resolve({
-          data: [
-            {
-              _id: 'dev-tenant-id',
-              name: 'Development Tenant',
-              description: 'A mock tenant for development',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ]
-        });
-      }
-      
-      if (url.includes('/project-types')) {
-        console.log('Returning mock project types data');
-        return Promise.resolve({
-          data: [
-            {
-              _id: 'dev-project-type-id',
-              name: 'Development Project Type',
-              description: 'A mock project type for development',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ]
-        });
-      }
-      
-      if (url.includes('/cloud-providers')) {
-        console.log('Returning mock cloud providers data');
-        return Promise.resolve({
-          data: [
-            {
-              _id: 'dev-cloud-provider-id',
-              name: 'Development Cloud Provider',
-              type: 'DROPBOX',
-              description: 'A mock cloud provider for development',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ]
-        });
-      }
-    }
-    
-    if (error.response) {
-      // Handle specific error codes
-      switch (error.response.status) {
-        case 401:
-          // Redirect to login or refresh token
-          window.location.href = '/login';
-          break;
-        case 403:
-          // Handle forbidden
-          window.location.href = '/unauthorized';
-          break;
-      }
-    }
+    console.error(`API error: ${error.message}`, error.response?.data);
     return Promise.reject(error);
   }
 );
 
-// API client functions
+// API endpoints
 const api = {
-  // User endpoints
-  fetchUserRoles: async (): Promise<UserRolesResponse> => {
+  // Auth endpoints
+  getUserRoles: async (): Promise<UserRolesResponse> => {
     const response = await apiClient.get('/users/me/roles');
     return response.data;
   },
-
-  // Tenant endpoints
-  fetchTenant: async (): Promise<Tenant> => {
-    const response = await apiClient.get('/tenants/me');
-    return response.data;
-  },
   
+  // Tenant endpoints
   fetchTenants: async (): Promise<Tenant[]> => {
     const response = await apiClient.get('/tenants');
     return response.data;
   },
   
-  fetchTenantById: async (id: string): Promise<Tenant> => {
-    const response = await apiClient.get(`/tenants/${id}`);
+  fetchTenant: async (id?: string): Promise<Tenant> => {
+    const url = id ? `/tenants/${id}` : '/tenants/me';
+    const response = await apiClient.get(url);
     return response.data;
   },
   
@@ -264,31 +163,48 @@ const api = {
     await apiClient.delete(`/projects/${id}`);
   },
 
-  // Project Member endpoints
+  // Project Members endpoints
   fetchProjectMembers: async (projectId: string): Promise<ProjectMember[]> => {
     const response = await apiClient.get(`/projects/${projectId}/members`);
     return response.data;
   },
   
-  addProjectMember: async (projectId: string, data: ProjectMember): Promise<void> => {
-    await apiClient.post(`/projects/${projectId}/members`, data);
+  addProjectMember: async (projectId: string, data: { email: string; role: string }): Promise<ProjectMember> => {
+    const response = await apiClient.post(`/projects/${projectId}/members`, data);
+    return response.data;
   },
   
-  updateProjectMember: async (projectId: string, userId: string, role: string): Promise<void> => {
-    await apiClient.patch(`/projects/${projectId}/members/${userId}`, { role });
+  updateProjectMember: async (projectId: string, memberId: string, data: { role: string }): Promise<ProjectMember> => {
+    const response = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, data);
+    return response.data;
   },
   
-  removeProjectMember: async (projectId: string, userId: string): Promise<void> => {
-    await apiClient.delete(`/projects/${projectId}/members/${userId}`);
+  removeProjectMember: async (projectId: string, memberId: string): Promise<void> => {
+    await apiClient.delete(`/projects/${projectId}/members/${memberId}`);
   },
 
-  // File endpoints
-  fetchProjectFiles: async (
-    projectId: string, 
-    params: { folder?: string; recursive?: boolean; fileTypes?: string[]; limit?: number; page?: number }
-  ): Promise<File[]> => {
-    const response = await apiClient.get(`/projects/${projectId}/files`, { params });
+  // Project Files endpoints
+  fetchProjectFiles: async (projectId: string): Promise<File[]> => {
+    const response = await apiClient.get(`/projects/${projectId}/files`);
     return response.data;
+  },
+  
+  uploadProjectFile: async (projectId: string, formData: FormData): Promise<File> => {
+    const response = await apiClient.post(`/projects/${projectId}/files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  
+  deleteProjectFile: async (projectId: string, fileId: string): Promise<void> => {
+    await apiClient.delete(`/projects/${projectId}/files/${fileId}`);
+  },
+  
+  getFileDownloadUrl: async (projectId: string, fileId: string): Promise<string> => {
+    const response = await apiClient.get(`/projects/${projectId}/files/${fileId}/download-url`);
+    return response.data.url;
   },
 };
 
