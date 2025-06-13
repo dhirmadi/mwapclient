@@ -17,12 +17,12 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus, IconTrash, IconEdit, IconRefresh, IconCheck, IconX } from '@tabler/icons-react';
-import { PageHeader } from '../../../../components/layout';
-import { useAuth } from '../../../../context/AuthContext';
-import { useCloudProviders } from '../../../../hooks/useCloudProviders';
-import { useTenants } from '../../../../hooks/useTenants';
-import { CloudProvider } from '../../../../types/cloud-provider';
-import { LoadingSpinner } from '../../../../components/common';
+import { PageHeader } from '../../components/layout';
+import { useAuth } from '../../context/AuthContext';
+import { useCloudProviders } from '../../hooks/useCloudProviders';
+import { useTenants } from '../../hooks/useTenants';
+import { CloudProvider } from '../../types/cloud-provider';
+import { LoadingSpinner } from '../../components/common';
 
 interface TenantIntegration {
   _id: string;

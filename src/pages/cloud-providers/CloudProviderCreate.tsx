@@ -27,9 +27,9 @@ import {
   IconArrowLeft,
   IconCloud
 } from '@tabler/icons-react';
-import { PageHeader } from '../../../../components/layout';
-import { useCloudProviders } from '../../../../hooks/useCloudProviders';
-import { CloudProviderCreate as CloudProviderCreateType } from '../../../../types/cloud-provider';
+import { PageHeader } from '../../components/layout';
+import { useCloudProviders } from '../../hooks/useCloudProviders';
+import { CloudProviderCreate as CloudProviderCreateType } from '../../types/cloud-provider';
 import { 
   AUTH_TYPES, 
   PROVIDER_TYPES, 

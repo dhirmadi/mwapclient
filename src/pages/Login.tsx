@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '@mantine/core';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner } from '../components/common';
 
 const Login: React.FC = () => {
   const { isAuthenticated, isLoading, login } = useAuth();

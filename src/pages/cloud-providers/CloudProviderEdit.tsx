@@ -32,10 +32,10 @@ import {
   IconBrandMinecraft,
   IconCloud
 } from '@tabler/icons-react';
-import { PageHeader } from '../../../../components/layout';
-import { useCloudProviders } from '../../../../hooks/useCloudProviders';
-import { CloudProvider, CloudProviderUpdate } from '../../../../types/cloud-provider';
-import { LoadingSpinner } from '../../../../components/common';
+import { PageHeader } from '../../components/layout';
+import { useCloudProviders } from '../../hooks/useCloudProviders';
+import { CloudProvider, CloudProviderUpdate } from '../../types/cloud-provider';
+import { LoadingSpinner } from '../../components/common';
 
 // Import constants from CloudProviderCreate
 import { 

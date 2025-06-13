@@ -16,9 +16,9 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconCheck, IconDeviceFloppy, IconArrowLeft } from '@tabler/icons-react';
-import { PageHeader } from '../../../../components/layout';
-import { useProjectTypes } from '../../../../hooks/useProjectTypes';
-import { ProjectTypeCreate as ProjectTypeCreateType } from '../../../../types/project-type';
+import { PageHeader } from '../../components/layout';
+import { useProjectTypes } from '../../hooks/useProjectTypes';
+import { ProjectTypeCreate as ProjectTypeCreateType } from '../../types/project-type';
 
 const ProjectTypeCreate: React.FC = () => {
   const navigate = useNavigate();

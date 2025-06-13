@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTenants } from '../../../hooks';
-import { PageHeader } from '../../../components/layout';
-import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '../../../components/common';
+import { useTenants } from '../../hooks';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text } from '@mantine/core';
 import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
 

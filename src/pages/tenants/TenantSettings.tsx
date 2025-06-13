@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from '@mantine/form';
 import { TextInput, Textarea, Button, Paper, Title, Text, Group, Switch, LoadingOverlay } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { PageHeader } from '../../../../components/layout';
-import { useAuth } from '../../../../context/AuthContext';
-import { useTenants } from '../../../../hooks/useTenants';
-import { Tenant } from '../../../../types/tenant';
-import { LoadingSpinner } from '../../../../components/common';
+import { PageHeader } from '../../components/layout';
+import { useAuth } from '../../context/AuthContext';
+import { useTenants } from '../../hooks/useTenants';
+import { Tenant } from '../../types/tenant';
+import { LoadingSpinner } from '../../components/common';
 
 const TenantSettings: React.FC = () => {
   const { roles } = useAuth();

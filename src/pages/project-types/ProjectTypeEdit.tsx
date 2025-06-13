@@ -16,10 +16,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconCheck, IconDeviceFloppy, IconArrowLeft } from '@tabler/icons-react';
-import { PageHeader } from '../../../../components/layout';
-import { useProjectTypes } from '../../../../hooks/useProjectTypes';
-import { ProjectType, ProjectTypeUpdate } from '../../../../types/project-type';
-import { LoadingSpinner } from '../../../../components/common';
+import { PageHeader } from '../../components/layout';
+import { useProjectTypes } from '../../hooks/useProjectTypes';
+import { ProjectType, ProjectTypeUpdate } from '../../types/project-type';
+import { LoadingSpinner } from '../../components/common';
 
 const ProjectTypeEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
