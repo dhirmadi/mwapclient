@@ -60,8 +60,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('auth_token', token);
           
           try {
-            // Fetch user roles
-            const userRoles = await api.getUserRoles();
+            let userRoles;
+            
+            // In development, use the fallback function
+            if (import.meta.env.DEV) {
+              userRoles = await api.fetchUserRoles();
+            } else {
+              // In production, use the real API
+              userRoles = await api.getUserRoles();
+            }
+            
             setRoles(userRoles);
             
             // Set role flags

@@ -47,6 +47,20 @@ const api = {
     return response.data;
   },
   
+  // Fallback for development
+  fetchUserRoles: async (): Promise<UserRolesResponse> => {
+    // For development, return default roles
+    console.log('Using default roles for development');
+    return {
+      isSuperAdmin: true,
+      isTenantOwner: true,
+      tenantId: 'dev-tenant-id',
+      projectRoles: [
+        { projectId: 'dev-project-id', role: 'OWNER' }
+      ]
+    };
+  },
+  
   // Tenant endpoints
   fetchTenants: async (): Promise<Tenant[]> => {
     const response = await apiClient.get('/tenants');
