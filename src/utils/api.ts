@@ -15,7 +15,7 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Add request interceptor to add auth token
+// Add request interceptor to add auth token and log requests
 apiClient.interceptors.request.use(
   async (config) => {
     // Get token from localStorage
@@ -25,30 +25,83 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // Debug logging for request
+    console.group(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log('Request Headers:', config.headers);
+    console.log('Request Params:', config.params);
+    console.log('Request Data:', config.data);
+    console.log('Full Config:', config);
+    console.groupEnd();
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
+  }
 );
 
-// Add response interceptor to handle errors
+// Add response interceptor to handle errors and log responses
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Debug logging for successful response
+    console.group(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    console.log('Status:', response.status);
+    console.log('Status Text:', response.statusText);
+    console.log('Response Headers:', response.headers);
+    console.log('Response Data:', response.data);
+    console.groupEnd();
+    
+    return response;
+  },
   (error: AxiosError) => {
+    // Debug logging for error response
+    console.group(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`);
+    console.log('Error Message:', error.message);
+    console.log('Status:', error.response?.status);
+    console.log('Status Text:', error.response?.statusText);
+    console.log('Response Headers:', error.response?.headers);
+    console.log('Response Data:', error.response?.data);
+    console.log('Full Error:', error);
+    console.groupEnd();
+    
     console.error(`API error: ${error.message}`, error.response?.data);
     return Promise.reject(error);
   }
 );
 
+// Debug wrapper for API functions
+const debugApiCall = <T>(functionName: string, fn: (...args: any[]) => Promise<T>) => {
+  return async (...args: any[]): Promise<T> => {
+    console.group(`🔍 API Function Call: ${functionName}`);
+    console.log('Arguments:', ...args);
+    console.time(`${functionName} execution time`);
+    
+    try {
+      const result = await fn(...args);
+      console.log('Result:', result);
+      console.timeEnd(`${functionName} execution time`);
+      console.groupEnd();
+      return result;
+    } catch (error) {
+      console.log('Function Error:', error);
+      console.timeEnd(`${functionName} execution time`);
+      console.groupEnd();
+      throw error;
+    }
+  };
+};
+
 // API endpoints
 const api = {
   // Auth endpoints
-  getUserRoles: async (): Promise<UserRolesResponse> => {
+  getUserRoles: debugApiCall('getUserRoles', async (): Promise<UserRolesResponse> => {
     const response = await apiClient.get('/users/me/roles');
     return response.data;
-  },
+  }),
   
   // Fallback for development
-  fetchUserRoles: async (): Promise<UserRolesResponse> => {
+  fetchUserRoles: debugApiCall('fetchUserRoles', async (): Promise<UserRolesResponse> => {
     // For development, return default roles
     console.log('Using default roles for development');
     return {
@@ -59,167 +112,167 @@ const api = {
         { projectId: 'dev-project-id', role: 'OWNER' }
       ]
     };
-  },
+  }),
   
   // Tenant endpoints
-  fetchTenants: async (): Promise<Tenant[]> => {
+  fetchTenants: debugApiCall('fetchTenants', async (): Promise<Tenant[]> => {
     const response = await apiClient.get('/tenants');
     return response.data;
-  },
+  }),
   
-  fetchTenant: async (id?: string): Promise<Tenant> => {
+  fetchTenant: debugApiCall('fetchTenant', async (id?: string): Promise<Tenant> => {
     const url = id ? `/tenants/${id}` : '/tenants/me';
     const response = await apiClient.get(url);
     return response.data;
-  },
+  }),
   
-  createTenant: async (data: TenantCreate): Promise<Tenant> => {
+  createTenant: debugApiCall('createTenant', async (data: TenantCreate): Promise<Tenant> => {
     const response = await apiClient.post('/tenants', data);
     return response.data;
-  },
+  }),
   
-  updateTenant: async (id: string, data: Partial<Tenant>): Promise<Tenant> => {
+  updateTenant: debugApiCall('updateTenant', async (id: string, data: Partial<Tenant>): Promise<Tenant> => {
     const response = await apiClient.patch(`/tenants/${id}`, data);
     return response.data;
-  },
+  }),
   
-  deleteTenant: async (id: string): Promise<void> => {
+  deleteTenant: debugApiCall('deleteTenant', async (id: string): Promise<void> => {
     await apiClient.delete(`/tenants/${id}`);
-  },
+  }),
 
   // Cloud Provider endpoints
-  fetchCloudProviders: async (): Promise<CloudProvider[]> => {
+  fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<CloudProvider[]> => {
     const response = await apiClient.get('/cloud-providers');
     return response.data;
-  },
+  }),
   
-  fetchCloudProviderById: async (id: string): Promise<CloudProvider> => {
+  fetchCloudProviderById: debugApiCall('fetchCloudProviderById', async (id: string): Promise<CloudProvider> => {
     const response = await apiClient.get(`/cloud-providers/${id}`);
     return response.data;
-  },
+  }),
   
-  createCloudProvider: async (data: Omit<CloudProvider, '_id'>): Promise<CloudProvider> => {
+  createCloudProvider: debugApiCall('createCloudProvider', async (data: Omit<CloudProvider, '_id'>): Promise<CloudProvider> => {
     const response = await apiClient.post('/cloud-providers', data);
     return response.data;
-  },
+  }),
   
-  updateCloudProvider: async (id: string, data: Partial<CloudProvider>): Promise<CloudProvider> => {
+  updateCloudProvider: debugApiCall('updateCloudProvider', async (id: string, data: Partial<CloudProvider>): Promise<CloudProvider> => {
     const response = await apiClient.patch(`/cloud-providers/${id}`, data);
     return response.data;
-  },
+  }),
   
-  deleteCloudProvider: async (id: string): Promise<void> => {
+  deleteCloudProvider: debugApiCall('deleteCloudProvider', async (id: string): Promise<void> => {
     await apiClient.delete(`/cloud-providers/${id}`);
-  },
+  }),
 
   // Tenant Integration endpoints
-  fetchTenantIntegrations: async (tenantId: string): Promise<any[]> => {
+  fetchTenantIntegrations: debugApiCall('fetchTenantIntegrations', async (tenantId: string): Promise<any[]> => {
     const response = await apiClient.get(`/tenants/${tenantId}/integrations`);
     return response.data;
-  },
+  }),
   
-  createTenantIntegration: async (tenantId: string, data: any): Promise<any> => {
+  createTenantIntegration: debugApiCall('createTenantIntegration', async (tenantId: string, data: any): Promise<any> => {
     const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
     return response.data;
-  },
+  }),
   
-  deleteTenantIntegration: async (tenantId: string, integrationId: string): Promise<void> => {
+  deleteTenantIntegration: debugApiCall('deleteTenantIntegration', async (tenantId: string, integrationId: string): Promise<void> => {
     await apiClient.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
-  },
+  }),
 
   // Project Type endpoints
-  fetchProjectTypes: async (): Promise<ProjectType[]> => {
+  fetchProjectTypes: debugApiCall('fetchProjectTypes', async (): Promise<ProjectType[]> => {
     const response = await apiClient.get('/project-types');
     return response.data;
-  },
+  }),
   
-  fetchProjectTypeById: async (id: string): Promise<ProjectType> => {
+  fetchProjectTypeById: debugApiCall('fetchProjectTypeById', async (id: string): Promise<ProjectType> => {
     const response = await apiClient.get(`/project-types/${id}`);
     return response.data;
-  },
+  }),
   
-  createProjectType: async (data: Omit<ProjectType, '_id'>): Promise<ProjectType> => {
+  createProjectType: debugApiCall('createProjectType', async (data: Omit<ProjectType, '_id'>): Promise<ProjectType> => {
     const response = await apiClient.post('/project-types', data);
     return response.data;
-  },
+  }),
   
-  updateProjectType: async (id: string, data: Partial<ProjectType>): Promise<ProjectType> => {
+  updateProjectType: debugApiCall('updateProjectType', async (id: string, data: Partial<ProjectType>): Promise<ProjectType> => {
     const response = await apiClient.patch(`/project-types/${id}`, data);
     return response.data;
-  },
+  }),
   
-  deleteProjectType: async (id: string): Promise<void> => {
+  deleteProjectType: debugApiCall('deleteProjectType', async (id: string): Promise<void> => {
     await apiClient.delete(`/project-types/${id}`);
-  },
+  }),
 
   // Project endpoints
-  fetchProjects: async (): Promise<Project[]> => {
+  fetchProjects: debugApiCall('fetchProjects', async (): Promise<Project[]> => {
     const response = await apiClient.get('/projects');
     return response.data;
-  },
+  }),
   
-  fetchProjectById: async (id: string): Promise<Project> => {
+  fetchProjectById: debugApiCall('fetchProjectById', async (id: string): Promise<Project> => {
     const response = await apiClient.get(`/projects/${id}`);
     return response.data;
-  },
+  }),
   
-  createProject: async (data: ProjectCreate): Promise<Project> => {
+  createProject: debugApiCall('createProject', async (data: ProjectCreate): Promise<Project> => {
     const response = await apiClient.post('/projects', data);
     return response.data;
-  },
+  }),
   
-  updateProject: async (id: string, data: Partial<Project>): Promise<Project> => {
+  updateProject: debugApiCall('updateProject', async (id: string, data: Partial<Project>): Promise<Project> => {
     const response = await apiClient.patch(`/projects/${id}`, data);
     return response.data;
-  },
+  }),
   
-  deleteProject: async (id: string): Promise<void> => {
+  deleteProject: debugApiCall('deleteProject', async (id: string): Promise<void> => {
     await apiClient.delete(`/projects/${id}`);
-  },
+  }),
 
   // Project Members endpoints
-  fetchProjectMembers: async (projectId: string): Promise<ProjectMember[]> => {
+  fetchProjectMembers: debugApiCall('fetchProjectMembers', async (projectId: string): Promise<ProjectMember[]> => {
     const response = await apiClient.get(`/projects/${projectId}/members`);
     return response.data;
-  },
+  }),
   
-  addProjectMember: async (projectId: string, data: { email: string; role: string }): Promise<ProjectMember> => {
+  addProjectMember: debugApiCall('addProjectMember', async (projectId: string, data: { email: string; role: string }): Promise<ProjectMember> => {
     const response = await apiClient.post(`/projects/${projectId}/members`, data);
     return response.data;
-  },
+  }),
   
-  updateProjectMember: async (projectId: string, memberId: string, data: { role: string }): Promise<ProjectMember> => {
+  updateProjectMember: debugApiCall('updateProjectMember', async (projectId: string, memberId: string, data: { role: string }): Promise<ProjectMember> => {
     const response = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, data);
     return response.data;
-  },
+  }),
   
-  removeProjectMember: async (projectId: string, memberId: string): Promise<void> => {
+  removeProjectMember: debugApiCall('removeProjectMember', async (projectId: string, memberId: string): Promise<void> => {
     await apiClient.delete(`/projects/${projectId}/members/${memberId}`);
-  },
+  }),
 
   // Project Files endpoints
-  fetchProjectFiles: async (projectId: string): Promise<File[]> => {
+  fetchProjectFiles: debugApiCall('fetchProjectFiles', async (projectId: string): Promise<File[]> => {
     const response = await apiClient.get(`/projects/${projectId}/files`);
     return response.data;
-  },
+  }),
   
-  uploadProjectFile: async (projectId: string, formData: FormData): Promise<File> => {
+  uploadProjectFile: debugApiCall('uploadProjectFile', async (projectId: string, formData: FormData): Promise<File> => {
     const response = await apiClient.post(`/projects/${projectId}/files`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
-  },
+  }),
   
-  deleteProjectFile: async (projectId: string, fileId: string): Promise<void> => {
+  deleteProjectFile: debugApiCall('deleteProjectFile', async (projectId: string, fileId: string): Promise<void> => {
     await apiClient.delete(`/projects/${projectId}/files/${fileId}`);
-  },
+  }),
   
-  getFileDownloadUrl: async (projectId: string, fileId: string): Promise<string> => {
+  getFileDownloadUrl: debugApiCall('getFileDownloadUrl', async (projectId: string, fileId: string): Promise<string> => {
     const response = await apiClient.get(`/projects/${projectId}/files/${fileId}/download-url`);
     return response.data.url;
-  },
+  }),
 };
 
 export default api;
