@@ -66,6 +66,7 @@ const CloudProviderEdit: React.FC = () => {
       authType: '',
       configSchema: {},
       isActive: true,
+      credentials: {}
     },
     validate: {
       name: (value) => (value && value.length < 3 ? 'Name must be at least 3 characters' : null),
@@ -78,12 +79,16 @@ const CloudProviderEdit: React.FC = () => {
   // Load cloud provider data
   useEffect(() => {
     if (cloudProvider) {
+      // Extract credentials from configSchema if they exist
+      const credentials = cloudProvider.configSchema.credentials || {};
+      
       form.setValues({
         name: cloudProvider.name,
         type: cloudProvider.type,
         authType: cloudProvider.authType,
         configSchema: cloudProvider.configSchema,
         isActive: cloudProvider.isActive,
+        credentials
       });
       
       // Set selected provider type and auth type
@@ -136,8 +141,23 @@ const CloudProviderEdit: React.FC = () => {
         return;
       }
       
+      // Extract credentials from form values
+      const { credentials, ...providerData } = values;
+      
+      // Create the provider data object in the format expected by the API
+      const apiData = {
+        ...providerData,
+        // Store credentials in the configSchema
+        configSchema: {
+          ...providerData.configSchema,
+          credentials: credentials || {}
+        }
+      };
+      
+      console.log('Updating cloud provider data:', apiData);
+      
       // Update cloud provider
-      await updateCloudProvider({ id, data: values });
+      await updateCloudProvider({ id, data: apiData });
       
       notifications.show({
         title: 'Success',
@@ -150,9 +170,14 @@ const CloudProviderEdit: React.FC = () => {
       navigate('/admin/cloud-providers');
     } catch (error) {
       console.error('Failed to update cloud provider:', error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       notifications.show({
         title: 'Error',
-        message: 'Failed to update cloud provider',
+        message: 'Failed to update cloud provider. See console for details.',
         color: 'red',
       });
     }
@@ -313,6 +338,7 @@ const CloudProviderEdit: React.FC = () => {
                         label={field.label}
                         placeholder={`Enter new ${field.label.toLowerCase()} or leave blank to keep existing`}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     ) : field.type === 'textarea' ? (
                       <Textarea
@@ -320,12 +346,14 @@ const CloudProviderEdit: React.FC = () => {
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         minRows={3}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     ) : (
                       <TextInput
                         label={field.label}
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     )}
                   </div>

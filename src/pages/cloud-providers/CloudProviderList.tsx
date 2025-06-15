@@ -38,9 +38,6 @@ const CloudProviderList: React.FC = () => {
     try {
       await deleteCloudProvider(selectedProvider._id);
       
-      // Remove from local state
-      setProviders(prev => prev.filter(p => p._id !== selectedProvider._id));
-      
       notifications.show({
         title: 'Success',
         message: `${selectedProvider.name} has been deleted`,
