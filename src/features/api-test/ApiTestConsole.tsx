@@ -13,12 +13,8 @@ export const ApiTestConsole: React.FC = () => {
   } = useApiTestRunner();
 
   return (
-    <div className="container mx-auto p-4">
+    <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">API Test Console</h1>
-        <p className="text-gray-600 mb-4">
-          Run predefined API tests to verify endpoints are working correctly.
-        </p>
         
         <div className="flex flex-wrap items-center gap-4 mb-6">
           <button
