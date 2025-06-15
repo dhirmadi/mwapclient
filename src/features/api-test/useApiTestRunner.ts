@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosResponse, AxiosError } from 'axios';
 import apiClient from '../../utils/api';
+
+// Use the same baseURL as the main API client for consistency
+const API_BASE_URL = '/api';
 
 export interface TestResult {
   id: string;
@@ -68,18 +71,68 @@ export const useApiTestRunner = () => {
 
   const runTest = async (test: ApiTest): Promise<TestResult> => {
     const startTime = performance.now();
+    console.log(`🚀 Starting API test: ${test.method} ${test.url}`);
     
     try {
-      const config: AxiosRequestConfig = {
-        url: test.url,
-        method: test.method,
-        data: test.data,
-        headers: test.headers
-      };
+      // Get token from localStorage (should be set by the auth system)
+      const token = localStorage.getItem('auth_token');
       
-      const response: AxiosResponse = await apiClient.request(config);
+      // Create a direct axios instance for testing
+      const axiosInstance = axios.create({
+        baseURL: API_BASE_URL, // Use the configured API base URL
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          ...(test.headers || {})
+        },
+      });
+      
+      console.log(`🔌 Using API base URL: ${API_BASE_URL}`);
+      console.log(`🔑 Auth token ${token ? 'present' : 'not found'} for API request`);
+      
+      // Log the request details
+      console.group(`📤 API Test Request: ${test.method} ${test.url}`);
+      console.log('Request Headers:', axiosInstance.defaults.headers);
+      console.log('Request Data:', test.data);
+      console.groupEnd();
+      
+      // Make the request - use the appropriate method based on HTTP verb
+      let response: AxiosResponse;
+      
+      switch (test.method) {
+        case 'GET':
+          response = await axiosInstance.get(test.url);
+          break;
+        case 'POST':
+          response = await axiosInstance.post(test.url, test.data);
+          break;
+        case 'PUT':
+          response = await axiosInstance.put(test.url, test.data);
+          break;
+        case 'PATCH':
+          response = await axiosInstance.patch(test.url, test.data);
+          break;
+        case 'DELETE':
+          response = await axiosInstance.delete(test.url);
+          break;
+        default:
+          // Fallback to generic request
+          response = await axiosInstance({
+            url: test.url,
+            method: test.method,
+            data: test.data
+          });
+      }
       
       const endTime = performance.now();
+      
+      // Log the response details
+      console.group(`📥 API Test Response: ${test.method} ${test.url}`);
+      console.log('Status:', response.status, response.statusText);
+      console.log('Response Headers:', response.headers);
+      console.log('Response Data:', response.data);
+      console.log('Duration:', (endTime - startTime).toFixed(2), 'ms');
+      console.groupEnd();
       
       return {
         id: test.id,
@@ -97,6 +150,15 @@ export const useApiTestRunner = () => {
     } catch (error) {
       const endTime = performance.now();
       const axiosError = error as AxiosError;
+      
+      // Log the error details
+      console.group(`❌ API Test Error: ${test.method} ${test.url}`);
+      console.log('Error Message:', axiosError.message);
+      console.log('Status:', axiosError.response?.status, axiosError.response?.statusText);
+      console.log('Response Headers:', axiosError.response?.headers);
+      console.log('Response Data:', axiosError.response?.data);
+      console.log('Duration:', (endTime - startTime).toFixed(2), 'ms');
+      console.groupEnd();
       
       return {
         id: test.id,
@@ -123,10 +185,43 @@ export const useApiTestRunner = () => {
       selectedTests.includes(test.id)
     );
     
+    console.group('🧪 Running API Tests');
+    console.log(`Selected tests: ${testsToRun.length} of ${predefinedTests.length}`);
+    console.log('Tests to run:', testsToRun.map(t => t.name));
+    console.groupEnd();
+    
+    const allResults: TestResult[] = [];
+    
     for (const test of testsToRun) {
-      const result = await runTest(test);
-      setResults(prev => [...prev, result]);
+      try {
+        const result = await runTest(test);
+        allResults.push(result);
+        setResults([...allResults]);
+      } catch (error) {
+        console.error(`Failed to run test ${test.name}:`, error);
+        // Add a failed result
+        const failedResult: TestResult = {
+          id: test.id,
+          name: test.name,
+          url: test.url,
+          method: test.method,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          success: false,
+          duration: 0
+        };
+        allResults.push(failedResult);
+        setResults([...allResults]);
+      }
     }
+    
+    // Log summary
+    const successCount = allResults.filter(r => r.success).length;
+    const failCount = allResults.length - successCount;
+    
+    console.group('📊 API Tests Summary');
+    console.log(`Total: ${allResults.length}, Success: ${successCount}, Failed: ${failCount}`);
+    console.log('Results:', allResults);
+    console.groupEnd();
     
     setIsRunning(false);
   };
