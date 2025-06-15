@@ -7,7 +7,7 @@ import '@mantine/notifications/styles.css';
 function App() {
   return (
     <MantineProvider>
-      <Notifications position="top-right" />
+      <Notifications position="top-right" limit={5} />
       <AppRouter />
     </MantineProvider>
   );

@@ -129,11 +129,24 @@ const CloudProviderCreate: React.FC = () => {
         return;
       }
       
+      // Extract credentials from form values
+      const { credentials, ...providerData } = values;
+      
+      // Create the provider data object in the format expected by the API
+      const apiData = {
+        ...providerData,
+        // Store credentials in the configSchema
+        configSchema: {
+          ...providerData.configSchema,
+          credentials: credentials || {}
+        }
+      };
+      
       // Log the values being submitted
-      console.log('Submitting cloud provider data:', values);
+      console.log('Submitting cloud provider data:', apiData);
       
       // Create cloud provider
-      await createCloudProvider(values);
+      await createCloudProvider(apiData);
       
       notifications.show({
         title: 'Success',
