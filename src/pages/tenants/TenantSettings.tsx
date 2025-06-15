@@ -4,15 +4,15 @@ import { TextInput, Textarea, Button, Paper, Title, Text, Group, Switch, Loading
 import { notifications } from '@mantine/notifications';
 import { PageHeader } from '../../components/layout';
 import { useAuth } from '../../context/AuthContext';
-import { useTenants } from '../../hooks/useTenants';
+import { useTenant, useUpdateTenant } from '../../hooks/useTenants';
 import { Tenant } from '../../types/tenant';
 import { LoadingSpinner } from '../../components/common';
 
 const TenantSettings: React.FC = () => {
   const { roles } = useAuth();
-  const tenantId = roles.tenantId;
+  const tenantId = roles?.tenantId;
   const { updateTenant } = useUpdateTenant();
-  const { tenant, isLoading: loading } = useTenant(tenantId);
+  const { tenant, isLoading: loading } = useTenant(tenantId || '');
   const [saving, setSaving] = useState(false);
 
   const form = useForm({
@@ -36,42 +36,23 @@ const TenantSettings: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadTenant = async () => {
-      try {
-        setLoading(true);
-        const tenantData = await fetchTenant();
-        setTenant(tenantData);
-        
-        // Update form values
-        form.setValues({
-          name: tenantData.name,
-          description: tenantData.description || '',
-          contactEmail: tenantData.contactEmail || '',
-          contactPhone: tenantData.contactPhone || '',
-          website: tenantData.website || '',
-          isActive: tenantData.isActive,
-          settings: {
-            allowExternalSharing: tenantData.settings?.allowExternalSharing || false,
-            enforceStrongPasswords: tenantData.settings?.enforceStrongPasswords || true,
-            defaultStorageQuota: tenantData.settings?.defaultStorageQuota || 5,
-          },
-        });
-      } catch (error) {
-        console.error('Failed to load tenant:', error);
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to load tenant settings',
-          color: 'red',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (roles?.tenantId) {
-      loadTenant();
+    if (tenant) {
+      // Update form values when tenant data is loaded
+      form.setValues({
+        name: tenant.name,
+        description: tenant.description || '',
+        contactEmail: tenant.contactEmail || '',
+        contactPhone: tenant.contactPhone || '',
+        website: tenant.website || '',
+        isActive: tenant.isActive,
+        settings: {
+          allowExternalSharing: tenant.settings?.allowExternalSharing || false,
+          enforceStrongPasswords: tenant.settings?.enforceStrongPasswords || true,
+          defaultStorageQuota: tenant.settings?.defaultStorageQuota || 5,
+        },
+      });
     }
-  }, [roles?.tenantId]);
+  }, [tenant]);
 
   const handleSubmit = async (values: typeof form.values) => {
     if (!tenant || !roles?.tenantId) return;

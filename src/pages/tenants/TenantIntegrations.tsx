@@ -20,9 +20,10 @@ import { IconPlus, IconTrash, IconEdit, IconRefresh, IconCheck, IconX } from '@t
 import { PageHeader } from '../../components/layout';
 import { useAuth } from '../../context/AuthContext';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
-import { useTenants } from '../../hooks/useTenants';
+import { useTenant } from '../../hooks/useTenants';
 import { CloudProvider } from '../../types/cloud-provider';
 import { LoadingSpinner } from '../../components/common';
+import api from '../../utils/api';
 
 interface TenantIntegration {
   _id: string;
@@ -38,10 +39,10 @@ interface TenantIntegration {
 const TenantIntegrations: React.FC = () => {
   const { roles } = useAuth();
   const { cloudProviders, isLoading: loadingProviders } = useCloudProviders();
-  const { tenant, isLoading: loadingTenant } = useTenant(roles.tenantId);
+  const { tenant, isLoading: loadingTenant } = useTenant(roles?.tenantId || '');
   
   const [integrations, setIntegrations] = useState<TenantIntegration[]>([]);
-  const loading = loadingProviders || loadingTenant;
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<CloudProvider | null>(null);
@@ -60,34 +61,52 @@ const TenantIntegrations: React.FC = () => {
     },
   });
 
+  // Fetch tenant integrations
+  const fetchTenantIntegrations = async (tenantId: string): Promise<TenantIntegration[]> => {
+    try {
+      const response = await api.get(`/tenants/${tenantId}/integrations`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tenant integrations:', error);
+      return [];
+    }
+  };
+
+  // Create tenant integration
+  const createTenantIntegration = async (tenantId: string, data: any): Promise<TenantIntegration> => {
+    const response = await api.post(`/tenants/${tenantId}/integrations`, data);
+    return response.data;
+  };
+
+  // Delete tenant integration
+  const deleteTenantIntegration = async (tenantId: string, integrationId: string): Promise<void> => {
+    await api.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        
-        // Load cloud providers
-        const providers = await fetchCloudProviders();
-        setCloudProviders(providers);
-        
-        // Load tenant integrations
-        if (roles?.tenantId) {
+    const loadIntegrations = async () => {
+      if (roles?.tenantId) {
+        try {
+          setLoading(true);
           const tenantIntegrations = await fetchTenantIntegrations(roles.tenantId);
           setIntegrations(tenantIntegrations);
+        } catch (error) {
+          console.error('Failed to load integrations:', error);
+          notifications.show({
+            title: 'Error',
+            message: 'Failed to load cloud integrations',
+            color: 'red',
+          });
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Failed to load data:', error);
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to load cloud integrations',
-          color: 'red',
-        });
-      } finally {
-        setLoading(false);
       }
     };
 
-    loadData();
-  }, [roles?.tenantId]);
+    if (!loadingProviders && !loadingTenant) {
+      loadIntegrations();
+    }
+  }, [roles?.tenantId, loadingProviders, loadingTenant]);
 
   // Update form fields when selected provider changes
   useEffect(() => {
