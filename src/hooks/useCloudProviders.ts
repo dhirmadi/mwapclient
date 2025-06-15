@@ -22,15 +22,12 @@ export const useCloudProviders = () => {
     refetch 
   } = useQuery({
     queryKey: ['cloud-providers'],
-    queryFn: () => api.fetchCloudProviders(),
+    queryFn: async () => {
+      const response = await api.fetchCloudProviders();
+      return response.data || [];
+    },
     enabled: isSuperAdmin,
   });
-
-  // Function to fetch cloud providers directly - memoized with useCallback
-  const fetchCloudProviders = useCallback(async () => {
-    const response = await api.fetchCloudProviders();
-    return response.data || [];
-  }, []);
 
   // Fetch a single cloud provider by ID
   const useCloudProvider = (id?: string) => {
@@ -95,7 +92,6 @@ export const useCloudProviders = () => {
     isLoading,
     error,
     refetch,
-    fetchCloudProviders,
     useCloudProvider,
     createCloudProvider: createCloudProviderMutation.mutate,
     updateCloudProvider: updateCloudProviderMutation.mutate,

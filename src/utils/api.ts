@@ -143,6 +143,8 @@ const api = {
   // Cloud Provider endpoints
   fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<{ success: boolean, data: CloudProvider[] }> => {
     const response = await apiClient.get('/cloud-providers');
+    // Add some logging to debug the response format
+    console.log('Cloud providers API response:', response.data);
     return response.data;
   }),
   

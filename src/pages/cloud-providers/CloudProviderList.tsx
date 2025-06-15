@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { PageHeader } from '../../components/layout';
@@ -9,42 +9,14 @@ import { IconEdit, IconTrash, IconEye, IconPlus } from '@tabler/icons-react';
 
 const CloudProviderList: React.FC = () => {
   const navigate = useNavigate();
-  const { fetchCloudProviders, deleteCloudProvider } = useCloudProviders();
+  const { cloudProviders, isLoading, error, refetch, deleteCloudProvider } = useCloudProviders();
   
-  const [providers, setProviders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [confirmText, setConfirmText] = useState('');
-
-  useEffect(() => {
-    const loadProviders = async () => {
-      try {
-        setLoading(true);
-        const result = await fetchCloudProviders();
-        // Handle the API response format which returns { success: boolean, data: CloudProvider[] }
-        if (result && result.data) {
-          setProviders(result.data);
-        } else if (Array.isArray(result)) {
-          // Fallback in case the API returns the array directly
-          setProviders(result);
-        } else {
-          setProviders([]);
-        }
-      } catch (error) {
-        console.error('Failed to load cloud providers:', error);
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to load cloud providers',
-          color: 'red',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProviders();
-  }, []); // No dependencies needed since fetchCloudProviders is memoized
+  
+  // Get providers from the React Query hook
+  const providers = cloudProviders || [];
 
   const handleCreateCloudProvider = () => {
     navigate('/admin/cloud-providers/create');
@@ -86,8 +58,16 @@ const CloudProviderList: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingSpinner />;
+  }
+  
+  if (error) {
+    notifications.show({
+      title: 'Error',
+      message: 'Failed to load cloud providers',
+      color: 'red',
+    });
   }
 
   if (providers.length === 0) {
