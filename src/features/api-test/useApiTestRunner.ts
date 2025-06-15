@@ -5,6 +5,20 @@ import apiClient from '../../utils/api';
 // Use the same baseURL as the main API client for consistency
 const API_BASE_URL = '/api';
 
+// The actual API server URL (from vite.config.ts proxy)
+const ACTUAL_API_URL = 'https://mwapss.shibari.photo/api/v1';
+
+/**
+ * Generate a curl command for the given API test
+ */
+const generateCurlCommand = (test: ApiTest, token: string | null): string => {
+  const url = `${ACTUAL_API_URL}${test.url}`;
+  const dataParam = test.data ? ` \\\n  -d '${JSON.stringify(test.data)}'` : '';
+  const authHeader = token ? ` \\\n  -H "Authorization: Bearer ${token}"` : '';
+  
+  return `curl -X ${test.method} "${url}"${authHeader} \\\n  -H "Content-Type: application/json"${dataParam} \\\n  -v`;
+};
+
 export interface TestResult {
   id: string;
   name: string;
@@ -132,6 +146,12 @@ export const useApiTestRunner = () => {
       console.log('Response Headers:', response.headers);
       console.log('Response Data:', response.data);
       console.log('Duration:', (endTime - startTime).toFixed(2), 'ms');
+      
+      // Generate and log the equivalent curl command with the actual token
+      const curlCommand = generateCurlCommand(test, token);
+      console.log('\n📋 Equivalent curl command:');
+      console.log(curlCommand);
+      
       console.groupEnd();
       
       return {
@@ -158,6 +178,12 @@ export const useApiTestRunner = () => {
       console.log('Response Headers:', axiosError.response?.headers);
       console.log('Response Data:', axiosError.response?.data);
       console.log('Duration:', (endTime - startTime).toFixed(2), 'ms');
+      
+      // Generate and log the equivalent curl command with the actual token
+      const curlCommand = generateCurlCommand(test, token);
+      console.log('\n📋 Equivalent curl command:');
+      console.log(curlCommand);
+      
       console.groupEnd();
       
       return {
