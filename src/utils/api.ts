@@ -154,8 +154,19 @@ const api = {
   }),
   
   createCloudProvider: debugApiCall('createCloudProvider', async (data: Omit<CloudProvider, '_id'>): Promise<CloudProvider> => {
-    const response = await apiClient.post('/cloud-providers', data);
-    return response.data.data || response.data;
+    console.log('API createCloudProvider called with data:', data);
+    try {
+      const response = await apiClient.post('/cloud-providers', data);
+      console.log('API createCloudProvider response:', response.data);
+      return response.data.data || response.data;
+    } catch (error) {
+      console.error('API createCloudProvider error:', error);
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+      throw error;
+    }
   }),
   
   updateCloudProvider: debugApiCall('updateCloudProvider', async (id: string, data: Partial<CloudProvider>): Promise<CloudProvider> => {

@@ -121,6 +121,9 @@ const CloudProviderCreate: React.FC = () => {
         return;
       }
       
+      // Log the values being submitted
+      console.log('Submitting cloud provider data:', values);
+      
       // Create cloud provider
       await createCloudProvider(values);
       
@@ -135,9 +138,14 @@ const CloudProviderCreate: React.FC = () => {
       navigate('/admin/cloud-providers');
     } catch (error) {
       console.error('Failed to create cloud provider:', error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       notifications.show({
         title: 'Error',
-        message: 'Failed to create cloud provider',
+        message: 'Failed to create cloud provider. See console for details.',
         color: 'red',
       });
     }
