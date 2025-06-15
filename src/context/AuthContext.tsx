@@ -150,8 +150,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRoleValue >= requiredRoleValue;
   };
 
-  // In development mode, we'll always be authenticated
-  const isDevelopment = true; // Force development mode for now
+  // Only use development mode if explicitly in development environment
+  const isDevelopment = import.meta.env.DEV && import.meta.env.VITE_USE_DEV_AUTH === 'true';
   const effectiveIsAuthenticated = isDevelopment ? true : isAuthenticated;
   const effectiveUser = isDevelopment && !user ? { 
     name: 'Development User',
