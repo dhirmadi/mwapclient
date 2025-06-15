@@ -44,7 +44,7 @@ const CloudProviderList: React.FC = () => {
     };
 
     loadProviders();
-  }, [fetchCloudProviders]);
+  }, []); // No dependencies needed since fetchCloudProviders is memoized
 
   const handleCreateCloudProvider = () => {
     navigate('/admin/cloud-providers/create');

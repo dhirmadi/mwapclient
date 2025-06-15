@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import api from '../utils/api';
 import { 
   CloudProvider, 
@@ -25,11 +26,11 @@ export const useCloudProviders = () => {
     enabled: isSuperAdmin,
   });
 
-  // Function to fetch cloud providers directly
-  const fetchCloudProviders = async () => {
+  // Function to fetch cloud providers directly - memoized with useCallback
+  const fetchCloudProviders = useCallback(async () => {
     const response = await api.fetchCloudProviders();
     return response.data || [];
-  };
+  }, []);
 
   // Fetch a single cloud provider by ID
   const useCloudProvider = (id?: string) => {
