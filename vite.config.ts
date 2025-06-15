@@ -22,10 +22,10 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://mwapss.shibari.photo/api/v1',
+        target: 'https://mwapss.shibari.photo',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
       },
     },
   },
