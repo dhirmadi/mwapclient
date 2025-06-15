@@ -25,6 +25,12 @@ export const useCloudProviders = () => {
     enabled: isSuperAdmin,
   });
 
+  // Function to fetch cloud providers directly
+  const fetchCloudProviders = async () => {
+    const response = await api.fetchCloudProviders();
+    return response.data || [];
+  };
+
   // Fetch a single cloud provider by ID
   const useCloudProvider = (id?: string) => {
     return useQuery({
@@ -88,6 +94,7 @@ export const useCloudProviders = () => {
     isLoading,
     error,
     refetch,
+    fetchCloudProviders,
     useCloudProvider,
     createCloudProvider: createCloudProviderMutation.mutate,
     updateCloudProvider: updateCloudProviderMutation.mutate,

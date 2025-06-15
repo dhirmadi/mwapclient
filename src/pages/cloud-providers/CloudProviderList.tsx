@@ -21,8 +21,16 @@ const CloudProviderList: React.FC = () => {
     const loadProviders = async () => {
       try {
         setLoading(true);
-        const data = await fetchCloudProviders();
-        setProviders(data);
+        const result = await fetchCloudProviders();
+        // Handle the API response format which returns { success: boolean, data: CloudProvider[] }
+        if (result && result.data) {
+          setProviders(result.data);
+        } else if (Array.isArray(result)) {
+          // Fallback in case the API returns the array directly
+          setProviders(result);
+        } else {
+          setProviders([]);
+        }
       } catch (error) {
         console.error('Failed to load cloud providers:', error);
         notifications.show({
@@ -36,7 +44,7 @@ const CloudProviderList: React.FC = () => {
     };
 
     loadProviders();
-  }, []);
+  }, [fetchCloudProviders]);
 
   const handleCreateCloudProvider = () => {
     navigate('/admin/cloud-providers/create');

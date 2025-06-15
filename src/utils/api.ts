@@ -141,24 +141,24 @@ const api = {
   }),
 
   // Cloud Provider endpoints
-  fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<CloudProvider[]> => {
+  fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<{ success: boolean, data: CloudProvider[] }> => {
     const response = await apiClient.get('/cloud-providers');
     return response.data;
   }),
   
   fetchCloudProviderById: debugApiCall('fetchCloudProviderById', async (id: string): Promise<CloudProvider> => {
     const response = await apiClient.get(`/cloud-providers/${id}`);
-    return response.data;
+    return response.data.data || response.data;
   }),
   
   createCloudProvider: debugApiCall('createCloudProvider', async (data: Omit<CloudProvider, '_id'>): Promise<CloudProvider> => {
     const response = await apiClient.post('/cloud-providers', data);
-    return response.data;
+    return response.data.data || response.data;
   }),
   
   updateCloudProvider: debugApiCall('updateCloudProvider', async (id: string, data: Partial<CloudProvider>): Promise<CloudProvider> => {
     const response = await apiClient.patch(`/cloud-providers/${id}`, data);
-    return response.data;
+    return response.data.data || response.data;
   }),
   
   deleteCloudProvider: debugApiCall('deleteCloudProvider', async (id: string): Promise<void> => {
