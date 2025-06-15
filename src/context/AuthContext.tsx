@@ -162,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Set the Auth0 bearer token from environment variable if in development mode
   useEffect(() => {
     if (isDevelopment) {
-      const token = import.meta.env.VITE_AUTH0_BEARER_TOKEN || process.env.Auth0_Bearertoken;
+      const token = import.meta.env.VITE_AUTH0_BEARER_TOKEN;
       if (token) {
         localStorage.setItem('auth_token', token);
         console.log('Using development Auth0 token');
