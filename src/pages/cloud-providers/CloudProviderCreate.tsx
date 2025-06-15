@@ -55,9 +55,17 @@ const CloudProviderCreate: React.FC = () => {
       authType: 'oauth2',
       configSchema: DEFAULT_SCHEMAS.dropbox,
       isActive: true,
+      credentials: {
+        client_id: '',
+        client_secret: '',
+        redirect_uri: ''
+      }
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Name must be at least 3 characters' : null),
+      'credentials.client_id': (value) => (!value ? 'Client ID is required' : null),
+      'credentials.client_secret': (value) => (!value ? 'Client Secret is required' : null),
+      'credentials.redirect_uri': (value) => (!value ? 'Redirect URI is required' : null),
     },
   });
 
@@ -255,6 +263,7 @@ const CloudProviderCreate: React.FC = () => {
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         required
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     ) : field.type === 'textarea' ? (
                       <Textarea
@@ -263,6 +272,7 @@ const CloudProviderCreate: React.FC = () => {
                         required
                         minRows={3}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     ) : (
                       <TextInput
@@ -270,6 +280,7 @@ const CloudProviderCreate: React.FC = () => {
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         required
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     )}
                   </div>

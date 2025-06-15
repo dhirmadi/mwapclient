@@ -16,6 +16,7 @@ export interface CloudProviderCreate {
   authType: string;
   configSchema: Record<string, unknown>;
   isActive: boolean;
+  credentials: Record<string, string>;
 }
 
 export interface CloudProviderUpdate {
@@ -24,6 +25,7 @@ export interface CloudProviderUpdate {
   authType?: string;
   configSchema?: Record<string, unknown>;
   isActive?: boolean;
+  credentials?: Record<string, string>;
 }
 
 export interface CloudProviderIntegration {
