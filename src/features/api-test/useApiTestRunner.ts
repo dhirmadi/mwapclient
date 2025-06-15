@@ -11,7 +11,7 @@ const ACTUAL_API_URL = 'https://mwapss.shibari.photo/api/v1';
 /**
  * Generate a curl command for the given API test
  */
-const generateCurlCommand = (test: ApiTest, token: string | null): string => {
+const generateCurlCommand = (test: ApiTest, token: string): string => {
   const url = `${ACTUAL_API_URL}${test.url}`;
   const dataParam = test.data ? ` \\\n  -d '${JSON.stringify(test.data)}'` : '';
   const authHeader = token ? ` \\\n  -H "Authorization: Bearer ${token}"` : '';
