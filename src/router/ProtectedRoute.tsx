@@ -1,23 +1,20 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ProjectRole } from '../types/auth';
 import { LoadingSpinner } from '../components/common';
 
 interface ProtectedRouteProps {
-  requireSuperAdmin?: boolean;
-  requireTenantOwner?: boolean;
-  requireProjectRole?: ProjectRole;
-  projectId?: string;
+  requiredRoles?: string[];
+  projectIdParam?: string;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  requireSuperAdmin,
-  requireTenantOwner,
-  requireProjectRole,
-  projectId,
+  requiredRoles,
+  projectIdParam = 'id',
 }) => {
   const { isAuthenticated, isLoading, isSuperAdmin, isTenantOwner, hasProjectRole } = useAuth();
+  const params = useParams();
+  const projectId = params[projectIdParam];
 
   if (isLoading) {
     return (
@@ -31,21 +28,33 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" replace />;
   }
 
-  // Check for super admin requirement
-  if (requireSuperAdmin && !isSuperAdmin) {
-    return <Navigate to="/unauthorized" replace />;
+  // If no specific roles are required, just check for authentication
+  if (!requiredRoles || requiredRoles.length === 0) {
+    return <Outlet />;
   }
 
-  // Check for tenant owner requirement
-  if (requireTenantOwner && !isTenantOwner) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  // Check for project role requirement
-  if (requireProjectRole && projectId) {
-    if (!hasProjectRole(projectId, requireProjectRole)) {
-      return <Navigate to="/unauthorized" replace />;
+  // Check for required roles
+  const hasRequiredRole = requiredRoles.some(role => {
+    // Check for SuperAdmin role
+    if (role === 'SUPERADMIN') {
+      return isSuperAdmin;
     }
+    
+    // Check for TenantOwner role
+    if (role === 'TENANT_OWNER') {
+      return isTenantOwner;
+    }
+    
+    // Check for Project roles (OWNER, DEPUTY, MEMBER)
+    if (['OWNER', 'DEPUTY', 'MEMBER'].includes(role) && projectId) {
+      return hasProjectRole(projectId, role);
+    }
+    
+    return false;
+  });
+
+  if (!hasRequiredRole) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <Outlet />;

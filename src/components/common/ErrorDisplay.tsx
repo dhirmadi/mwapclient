@@ -1,5 +1,5 @@
 import React from 'react';
-import { ApiError } from '@/types';
+import { ApiError } from '../../types/api';
 
 interface ErrorDisplayProps {
   error: Error | ApiError | null;

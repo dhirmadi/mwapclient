@@ -1,14 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTenants } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '@/components/common';
+import { useTenants } from '../../hooks';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text } from '@mantine/core';
 import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
 
 const TenantList: React.FC = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error, page, setPage, totalPages } = useTenants();
+  const { tenants, isLoading, error } = useTenants();
+  const [page, setPage] = React.useState(1);
+  const totalPages = Math.ceil((tenants?.length || 0) / 10);
 
   const handleCreateTenant = () => {
     navigate('/tenants/create');
@@ -70,10 +72,10 @@ const TenantList: React.FC = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {data.map((tenant) => (
+            {tenants?.map((tenant: any) => (
               <Table.Tr key={tenant.id}>
                 <Table.Td>
-                  <Text weight={500}>{tenant.name}</Text>
+                  <Text fw={500}>{tenant.name}</Text>
                   <Text size="xs" color="dimmed">
                     {tenant.id}
                   </Text>
@@ -101,7 +103,7 @@ const TenantList: React.FC = () => {
                   {new Date(tenant.createdAt).toLocaleDateString()}
                 </Table.Td>
                 <Table.Td>
-                  <Group spacing="xs">
+                  <Group gap="xs">
                     <ActionIcon
                       color="blue"
                       onClick={() => handleViewTenant(tenant.id)}

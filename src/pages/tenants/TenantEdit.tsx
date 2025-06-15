@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTenant, useUpdateTenant } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay } from '@/components/common';
+import { useTenant, useUpdateTenant } from '../../hooks';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner, ErrorDisplay } from '../../components/common';
 import { Button, TextInput, Switch, Card, Group } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { z } from 'zod';
@@ -19,7 +19,7 @@ const TenantEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: tenant, isLoading: isFetching, error: fetchError } = useTenant(id || '');
-  const { mutate, isLoading: isUpdating, error: updateError } = useUpdateTenant(id || '');
+  const { updateTenant, isUpdating, error: updateError } = useUpdateTenant();
 
   const form = useForm<TenantFormValues>({
     initialValues: {
@@ -39,7 +39,10 @@ const TenantEdit: React.FC = () => {
   }, [tenant]);
 
   const handleSubmit = (values: TenantFormValues) => {
-    mutate(values, {
+    updateTenant({ 
+      id: id || '', 
+      data: values 
+    }, {
       onSuccess: () => {
         navigate(`/tenants/${id}`);
       },
@@ -65,7 +68,7 @@ const TenantEdit: React.FC = () => {
           title="Tenant Not Found"
           description="The requested tenant could not be found"
         >
-          <Button leftIcon={<IconArrowLeft size={16} />} onClick={() => navigate('/tenants')}>
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/tenants')}>
             Back to Tenants
           </Button>
         </PageHeader>
@@ -79,7 +82,7 @@ const TenantEdit: React.FC = () => {
         title={`Edit Tenant: ${tenant.name}`}
         description={`Tenant ID: ${tenant.id}`}
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
           Back
         </Button>
       </PageHeader>
@@ -102,7 +105,7 @@ const TenantEdit: React.FC = () => {
             className="mb-6"
           />
 
-          <Group position="right">
+          <Group style={{ justifyContent: 'flex-end' }}>
             <Button
               type="button"
               variant="outline"
@@ -112,7 +115,7 @@ const TenantEdit: React.FC = () => {
             </Button>
             <Button
               type="submit"
-              leftIcon={<IconDeviceFloppy size={16} />}
+              leftSection={<IconDeviceFloppy size={16} />}
               loading={isUpdating}
             >
               Save

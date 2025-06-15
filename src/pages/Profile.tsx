@@ -1,6 +1,6 @@
 import React from 'react';
-import useAuth from '@/hooks/useAuth';
-import { PageHeader } from '@/components/layout';
+import useAuth from '../hooks/useAuth';
+import { PageHeader } from '../components/layout';
 import { Card, Avatar, Text, Group, Badge, Button } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
 

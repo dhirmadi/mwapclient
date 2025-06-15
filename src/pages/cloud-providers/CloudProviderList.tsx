@@ -1,46 +1,108 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCloudProviders } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay, EmptyState, Pagination } from '@/components/common';
-import { Button, Table, ActionIcon, Group, Badge, Text } from '@mantine/core';
-import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
+import { useCloudProviders } from '../../hooks/useCloudProviders';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner } from '../../components/common';
+import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconEdit, IconTrash, IconEye, IconPlus } from '@tabler/icons-react';
 
 const CloudProviderList: React.FC = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error, page, setPage, totalPages } = useCloudProviders();
+  const { fetchCloudProviders, deleteCloudProvider } = useCloudProviders();
+  
+  const [providers, setProviders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<any>(null);
+  const [confirmText, setConfirmText] = useState('');
+
+  useEffect(() => {
+    const loadProviders = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchCloudProviders();
+        setProviders(data);
+      } catch (error) {
+        console.error('Failed to load cloud providers:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to load cloud providers',
+          color: 'red',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProviders();
+  }, []);
 
   const handleCreateCloudProvider = () => {
-    navigate('/cloud-providers/create');
+    navigate('/admin/cloud-providers/create');
   };
 
   const handleEditCloudProvider = (id: string) => {
-    navigate(`/cloud-providers/${id}/edit`);
+    navigate(`/admin/cloud-providers/${id}/edit`);
   };
 
-  if (isLoading) {
-    return <LoadingSpinner size="xl" text="Loading cloud providers..." />;
+  const openDeleteModal = (provider: any) => {
+    setSelectedProvider(provider);
+    setDeleteModalOpen(true);
+    setConfirmText('');
+  };
+
+  const handleDeleteCloudProvider = async () => {
+    if (!selectedProvider) return;
+    
+    try {
+      await deleteCloudProvider(selectedProvider._id);
+      
+      // Remove from local state
+      setProviders(prev => prev.filter(p => p._id !== selectedProvider._id));
+      
+      notifications.show({
+        title: 'Success',
+        message: `${selectedProvider.name} has been deleted`,
+        color: 'green',
+      });
+      
+      setDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Failed to delete cloud provider:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete cloud provider',
+        color: 'red',
+      });
+    }
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
   }
 
-  if (error) {
-    return <ErrorDisplay error={error} />;
-  }
-
-  if (!data || data.length === 0) {
+  if (providers.length === 0) {
     return (
       <div>
         <PageHeader
           title="Cloud Providers"
           description="Manage cloud provider integrations"
-          actionText="Add Cloud Provider"
-          onAction={handleCreateCloudProvider}
         />
-        <EmptyState
-          title="No cloud providers found"
-          description="Get started by adding your first cloud provider"
-          actionText="Add Cloud Provider"
-          onAction={handleCreateCloudProvider}
-        />
+        
+        <Paper withBorder p="xl" radius="md" mt="md">
+          <Text ta="center" c="dimmed" mb="md">
+            No cloud providers found
+          </Text>
+          <Group justify="center">
+            <Button 
+              leftSection={<IconPlus size={16} />} 
+              onClick={handleCreateCloudProvider}
+            >
+              Add Cloud Provider
+            </Button>
+          </Group>
+        </Paper>
       </div>
     );
   }
@@ -50,11 +112,18 @@ const CloudProviderList: React.FC = () => {
       <PageHeader
         title="Cloud Providers"
         description="Manage cloud provider integrations"
-        actionText="Add Cloud Provider"
-        onAction={handleCreateCloudProvider}
       />
 
-      <div className="mt-6">
+      <Group justify="flex-end" mb="md">
+        <Button 
+          leftSection={<IconPlus size={16} />} 
+          onClick={handleCreateCloudProvider}
+        >
+          Add Cloud Provider
+        </Button>
+      </Group>
+
+      <Paper withBorder p="md" radius="md">
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
@@ -66,12 +135,12 @@ const CloudProviderList: React.FC = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {data.map((provider) => (
-              <Table.Tr key={provider.id}>
+            {providers.map((provider) => (
+              <Table.Tr key={provider._id}>
                 <Table.Td>
-                  <Text weight={500}>{provider.name}</Text>
-                  <Text size="xs" color="dimmed">
-                    {provider.id}
+                  <Text fw={500}>{provider.name}</Text>
+                  <Text size="xs" c="dimmed">
+                    {provider._id}
                   </Text>
                 </Table.Td>
                 <Table.Td>
@@ -79,27 +148,29 @@ const CloudProviderList: React.FC = () => {
                 </Table.Td>
                 <Table.Td>
                   <Badge
-                    color={provider.active ? 'green' : 'red'}
+                    color={provider.isActive ? 'green' : 'red'}
                   >
-                    {provider.active ? 'Active' : 'Inactive'}
+                    {provider.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
                   {new Date(provider.createdAt).toLocaleDateString()}
                 </Table.Td>
                 <Table.Td>
-                  <Group spacing="xs">
+                  <Group gap="xs">
                     <ActionIcon
-                      color="yellow"
-                      onClick={() => handleEditCloudProvider(provider.id)}
+                      variant="light"
+                      color="blue"
+                      onClick={() => handleEditCloudProvider(provider._id)}
                       title="Edit cloud provider"
                     >
                       <IconEdit size={16} />
                     </ActionIcon>
                     <ActionIcon
+                      variant="light"
                       color="red"
                       title="Delete cloud provider"
-                      disabled
+                      onClick={() => openDeleteModal(provider)}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -109,17 +180,50 @@ const CloudProviderList: React.FC = () => {
             ))}
           </Table.Tbody>
         </Table>
+      </Paper>
 
-        {totalPages > 1 && (
-          <div className="mt-4 flex justify-center">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+      {/* Delete Confirmation Modal */}
+      <Modal
+        opened={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Cloud Provider"
+      >
+        {selectedProvider && (
+          <>
+            <Text mb="md">
+              Are you sure you want to delete <strong>{selectedProvider.name}</strong>? This action cannot be undone.
+            </Text>
+            
+            <Text mb="md" size="sm" c="dimmed">
+              This will remove the cloud provider from the system. Any tenant integrations using this provider will be affected.
+            </Text>
+            
+            <Text mb="md" fw={500}>
+              Type <strong>{selectedProvider.name}</strong> to confirm:
+            </Text>
+            
+            <TextInput
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.currentTarget.value)}
+              placeholder={selectedProvider.name}
+              mb="xl"
             />
-          </div>
+            
+            <Group justify="flex-end">
+              <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                color="red" 
+                onClick={handleDeleteCloudProvider}
+                disabled={confirmText !== selectedProvider.name}
+              >
+                Delete
+              </Button>
+            </Group>
+          </>
         )}
-      </div>
+      </Modal>
     </div>
   );
 };

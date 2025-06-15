@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ApiError, ApiResponse } from '@/types';
-import api from '@/utils/api';
+import { ApiError, ApiResponse } from '../types/api';
+import api from '../utils/api';
 
 interface UseApiState<T> {
   data: T | null;

@@ -1,103 +1,219 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCloudProvider, useUpdateCloudProvider } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay } from '@/components/common';
-import { Button, TextInput, Textarea, Select, Switch, Card, Group, PasswordInput } from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
-import { z } from 'zod';
-import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
+import { useForm } from '@mantine/form';
+import { 
+  TextInput, 
+  Textarea, 
+  Select, 
+  Switch, 
+  Button, 
+  Paper, 
+  Title, 
+  Group, 
+  LoadingOverlay, 
+  Tabs, 
+  Code, 
+  Alert,
+  PasswordInput,
+  Divider,
+  Stack
+} from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { 
+  IconAlertCircle, 
+  IconCheck, 
+  IconDeviceFloppy, 
+  IconArrowLeft,
+  IconBrandDrops,
+  IconBrandGoogleDrive,
+  IconBrandOnedrive,
+  IconBrandAmazon,
+  IconBrandGoogle,
+  IconBrandMinecraft,
+  IconCloud
+} from '@tabler/icons-react';
+import { PageHeader } from '../../components/layout';
+import { useCloudProviders } from '../../hooks/useCloudProviders';
+import { CloudProvider, CloudProviderUpdate } from '../../types/cloud-provider';
+import { LoadingSpinner } from '../../components/common';
 
-const cloudProviderSchema = z.object({
-  name: z.string().min(3, 'Name must be at least 3 characters'),
-  type: z.enum(['AWS', 'AZURE', 'GCP', 'DIGITAL_OCEAN', 'OTHER']),
-  description: z.string().optional(),
-  credentials: z.object({
-    apiKey: z.string().min(1, 'API Key is required'),
-    apiSecret: z.string().optional(), // Optional on edit to allow keeping existing secret
-  }),
-  active: z.boolean(),
-});
-
-type CloudProviderFormValues = z.infer<typeof cloudProviderSchema>;
+// Import constants from CloudProviderCreate
+import { 
+  AUTH_TYPES, 
+  PROVIDER_TYPES, 
+  DEFAULT_SCHEMAS, 
+  AUTH_TYPE_FIELDS,
+  getProviderIcon
+} from './CloudProviderConstants';
 
 const CloudProviderEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: provider, isLoading: isFetching, error: fetchError } = useCloudProvider(id || '');
-  const { mutate, isLoading: isUpdating, error: updateError } = useUpdateCloudProvider(id || '');
+  const { useCloudProvider, updateCloudProvider, isUpdating } = useCloudProviders();
+  const { data: cloudProvider, isLoading, error } = useCloudProvider(id);
+  
+  const [activeTab, setActiveTab] = useState<string | null>('general');
+  const [schemaError, setSchemaError] = useState<string | null>(null);
+  const [selectedProviderType, setSelectedProviderType] = useState<string>('dropbox');
+  const [selectedAuthType, setSelectedAuthType] = useState<string>('oauth2');
+  const [requiredCredentials, setRequiredCredentials] = useState<Array<{ key: string, label: string, type: string }>>(AUTH_TYPE_FIELDS.oauth2);
 
-  const form = useForm<CloudProviderFormValues>({
+  // Form for cloud provider editing
+  const form = useForm<CloudProviderUpdate>({
     initialValues: {
       name: '',
-      type: 'AWS',
-      description: '',
-      credentials: {
-        apiKey: '',
-        apiSecret: '',
-      },
-      active: true,
+      type: '',
+      authType: '',
+      configSchema: {},
+      isActive: true,
     },
-    validate: zodResolver(cloudProviderSchema),
+    validate: {
+      name: (value) => (value && value.length < 3 ? 'Name must be at least 3 characters' : null),
+    },
   });
 
+  // Schema editor state
+  const [schemaJson, setSchemaJson] = useState<string>('{}');
+
+  // Load cloud provider data
   useEffect(() => {
-    if (provider) {
+    if (cloudProvider) {
       form.setValues({
-        name: provider.name,
-        type: provider.type,
-        description: provider.description || '',
-        credentials: {
-          apiKey: provider.credentials.apiKey,
-          apiSecret: '', // Don't show existing secret
-        },
-        active: provider.active,
+        name: cloudProvider.name,
+        type: cloudProvider.type,
+        authType: cloudProvider.authType,
+        configSchema: cloudProvider.configSchema,
+        isActive: cloudProvider.isActive,
+      });
+      
+      // Set selected provider type and auth type
+      setSelectedProviderType(cloudProvider.type);
+      setSelectedAuthType(cloudProvider.authType);
+      
+      // Set schema JSON
+      setSchemaJson(JSON.stringify(cloudProvider.configSchema || {}, null, 2));
+    }
+  }, [cloudProvider]);
+
+  // Update required credentials when auth type changes
+  useEffect(() => {
+    if (selectedAuthType) {
+      setRequiredCredentials(AUTH_TYPE_FIELDS[selectedAuthType] || []);
+      form.setFieldValue('authType', selectedAuthType);
+    }
+  }, [selectedAuthType]);
+
+  // Handle schema changes
+  const handleSchemaChange = (value: string) => {
+    setSchemaJson(value);
+    setSchemaError(null);
+    
+    try {
+      const parsed = JSON.parse(value);
+      form.setFieldValue('configSchema', parsed);
+    } catch (error) {
+      if (error instanceof Error) {
+        setSchemaError(error.message);
+      } else {
+        setSchemaError('Invalid JSON');
+      }
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (values: CloudProviderUpdate) => {
+    if (!id) return;
+    
+    try {
+      // Validate schema JSON
+      if (schemaError) {
+        notifications.show({
+          title: 'Error',
+          message: 'Please fix the schema errors before submitting',
+          color: 'red',
+        });
+        setActiveTab('schema');
+        return;
+      }
+      
+      // Update cloud provider
+      await updateCloudProvider({ id, data: values });
+      
+      notifications.show({
+        title: 'Success',
+        message: 'Cloud provider updated successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+      
+      // Navigate back to list
+      navigate('/admin/cloud-providers');
+    } catch (error) {
+      console.error('Failed to update cloud provider:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update cloud provider',
+        color: 'red',
       });
     }
-  }, [provider]);
-
-  const handleSubmit = (values: CloudProviderFormValues) => {
-    // If secret is empty, don't update it
-    const updatedValues = {
-      ...values,
-      credentials: {
-        ...values.credentials,
-        apiSecret: values.credentials.apiSecret || undefined,
-      },
-    };
-
-    mutate(updatedValues, {
-      onSuccess: () => {
-        navigate('/cloud-providers');
-      },
-    });
   };
 
   const handleBack = () => {
-    navigate('/cloud-providers');
+    navigate('/admin/cloud-providers');
   };
 
-  if (isFetching) {
-    return <LoadingSpinner size="xl" text="Loading cloud provider..." />;
-  }
+  // Get icon for selected provider
+  const renderProviderIcon = () => {
+    const provider = PROVIDER_TYPES.find(p => p.value === selectedProviderType);
+    return getProviderIcon(provider?.iconType || 'custom');
+  };
 
-  const error = fetchError || updateError;
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   if (error) {
-    return <ErrorDisplay error={error} />;
+    return (
+      <div>
+        <PageHeader
+          title="Error"
+          description="Failed to load cloud provider"
+        />
+        <Alert 
+          icon={<IconAlertCircle size={16} />} 
+          title="Error" 
+          color="red" 
+          mt="md"
+        >
+          {error instanceof Error ? error.message : 'An unknown error occurred'}
+        </Alert>
+        <Group mt="xl">
+          <Button 
+            leftSection={<IconArrowLeft size={16} />}
+            onClick={handleBack}
+          >
+            Back to Cloud Providers
+          </Button>
+        </Group>
+      </div>
+    );
   }
 
-  if (!provider) {
+  if (!cloudProvider) {
     return (
       <div>
         <PageHeader
           title="Cloud Provider Not Found"
           description="The requested cloud provider could not be found"
-        >
-          <Button leftIcon={<IconArrowLeft size={16} />} onClick={() => navigate('/cloud-providers')}>
+        />
+        <Group mt="md">
+          <Button 
+            leftSection={<IconArrowLeft size={16} />}
+            onClick={handleBack}
+          >
             Back to Cloud Providers
           </Button>
-        </PageHeader>
+        </Group>
       </div>
     );
   }
@@ -105,85 +221,185 @@ const CloudProviderEdit: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title={`Edit Cloud Provider: ${provider.name}`}
-        description={`Provider ID: ${provider.id}`}
-      >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
-          Back
+        title={`Edit Cloud Provider: ${cloudProvider.name}`}
+        description={`Provider ID: ${cloudProvider._id}`}
+      />
+
+      <Group justify="flex-start" mb="md">
+        <Button 
+          variant="outline" 
+          leftSection={<IconArrowLeft size={16} />}
+          onClick={handleBack}
+        >
+          Back to Cloud Providers
         </Button>
-      </PageHeader>
+      </Group>
 
-      <Card shadow="sm" p="lg" radius="md" withBorder className="mt-6">
+      <Paper withBorder p="md" radius="md" pos="relative">
+        <LoadingOverlay visible={isUpdating} />
+        
         <form onSubmit={form.onSubmit(handleSubmit)}>
-          <TextInput
-            label="Provider Name"
-            placeholder="Enter provider name"
-            required
-            {...form.getInputProps('name')}
-            className="mb-4"
-          />
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List mb="md">
+              <Tabs.Tab value="general">General Information</Tabs.Tab>
+              <Tabs.Tab value="auth">Authentication</Tabs.Tab>
+              <Tabs.Tab value="schema">Configuration Schema</Tabs.Tab>
+            </Tabs.List>
 
-          <Select
-            label="Provider Type"
-            placeholder="Select provider type"
-            data={[
-              { value: 'AWS', label: 'Amazon Web Services (AWS)' },
-              { value: 'AZURE', label: 'Microsoft Azure' },
-              { value: 'GCP', label: 'Google Cloud Platform (GCP)' },
-              { value: 'DIGITAL_OCEAN', label: 'Digital Ocean' },
-              { value: 'OTHER', label: 'Other' },
-            ]}
-            required
-            {...form.getInputProps('type')}
-            className="mb-4"
-          />
+            <Tabs.Panel value="general">
+              <Title order={3} mb="md">General Information</Title>
+              
+              <TextInput
+                label="Provider Name"
+                placeholder="Enter provider name"
+                required
+                mb="md"
+                leftSection={renderProviderIcon()}
+                {...form.getInputProps('name')}
+              />
+              
+              <Select
+                label="Provider Type"
+                placeholder="Select provider type"
+                data={PROVIDER_TYPES.map(type => ({
+                  value: type.value,
+                  label: type.label,
+                  leftSection: getProviderIcon(type.iconType)
+                }))}
+                value={selectedProviderType}
+                onChange={(value) => setSelectedProviderType(value || 'dropbox')}
+                required
+                mb="md"
+                disabled // Prevent changing provider type after creation
+              />
+              
+              <Textarea
+                label="Description"
+                placeholder="Enter provider description"
+                minRows={3}
+                mb="md"
+              />
+              
+              <Switch
+                label="Active"
+                description="Inactive providers cannot be used for new integrations"
+                checked={form.values.isActive}
+                mb="xl"
+                {...form.getInputProps('isActive', { type: 'checkbox' })}
+              />
+            </Tabs.Panel>
 
-          <Textarea
-            label="Description"
-            placeholder="Enter provider description"
-            {...form.getInputProps('description')}
-            className="mb-4"
-          />
+            <Tabs.Panel value="auth">
+              <Title order={3} mb="md">Authentication Configuration</Title>
+              
+              <Select
+                label="Authentication Type"
+                placeholder="Select authentication type"
+                data={AUTH_TYPES}
+                value={selectedAuthType}
+                onChange={(value) => setSelectedAuthType(value || 'oauth2')}
+                required
+                mb="xl"
+                disabled // Prevent changing auth type after creation
+              />
+              
+              <Divider mb="md" label="Required Credentials" labelPosition="center" />
+              
+              <Stack>
+                {requiredCredentials.map((field) => (
+                  <div key={field.key}>
+                    {field.type === 'password' ? (
+                      <PasswordInput
+                        label={field.label}
+                        placeholder={`Enter new ${field.label.toLowerCase()} or leave blank to keep existing`}
+                        mb="md"
+                      />
+                    ) : field.type === 'textarea' ? (
+                      <Textarea
+                        label={field.label}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                        minRows={3}
+                        mb="md"
+                      />
+                    ) : (
+                      <TextInput
+                        label={field.label}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                        mb="md"
+                      />
+                    )}
+                  </div>
+                ))}
+              </Stack>
+              
+              <Alert 
+                icon={<IconAlertCircle size={16} />} 
+                title="Credential Security" 
+                color="blue" 
+                mb="md"
+              >
+                Credentials are securely stored and encrypted. Leave password fields blank to keep existing values.
+              </Alert>
+            </Tabs.Panel>
 
-          <TextInput
-            label="API Key"
-            placeholder="Enter API key"
-            required
-            {...form.getInputProps('credentials.apiKey')}
-            className="mb-4"
-          />
-
-          <PasswordInput
-            label="API Secret"
-            placeholder="Leave blank to keep existing secret"
-            {...form.getInputProps('credentials.apiSecret')}
-            className="mb-4"
-          />
-
-          <Switch
-            label="Active"
-            {...form.getInputProps('active', { type: 'checkbox' })}
-            className="mb-6"
-          />
-
-          <Group position="right">
-            <Button
-              type="button"
-              variant="outline"
+            <Tabs.Panel value="schema">
+              <Title order={3} mb="md">Configuration Schema</Title>
+              
+              <Alert 
+                icon={<IconAlertCircle size={16} />} 
+                title="JSON Schema" 
+                color="blue" 
+                mb="md"
+              >
+                Define the configuration schema for this cloud provider using JSON Schema format. 
+                This schema will be used to validate tenant integrations.
+              </Alert>
+              
+              {schemaError && (
+                <Alert 
+                  icon={<IconAlertCircle size={16} />} 
+                  title="Schema Error" 
+                  color="red" 
+                  mb="md"
+                >
+                  {schemaError}
+                </Alert>
+              )}
+              
+              <Textarea
+                placeholder="Enter JSON schema"
+                minRows={10}
+                value={schemaJson}
+                onChange={(e) => handleSchemaChange(e.currentTarget.value)}
+                mb="md"
+                styles={{ input: { fontFamily: 'monospace' } }}
+              />
+              
+              <Title order={4} mb="md">Schema Preview</Title>
+              <Code block mb="xl">
+                {schemaError ? 'Invalid JSON' : JSON.stringify(form.values.configSchema, null, 2)}
+              </Code>
+            </Tabs.Panel>
+          </Tabs>
+          
+          <Group justify="flex-end" mt="xl">
+            <Button 
+              variant="outline" 
               onClick={handleBack}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              leftIcon={<IconDeviceFloppy size={16} />}
+            <Button 
+              type="submit" 
+              leftSection={<IconDeviceFloppy size={16} />}
               loading={isUpdating}
+              disabled={!!schemaError}
             >
-              Save
+              Save Changes
             </Button>
           </Group>
         </form>
-      </Card>
+      </Paper>
     </div>
   );
 };

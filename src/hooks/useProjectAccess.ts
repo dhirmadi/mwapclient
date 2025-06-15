@@ -1,4 +1,5 @@
-import { Project, ProjectMemberRole } from '@/types';
+import { Project } from '../types';
+import { ProjectRole } from '../types/auth';
 import useAuth from './useAuth';
 
 /**
@@ -20,7 +21,7 @@ export const useProjectAccess = () => {
   /**
    * Check if the current user has a specific role in the project
    */
-  const hasRole = (project: Project, role: ProjectMemberRole | ProjectMemberRole[]): boolean => {
+  const hasRole = (project: Project, role: ProjectRole | ProjectRole[]): boolean => {
     if (!user || !project.members) return false;
     
     const userMember = project.members.find(member => member.userId === user.id);
@@ -36,7 +37,7 @@ export const useProjectAccess = () => {
   /**
    * Get the current user's role in the project
    */
-  const getUserRole = (project: Project): ProjectMemberRole | null => {
+  const getUserRole = (project: Project): ProjectRole | null => {
     if (!user || !project.members) return null;
     
     const userMember = project.members.find(member => member.userId === user.id);
@@ -47,7 +48,7 @@ export const useProjectAccess = () => {
    * Check if the current user is an admin of the project
    */
   const isAdmin = (project: Project): boolean => {
-    return hasRole(project, ProjectMemberRole.ADMIN);
+    return hasRole(project, 'OWNER');
   };
 
   return {

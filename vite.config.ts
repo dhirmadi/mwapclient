@@ -1,18 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'node:path'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(path.dirname(''), './src'),
+      '@': resolve(__dirname, './src'),
     },
   },
   server: {
     host: '0.0.0.0',
-    port: 54987,
+    port: 5173,
     strictPort: true,
     cors: true,
     headers: {
@@ -22,10 +22,10 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://api.mwap.dev',
+        target: 'https://mwapss.shibari.photo/api/v1',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

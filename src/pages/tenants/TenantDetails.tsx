@@ -1,8 +1,8 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTenant } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay } from '@/components/common';
+import { useTenant } from '../../hooks';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner, ErrorDisplay } from '../../components/common';
 import { Button, Card, Group, Text, Badge, Tabs } from '@mantine/core';
 import { IconEdit, IconArrowLeft, IconUsers, IconSettings } from '@tabler/icons-react';
 
@@ -34,7 +34,7 @@ const TenantDetails: React.FC = () => {
           title="Tenant Not Found"
           description="The requested tenant could not be found"
         >
-          <Button leftIcon={<IconArrowLeft size={16} />} onClick={handleBack}>
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
             Back to Tenants
           </Button>
         </PageHeader>
@@ -48,19 +48,19 @@ const TenantDetails: React.FC = () => {
         title={tenant.name}
         description={`Tenant ID: ${tenant.id}`}
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
           Back
         </Button>
-        <Button leftIcon={<IconEdit size={16} />} onClick={handleEdit}>
+        <Button leftSection={<IconEdit size={16} />} onClick={handleEdit}>
           Edit
         </Button>
       </PageHeader>
 
       <div className="mt-6">
         <Card shadow="sm" p="lg" radius="md" withBorder>
-          <Group position="apart" mb="md">
+          <Group style={{ justifyContent: 'space-between' }} mb="md">
             <div>
-              <Text weight={500} size="lg">Tenant Information</Text>
+              <Text fw={500} size="lg">Tenant Information</Text>
             </div>
             <Badge color={tenant.active ? 'green' : 'red'}>
               {tenant.active ? 'Active' : 'Inactive'}
@@ -94,8 +94,8 @@ const TenantDetails: React.FC = () => {
         <div className="mt-6">
           <Tabs defaultValue="users">
             <Tabs.List>
-              <Tabs.Tab value="users" icon={<IconUsers size={14} />}>Users</Tabs.Tab>
-              <Tabs.Tab value="settings" icon={<IconSettings size={14} />}>Settings</Tabs.Tab>
+              <Tabs.Tab value="users" leftSection={<IconUsers size={14} />}>Users</Tabs.Tab>
+              <Tabs.Tab value="settings" leftSection={<IconSettings size={14} />}>Settings</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="users" pt="xs">

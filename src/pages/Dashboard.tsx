@@ -16,7 +16,7 @@ const SuperAdminDashboard: React.FC = () => {
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/tenants">
             <Title order={3} mb="md">Tenants</Title>
             <Text c="dimmed">Manage platform tenants</Text>
@@ -54,7 +54,7 @@ const TenantOwnerDashboard: React.FC = () => {
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
             <Title order={3} mb="md">Projects</Title>
             <Text c="dimmed">Manage your organization's projects</Text>
@@ -92,7 +92,7 @@ const ProjectMemberDashboard: React.FC = () => {
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
             <Title order={3} mb="md">My Projects</Title>
             <Text c="dimmed">View and access your projects</Text>

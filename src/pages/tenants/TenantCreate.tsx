@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateTenant } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { ErrorDisplay } from '@/components/common';
+import { useCreateTenant } from '../../hooks';
+import { PageHeader } from '../../components/layout';
+import { ErrorDisplay } from '../../components/common';
 import { Button, TextInput, Switch, Card, Group } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { z } from 'zod';
@@ -45,7 +45,7 @@ const TenantCreate: React.FC = () => {
         title="Create Tenant"
         description="Add a new tenant to the platform"
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
           Back
         </Button>
       </PageHeader>
@@ -68,7 +68,7 @@ const TenantCreate: React.FC = () => {
             className="mb-6"
           />
 
-          <Group position="right">
+          <Group style={{ justifyContent: 'flex-end' }}>
             <Button
               type="button"
               variant="outline"
@@ -78,7 +78,7 @@ const TenantCreate: React.FC = () => {
             </Button>
             <Button
               type="submit"
-              leftIcon={<IconDeviceFloppy size={16} />}
+              leftSection={<IconDeviceFloppy size={16} />}
               loading={isLoading}
             >
               Save

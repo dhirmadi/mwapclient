@@ -1,8 +1,8 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useProject } from '@/hooks';
-import { PageHeader } from '@/components/layout';
-import { LoadingSpinner, ErrorDisplay } from '@/components/common';
+import { useProject } from '../../hooks';
+import { PageHeader } from '../../components/layout';
+import { LoadingSpinner, ErrorDisplay } from '../../components/common';
 import { Button, Card, Group, Text, Badge, Tabs } from '@mantine/core';
 import { IconEdit, IconArrowLeft, IconUsers, IconSettings, IconFiles, IconCloud } from '@tabler/icons-react';
 
@@ -34,7 +34,7 @@ const ProjectDetails: React.FC = () => {
           title="Project Not Found"
           description="The requested project could not be found"
         >
-          <Button leftIcon={<IconArrowLeft size={16} />} onClick={handleBack}>
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
             Back to Projects
           </Button>
         </PageHeader>
@@ -48,19 +48,19 @@ const ProjectDetails: React.FC = () => {
         title={project.name}
         description={`Project ID: ${project.id}`}
       >
-        <Button leftIcon={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
           Back
         </Button>
-        <Button leftIcon={<IconEdit size={16} />} onClick={handleEdit}>
+        <Button leftSection={<IconEdit size={16} />} onClick={handleEdit}>
           Edit
         </Button>
       </PageHeader>
 
       <div className="mt-6">
         <Card shadow="sm" p="lg" radius="md" withBorder>
-          <Group position="apart" mb="md">
+          <Group style={{ justifyContent: 'space-between' }} mb="md">
             <div>
-              <Text weight={500} size="lg">Project Information</Text>
+              <Text fw={500} size="lg">Project Information</Text>
             </div>
             <Badge color={
               project.status === 'ACTIVE' ? 'green' : 
