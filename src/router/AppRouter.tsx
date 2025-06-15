@@ -26,6 +26,7 @@ import CloudProviderEdit from '../pages/cloud-providers/CloudProviderEdit';
 import ProjectTypeList from '../pages/project-types/ProjectTypeList';
 import ProjectTypeCreate from '../pages/project-types/ProjectTypeCreate';
 import ProjectTypeEdit from '../pages/project-types/ProjectTypeEdit';
+import ApiTestConsole from '../pages/admin/ApiTestConsole';
 
 // TenantOwner Pages
 import TenantSettings from '../pages/tenants/TenantSettings';
@@ -89,6 +90,7 @@ const AppRouter: React.FC = () => {
                     <Route path="/admin/project-types" element={<ProjectTypeList />} />
                     <Route path="/admin/project-types/create" element={<ProjectTypeCreate />} />
                     <Route path="/admin/project-types/:id/edit" element={<ProjectTypeEdit />} />
+                    <Route path="/admin/api-test" element={<ApiTestConsole />} />
                   </Route>
 
                   {/* TenantOwner Routes */}

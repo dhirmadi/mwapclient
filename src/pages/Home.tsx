@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser } from '@tabler/icons-react';
+import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconCode } from '@tabler/icons-react';
 
 const Home: React.FC = () => {
   const { isAuthenticated, user, isSuperAdmin, isTenantOwner } = useAuth();
@@ -102,6 +102,23 @@ const Home: React.FC = () => {
                 <Text mb="md">Define and configure project templates and types.</Text>
                 <Button component={Link} to="/admin/project-types" variant="filled" color="orange" fullWidth>
                   Manage Types
+                </Button>
+              </Card>
+            )}
+            
+            {isSuperAdmin && (
+              <Card shadow="sm" p="lg" radius="md" withBorder>
+                <Card.Section p="md">
+                  <Group justify="space-between">
+                    <Title order={3}>API Test Console</Title>
+                    <ThemeIcon size="lg" radius="md" color="teal">
+                      <IconCode size={20} />
+                    </ThemeIcon>
+                  </Group>
+                </Card.Section>
+                <Text mb="md">Test API endpoints and view detailed responses.</Text>
+                <Button component={Link} to="/admin/api-test" variant="filled" color="teal" fullWidth>
+                  Open Console
                 </Button>
               </Card>
             )}
