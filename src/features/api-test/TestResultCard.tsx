@@ -76,6 +76,18 @@ export const TestResultCard: React.FC<TestResultCardProps> = ({ result }) => {
             </Alert>
           )}
           
+          {result.curlCommand && (
+            <Box mb="md">
+              <Title order={5} mb="xs">cURL Command</Title>
+              <Paper p="xs" withBorder bg="blue.0">
+                <Text size="xs" c="dimmed">Copy this command to test manually:</Text>
+                <Code block style={{ maxHeight: '200px', overflow: 'auto' }}>
+                  {result.curlCommand}
+                </Code>
+              </Paper>
+            </Box>
+          )}
+          
           <Grid>
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Title order={5} mb="xs">Request</Title>

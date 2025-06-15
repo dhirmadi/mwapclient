@@ -32,6 +32,7 @@ export interface TestResult {
   error?: string;
   success: boolean;
   duration: number;
+  curlCommand?: string; // Added curl command for manual testing
 }
 
 export interface ApiTest {
@@ -165,7 +166,8 @@ export const useApiTestRunner = () => {
         responseHeaders: response.headers as Record<string, string>,
         responseData: response.data,
         success: response.status >= 200 && response.status < 300,
-        duration: endTime - startTime
+        duration: endTime - startTime,
+        curlCommand: curlCommand
       };
     } catch (error) {
       const endTime = performance.now();
@@ -198,7 +200,8 @@ export const useApiTestRunner = () => {
         responseData: axiosError.response?.data,
         error: axiosError.message,
         success: false,
-        duration: endTime - startTime
+        duration: endTime - startTime,
+        curlCommand: curlCommand
       };
     }
   };
