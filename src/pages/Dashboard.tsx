@@ -32,6 +32,11 @@ const SuperAdminDashboard: React.FC = () => {
             <Text c="dimmed">Manage available project templates</Text>
           </Card>
           
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/api-test">
+            <Title order={3} mb="md">API Test Console</Title>
+            <Text c="dimmed">Run API tests and view results</Text>
+          </Card>
+          
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/profile">
             <Title order={3} mb="md">Profile</Title>
             <Text c="dimmed">Manage your account settings</Text>
