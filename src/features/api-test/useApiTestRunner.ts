@@ -87,10 +87,10 @@ export const useApiTestRunner = () => {
     const startTime = performance.now();
     console.log(`🚀 Starting API test: ${test.method} ${test.url}`);
     
+    // Get token from localStorage (should be set by the auth system)
+    const token = localStorage.getItem('auth_token');
+    
     try {
-      // Get token from localStorage (should be set by the auth system)
-      const token = localStorage.getItem('auth_token');
-      
       // Create a direct axios instance for testing
       const axiosInstance = axios.create({
         baseURL: API_BASE_URL, // Use the configured API base URL
