@@ -1,5 +1,20 @@
 import React, { useState } from 'react';
 import { TestResult } from './useApiTestRunner';
+import { 
+  Paper, 
+  Group, 
+  Title, 
+  Text, 
+  Badge, 
+  ThemeIcon, 
+  Collapse, 
+  Grid, 
+  Box, 
+  Code, 
+  Alert,
+  ActionIcon
+} from '@mantine/core';
+import { IconCheck, IconX, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
 interface TestResultCardProps {
   result: TestResult;
@@ -9,106 +24,108 @@ export const TestResultCard: React.FC<TestResultCardProps> = ({ result }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="mb-4 border rounded-lg overflow-hidden shadow-sm">
-      <div 
-        className={`p-4 flex justify-between items-center cursor-pointer ${
-          result.success ? 'bg-green-50' : 'bg-red-50'
-        }`}
-        onClick={() => setShowDetails(!showDetails)}
-      >
-        <div className="flex items-center">
-          <span 
-            className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
-              result.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
+    <Paper 
+      withBorder 
+      p="md" 
+      radius="md"
+      bg={result.success ? 'green.0' : 'red.0'}
+    >
+      <Group justify="space-between" wrap="nowrap">
+        <Group wrap="nowrap">
+          <ThemeIcon 
+            color={result.success ? 'green' : 'red'} 
+            variant="light" 
+            size="lg" 
+            radius="xl"
           >
-            {result.success ? '✓' : '✗'}
-          </span>
+            {result.success ? <IconCheck size={18} /> : <IconX size={18} />}
+          </ThemeIcon>
+          
           <div>
-            <h3 className="font-medium">{result.name}</h3>
-            <p className="text-sm text-gray-600">
+            <Text fw={500}>{result.name}</Text>
+            <Text size="sm" c="dimmed">
               {result.method} {result.url}
-            </p>
+            </Text>
           </div>
-        </div>
-        <div className="flex items-center">
+        </Group>
+        
+        <Group wrap="nowrap">
           {result.status && (
-            <span 
-              className={`px-2 py-1 text-xs rounded-md mr-3 ${
-                result.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}
+            <Badge 
+              color={result.success ? 'green' : 'red'}
+              variant="light"
             >
               {result.status} {result.statusText}
-            </span>
+            </Badge>
           )}
-          <span className="text-sm text-gray-500">{result.duration.toFixed(0)}ms</span>
-          <svg 
-            className={`w-5 h-5 ml-2 transform transition-transform ${showDetails ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
+          <Text size="sm" c="dimmed">{result.duration.toFixed(0)}ms</Text>
+          <ActionIcon 
+            onClick={() => setShowDetails(!showDetails)}
+            variant="subtle"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
+            {showDetails ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
+          </ActionIcon>
+        </Group>
+      </Group>
       
-      {showDetails && (
-        <div className="p-4 border-t">
+      <Collapse in={showDetails}>
+        <Box mt="md" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
           {result.error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded text-red-700">
-              <strong>Error:</strong> {result.error}
-            </div>
+            <Alert color="red" title="Error" mb="md">
+              {result.error}
+            </Alert>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium mb-2">Request</h4>
-              <div className="bg-gray-50 p-3 rounded border">
-                <p className="text-sm font-mono mb-2">{result.method} {result.url}</p>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Title order={5} mb="xs">Request</Title>
+              <Paper p="xs" withBorder bg="gray.0">
+                <Text fw={500} ff="monospace" size="sm">
+                  {result.method} {result.url}
+                </Text>
+                
                 {result.requestData && (
-                  <>
-                    <p className="text-xs text-gray-500 mt-2 mb-1">Request Data:</p>
-                    <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                  <Box mt="xs">
+                    <Text size="xs" c="dimmed">Request Data:</Text>
+                    <Code block style={{ maxHeight: '200px', overflow: 'auto' }}>
                       {JSON.stringify(result.requestData, null, 2)}
-                    </pre>
-                  </>
+                    </Code>
+                  </Box>
                 )}
-              </div>
-            </div>
+              </Paper>
+            </Grid.Col>
             
-            <div>
-              <h4 className="font-medium mb-2">Response</h4>
-              <div className="bg-gray-50 p-3 rounded border">
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Title order={5} mb="xs">Response</Title>
+              <Paper p="xs" withBorder bg="gray.0">
                 {result.status && (
-                  <p className="text-sm font-mono mb-2">
+                  <Text fw={500} ff="monospace" size="sm">
                     {result.status} {result.statusText}
-                  </p>
+                  </Text>
                 )}
                 
                 {result.responseHeaders && (
-                  <>
-                    <p className="text-xs text-gray-500 mt-2 mb-1">Headers:</p>
-                    <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-20">
+                  <Box mt="xs">
+                    <Text size="xs" c="dimmed">Headers:</Text>
+                    <Code block style={{ maxHeight: '100px', overflow: 'auto' }}>
                       {JSON.stringify(result.responseHeaders, null, 2)}
-                    </pre>
-                  </>
+                    </Code>
+                  </Box>
                 )}
                 
                 {result.responseData && (
-                  <>
-                    <p className="text-xs text-gray-500 mt-2 mb-1">Response Body:</p>
-                    <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                  <Box mt="xs">
+                    <Text size="xs" c="dimmed">Response Body:</Text>
+                    <Code block style={{ maxHeight: '200px', overflow: 'auto' }}>
                       {JSON.stringify(result.responseData, null, 2)}
-                    </pre>
-                  </>
+                    </Code>
+                  </Box>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              </Paper>
+            </Grid.Col>
+          </Grid>
+        </Box>
+      </Collapse>
+    </Paper>
   );
 };

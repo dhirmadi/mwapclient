@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApiTestRunner, ApiTest } from './useApiTestRunner';
 import { TestResultCard } from './TestResultCard';
+import { Button, Text, Title, Group, Checkbox, Stack, Paper, Badge, Loader } from '@mantine/core';
 
 export const ApiTestConsole: React.FC = () => {
   const { 
@@ -14,67 +15,52 @@ export const ApiTestConsole: React.FC = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <button
+      <Paper p="md" mb="lg" withBorder>
+        <Group justify="space-between" mb="md">
+          <Button
             onClick={runAllTests}
             disabled={isRunning}
-            className={`px-4 py-2 rounded-md font-medium ${
-              isRunning 
-                ? 'bg-blue-300 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
+            color="blue"
+            leftSection={isRunning ? <Loader size="xs" color="white" /> : null}
           >
-            {isRunning ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Running Tests...
-              </span>
-            ) : (
-              'Run All Tests'
-            )}
-          </button>
+            {isRunning ? 'Running Tests...' : 'Run All Tests'}
+          </Button>
           
-          <div className="text-sm text-gray-500">
-            {results.length > 0 && (
-              <>
-                {results.filter(r => r.success).length} of {results.length} tests passed
-              </>
-            )}
-          </div>
-        </div>
+          {results.length > 0 && (
+            <Group>
+              <Badge color="green" size="lg">
+                {results.filter(r => r.success).length} Passed
+              </Badge>
+              <Badge color="red" size="lg">
+                {results.filter(r => !r.success).length} Failed
+              </Badge>
+            </Group>
+          )}
+        </Group>
         
-        <div className="mb-6">
-          <h2 className="text-lg font-medium mb-2">Available Tests</h2>
-          <div className="flex flex-wrap gap-2">
+        <div>
+          <Title order={4} mb="sm">Available Tests</Title>
+          <Group>
             {predefinedTests.map((test) => (
-              <label 
+              <Checkbox
                 key={test.id}
-                className="inline-flex items-center p-2 border rounded cursor-pointer hover:bg-gray-50"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTests.includes(test.id)}
-                  onChange={() => toggleTestSelection(test.id)}
-                  className="mr-2"
-                />
-                <span>{test.name}</span>
-              </label>
+                label={test.name}
+                checked={selectedTests.includes(test.id)}
+                onChange={() => toggleTestSelection(test.id)}
+              />
             ))}
-          </div>
+          </Group>
         </div>
-      </div>
+      </Paper>
       
       {results.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Test Results</h2>
-          {results.map((result) => (
-            <TestResultCard key={result.id} result={result} />
-          ))}
+          <Title order={3} mb="md">Test Results</Title>
+          <Stack spacing="md">
+            {results.map((result) => (
+              <TestResultCard key={result.id} result={result} />
+            ))}
+          </Stack>
         </div>
       )}
     </div>
