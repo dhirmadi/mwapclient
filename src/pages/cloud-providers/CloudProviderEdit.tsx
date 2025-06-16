@@ -175,23 +175,21 @@ const CloudProviderEdit: React.FC = () => {
         <PageHeader
           title="Error"
           description="Failed to load cloud provider"
-        />
-        <Alert 
-          icon={<IconAlertCircle size={16} />} 
-          title="Error" 
-          color="red" 
-          mt="md"
         >
-          {error instanceof Error ? error.message : 'An unknown error occurred'}
-        </Alert>
-        <Group mt="xl">
           <Button 
             leftSection={<IconArrowLeft size={16} />}
             onClick={handleBack}
           >
             Back to Cloud Providers
           </Button>
-        </Group>
+        </PageHeader>
+        <Alert 
+          icon={<IconAlertCircle size={16} />} 
+          title="Error" 
+          color="red" 
+        >
+          {error instanceof Error ? error.message : 'An unknown error occurred'}
+        </Alert>
       </div>
     );
   }
@@ -202,15 +200,14 @@ const CloudProviderEdit: React.FC = () => {
         <PageHeader
           title="Cloud Provider Not Found"
           description="The requested cloud provider could not be found"
-        />
-        <Group mt="md">
+        >
           <Button 
             leftSection={<IconArrowLeft size={16} />}
             onClick={handleBack}
           >
             Back to Cloud Providers
           </Button>
-        </Group>
+        </PageHeader>
       </div>
     );
   }
@@ -220,9 +217,7 @@ const CloudProviderEdit: React.FC = () => {
       <PageHeader
         title={`Edit Cloud Provider: ${cloudProvider.name}`}
         description={`Provider ID: ${cloudProvider._id}`}
-      />
-
-      <Group justify="flex-start" mb="md">
+      >
         <Button 
           variant="outline" 
           leftSection={<IconArrowLeft size={16} />}
@@ -230,7 +225,7 @@ const CloudProviderEdit: React.FC = () => {
         >
           Back to Cloud Providers
         </Button>
-      </Group>
+      </PageHeader>
 
       <Paper withBorder p="md" radius="md" pos="relative">
         <LoadingOverlay visible={isUpdating} />

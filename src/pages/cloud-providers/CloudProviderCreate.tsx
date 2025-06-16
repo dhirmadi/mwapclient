@@ -117,9 +117,7 @@ const CloudProviderCreate: React.FC = () => {
       <PageHeader
         title="Add Cloud Provider"
         description="Configure a new cloud storage provider integration"
-      />
-
-      <Group justify="flex-start" mb="md">
+      >
         <Button 
           variant="outline" 
           leftSection={<IconArrowLeft size={16} />}
@@ -127,7 +125,7 @@ const CloudProviderCreate: React.FC = () => {
         >
           Back to Cloud Providers
         </Button>
-      </Group>
+      </PageHeader>
 
       <Paper withBorder p="md" radius="md" pos="relative">
         <LoadingOverlay visible={isCreating} />
