@@ -19,7 +19,7 @@ import {
   Stack,
   Code
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { showSuccess, showError } from '../../utils/notificationService';
 import { 
   IconEdit, 
   IconTrash, 
@@ -70,20 +70,12 @@ const ProjectTypeList: React.FC = () => {
       // Remove from local state
       setTypes(prev => prev.filter(p => p._id !== selectedType._id));
       
-      notifications.show({
-        title: 'Success',
-        message: `${selectedType.name} has been deleted`,
-        color: 'green',
-      });
+      showSuccess(`${selectedType.name} has been deleted`);
       
       setDeleteModalOpen(false);
     } catch (error) {
       console.error('Failed to delete project type:', error);
-      notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to delete project type',
-        color: 'red',
-      });
+      showError(error instanceof Error ? error.message : 'Failed to delete project type');
     }
   };
 

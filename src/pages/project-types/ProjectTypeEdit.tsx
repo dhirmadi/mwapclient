@@ -18,7 +18,7 @@ import {
   Skeleton,
   Text
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { storeSuccess, showError } from '../../utils/notificationService';
 import { 
   IconAlertCircle, 
   IconCheck, 
@@ -123,12 +123,7 @@ const ProjectTypeEdit: React.FC = () => {
     try {
       // Validate schema JSON
       if (schemaError) {
-        notifications.show({
-          title: 'Error',
-          message: 'Please fix the schema errors before submitting',
-          color: 'red',
-          icon: <IconAlertCircle size={16} />,
-        });
+        showError('Please fix the schema errors before submitting');
         setActiveTab('schema');
         return;
       }
@@ -136,23 +131,14 @@ const ProjectTypeEdit: React.FC = () => {
       // Update project type
       await updateProjectType({ id, data: values });
       
-      notifications.show({
-        title: 'Success',
-        message: 'Project type updated successfully',
-        color: 'green',
-        icon: <IconCheck size={16} />,
-      });
+      // Store success message for next page
+      storeSuccess('Project type updated successfully');
       
       // Navigate back to list
       navigate('/admin/project-types');
     } catch (error) {
       console.error('Failed to update project type:', error);
-      notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to update project type',
-        color: 'red',
-        icon: <IconAlertCircle size={16} />,
-      });
+      showError(error instanceof Error ? error.message : 'Failed to update project type');
     }
   };
 

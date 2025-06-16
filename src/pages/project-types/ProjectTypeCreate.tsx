@@ -17,7 +17,7 @@ import {
   Divider,
   Text
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { storeSuccess, showError } from '../../utils/notificationService';
 import { 
   IconAlertCircle, 
   IconCheck, 
@@ -100,12 +100,7 @@ const ProjectTypeCreate: React.FC = () => {
     try {
       // Validate schema JSON
       if (schemaError) {
-        notifications.show({
-          title: 'Error',
-          message: 'Please fix the schema errors before submitting',
-          color: 'red',
-          icon: <IconAlertCircle size={16} />,
-        });
+        showError('Please fix the schema errors before submitting');
         setActiveTab('schema');
         return;
       }
@@ -113,23 +108,14 @@ const ProjectTypeCreate: React.FC = () => {
       // Create project type
       await createProjectType(values);
       
-      notifications.show({
-        title: 'Success',
-        message: 'Project type created successfully',
-        color: 'green',
-        icon: <IconCheck size={16} />,
-      });
+      // Store success message for next page
+      storeSuccess('Project type created successfully');
       
       // Navigate back to list
       navigate('/admin/project-types');
     } catch (error) {
       console.error('Failed to create project type:', error);
-      notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to create project type',
-        color: 'red',
-        icon: <IconAlertCircle size={16} />,
-      });
+      showError(error instanceof Error ? error.message : 'Failed to create project type');
     }
   };
 
