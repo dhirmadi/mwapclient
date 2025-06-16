@@ -6,7 +6,7 @@ import { LoadingSpinner } from '../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
 import { CloudProvider } from '../../types/cloud-provider';
-import { checkForStoredNotifications, showNotification } from '../../utils/notificationUtils';
+import { showSuccess, showError } from '../../utils/notificationService';
 
 /**
  * Cloud Provider List Component
@@ -21,11 +21,6 @@ const CloudProviderList: React.FC = () => {
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Check for stored notifications
-  useEffect(() => {
-    checkForStoredNotifications();
-  }, []);
-
   // Navigation handlers
   const handleCreateCloudProvider = () => navigate('/admin/cloud-providers/create');
   const handleEditCloudProvider = (id: string) => navigate(`/admin/cloud-providers/${id}/edit`);
@@ -53,24 +48,16 @@ const CloudProviderList: React.FC = () => {
       await deleteCloudProvider(selectedProvider._id);
       closeDeleteModal();
       
-      // Show success notification safely
-      showNotification({
-        title: 'Success',
-        message: `${selectedProvider.name} has been deleted`,
-        color: 'green',
-      });
+      // Show success notification
+      showSuccess(`${selectedProvider.name} has been deleted`);
       
       // Refresh the list
       refetch();
     } catch (error) {
       console.error('Failed to delete cloud provider:', error);
       
-      // Show error notification safely
-      showNotification({
-        title: 'Error',
-        message: 'Failed to delete cloud provider',
-        color: 'red',
-      });
+      // Show error notification
+      showError('Failed to delete cloud provider');
     } finally {
       setIsDeleting(false);
     }
@@ -82,10 +69,12 @@ const CloudProviderList: React.FC = () => {
   }
   
   // Error handling
-  if (error) {
-    // Log the error but don't try to show a notification directly
-    console.error('Error loading cloud providers:', error);
-  }
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading cloud providers:', error);
+      showError('Failed to load cloud providers');
+    }
+  }, [error]);
 
   // Empty state
   if (cloudProviders.length === 0) {

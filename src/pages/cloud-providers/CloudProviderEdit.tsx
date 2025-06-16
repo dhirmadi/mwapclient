@@ -18,7 +18,7 @@ import {
   Divider,
   Stack
 } from '@mantine/core';
-import { checkForStoredNotifications, showNotification } from '../../utils/notificationUtils';
+import { storeSuccess, showError } from '../../utils/notificationService';
 import { 
   IconAlertCircle, 
   IconCheck, 
@@ -59,10 +59,7 @@ const CloudProviderEdit: React.FC = () => {
   const [selectedAuthType, setSelectedAuthType] = useState<string>('oauth2');
   const [requiredCredentials, setRequiredCredentials] = useState<Array<{ key: string, label: string, type: string }>>(AUTH_TYPE_FIELDS.oauth2);
   
-  // Check for stored notifications
-  useEffect(() => {
-    checkForStoredNotifications();
-  }, []);
+  // No need for notification check anymore
 
   // Form for cloud provider editing
   const form = useForm<CloudProviderUpdate>({
@@ -99,6 +96,14 @@ const CloudProviderEdit: React.FC = () => {
       setSelectedProviderType(cloudProvider.slug);
     }
   }, [cloudProvider]);
+  
+  // Handle errors
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading cloud provider:', error);
+      showError('Failed to load cloud provider');
+    }
+  }, [error]);
 
   // Update required credentials when auth type changes
   useEffect(() => {
@@ -130,31 +135,23 @@ const CloudProviderEdit: React.FC = () => {
     if (!id) return;
     
     try {
-      console.log('Updating cloud provider data:', values);
-      
       // Update cloud provider
       await updateCloudProvider({ id, data: values });
       
-      // Store success message using our safe notification utility
-      sessionStorage.setItem('appNotification', JSON.stringify({
-        title: 'Success',
-        message: 'Cloud provider updated successfully',
-        color: 'green',
-      }));
+      // Store success message for next page
+      storeSuccess('Cloud provider updated successfully');
       
       // Navigate back to list
       navigate('/admin/cloud-providers');
       
     } catch (error) {
       console.error('Failed to update cloud provider:', error);
-      // Log more details about the error
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
       
       // Show error message directly on the form
       form.setErrors({ name: 'Failed to update cloud provider. Please try again.' });
+      
+      // Also show error notification
+      showError('Failed to update cloud provider');
     }
   };
 

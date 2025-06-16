@@ -1,9 +1,9 @@
 import { MantineProvider } from '@mantine/core';
 import { AppRouter } from './router';
 import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import NotificationContainer from './components/notifications/NotificationContainer';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -21,6 +21,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
         <AppRouter />
+        <NotificationContainer />
         <ReactQueryDevtools initialIsOpen={false} />
       </MantineProvider>
     </QueryClientProvider>
