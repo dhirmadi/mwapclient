@@ -121,8 +121,10 @@ const api = {
   // Tenant endpoints
   fetchTenants: debugApiCall('fetchTenants', async (): Promise<Tenant[]> => {
     const response = await apiClient.get('/tenants');
-    // Handle different response formats
-    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+    console.log('Tenants API response:', response.data);
+    
+    // Handle the specific response format: { success: true, data: Array(1) }
+    if (response.data && response.data.success === true && Array.isArray(response.data.data)) {
       return response.data.data;
     } else if (Array.isArray(response.data)) {
       return response.data;

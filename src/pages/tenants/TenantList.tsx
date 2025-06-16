@@ -85,11 +85,11 @@ const TenantList: React.FC = () => {
           </Table.Thead>
           <Table.Tbody>
             {tenants?.map((tenant: any) => (
-              <Table.Tr key={tenant._id}>
+              <Table.Tr key={tenant.id || tenant._id}>
                 <Table.Td>
                   <Text fw={500}>{tenant.name}</Text>
                   <Text size="xs" color="dimmed">
-                    {tenant._id}
+                    {tenant.id || tenant._id}
                   </Text>
                 </Table.Td>
                 <Table.Td>
@@ -103,9 +103,9 @@ const TenantList: React.FC = () => {
                 </Table.Td>
                 <Table.Td>
                   <Badge
-                    color={!tenant.archived ? 'green' : 'red'}
+                    color={tenant.active === false || tenant.archived === true ? 'red' : 'green'}
                   >
-                    {!tenant.archived ? 'Active' : 'Archived'}
+                    {tenant.active === false || tenant.archived === true ? 'Inactive' : 'Active'}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -115,14 +115,14 @@ const TenantList: React.FC = () => {
                   <Group gap="xs">
                     <ActionIcon
                       color="blue"
-                      onClick={() => handleViewTenant(tenant._id)}
+                      onClick={() => handleViewTenant(tenant.id || tenant._id)}
                       title="View tenant"
                     >
                       <IconEye size={16} />
                     </ActionIcon>
                     <ActionIcon
                       color="yellow"
-                      onClick={() => handleEditTenant(tenant._id)}
+                      onClick={() => handleEditTenant(tenant.id || tenant._id)}
                       title="Edit tenant"
                     >
                       <IconEdit size={16} />
