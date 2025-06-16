@@ -145,15 +145,44 @@ const api = {
     return response.data;
   }),
   
-  // Alias for fetchTenant with required ID parameter
+  // Workaround for fetchTenantById - fetches all tenants and filters by ID
   fetchTenantById: debugApiCall('fetchTenantById', async (id: string): Promise<Tenant> => {
-    const response = await apiClient.get(`/tenants/${id}`);
+    console.log(`Fetching tenant by ID: ${id}`);
     
-    // Handle different response formats
-    if (response.data && response.data.success === true && response.data.data) {
-      return response.data.data;
+    try {
+      // First try the direct endpoint (which currently returns 404)
+      const response = await apiClient.get(`/tenants/${id}`);
+      
+      // Handle different response formats
+      if (response.data && response.data.success === true && response.data.data) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.log('Error fetching tenant by ID directly, falling back to workaround', error);
+      
+      // Fallback: Fetch all tenants and filter by ID
+      const allTenantsResponse = await apiClient.get('/tenants');
+      let allTenants = [];
+      
+      // Handle different response formats
+      if (allTenantsResponse.data && allTenantsResponse.data.success === true && Array.isArray(allTenantsResponse.data.data)) {
+        allTenants = allTenantsResponse.data.data;
+      } else if (Array.isArray(allTenantsResponse.data)) {
+        allTenants = allTenantsResponse.data;
+      } else {
+        throw new Error('Unexpected response format when fetching all tenants');
+      }
+      
+      // Find the tenant with the matching ID
+      const tenant = allTenants.find((t: any) => (t.id === id || t._id === id));
+      
+      if (!tenant) {
+        throw new Error(`Tenant with ID ${id} not found`);
+      }
+      
+      return tenant;
     }
-    return response.data;
   }),
   
   createTenant: debugApiCall('createTenant', async (data: TenantCreate): Promise<Tenant> => {
@@ -162,8 +191,37 @@ const api = {
   }),
   
   updateTenant: debugApiCall('updateTenant', async (id: string, data: Partial<Tenant>): Promise<Tenant> => {
-    const response = await apiClient.patch(`/tenants/${id}`, data);
-    return response.data;
+    try {
+      const response = await apiClient.patch(`/tenants/${id}`, data);
+      
+      // Handle different response formats
+      if (response.data && response.data.success === true && response.data.data) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error updating tenant directly, attempting workaround', error);
+      
+      // If the direct update fails, try to use the PUT method instead
+      try {
+        // First get the current tenant data
+        const currentTenant = await api.fetchTenantById(id);
+        
+        // Merge the current data with the updates
+        const updatedData = { ...currentTenant, ...data };
+        
+        // Try PUT instead of PATCH
+        const putResponse = await apiClient.put(`/tenants/${id}`, updatedData);
+        
+        if (putResponse.data && putResponse.data.success === true && putResponse.data.data) {
+          return putResponse.data.data;
+        }
+        return putResponse.data;
+      } catch (putError) {
+        console.error('Both PATCH and PUT methods failed for tenant update', putError);
+        throw putError;
+      }
+    }
   }),
   
   deleteTenant: debugApiCall('deleteTenant', async (id: string): Promise<void> => {
