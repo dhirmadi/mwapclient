@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser } from '@tabler/icons-react';
+import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus } from '@tabler/icons-react';
+import { useTenants } from '../hooks/useTenants';
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, user, isSuperAdmin, isTenantOwner } = useAuth();
+  const { currentTenant, isLoadingCurrentTenant } = useTenants();
+  const [hasNoTenant, setHasNoTenant] = useState<boolean>(false);
+  
+  // Check if user has no tenant
+  useEffect(() => {
+    if (isAuthenticated && !isLoadingCurrentTenant && !isSuperAdmin) {
+      setHasNoTenant(!currentTenant);
+    }
+  }, [isAuthenticated, isLoadingCurrentTenant, currentTenant, isSuperAdmin]);
 
   return (
     <Container size="lg" py="xl">
@@ -38,6 +49,23 @@ const Home: React.FC = () => {
           <Title order={2} mb="md">Quick Actions</Title>
           
           <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+            {hasNoTenant && (
+              <Card shadow="sm" p="lg" radius="md" withBorder>
+                <Card.Section p="md" bg="teal.6">
+                  <Group justify="space-between">
+                    <Title order={3} c="white">Create Tenant</Title>
+                    <ThemeIcon size="lg" radius="md" color="white" variant="outline">
+                      <IconPlus size={20} />
+                    </ThemeIcon>
+                  </Group>
+                </Card.Section>
+                <Text mb="md">You don't have a tenant yet. Create your own tenant to get started.</Text>
+                <Button component={Link} to="/tenants/create" variant="filled" color="teal" fullWidth>
+                  Create Tenant
+                </Button>
+              </Card>
+            )}
+            
             {isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">

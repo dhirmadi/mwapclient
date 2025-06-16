@@ -75,6 +75,7 @@ const AppRouter: React.FC = () => {
                   {/* Common Routes */}
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/tenants/create" element={<TenantCreate />} />
 
                   {/* SuperAdmin Routes */}
                   <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN']} />}>
