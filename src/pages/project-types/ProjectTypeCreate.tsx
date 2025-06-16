@@ -14,7 +14,8 @@ import {
   Code, 
   Alert,
   Stack,
-  Divider
+  Divider,
+  Text
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { 
@@ -188,7 +189,6 @@ const ProjectTypeCreate: React.FC = () => {
               <Textarea
                 label="Description"
                 placeholder="Enter project type description"
-                defaultValue="Flat config for testing"
                 minRows={3}
                 mb="md"
                 {...form.getInputProps('description')}
