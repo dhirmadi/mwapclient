@@ -62,14 +62,16 @@ const CloudProviderEdit: React.FC = () => {
   const form = useForm<CloudProviderUpdate>({
     initialValues: {
       name: '',
-      type: '',
-      authType: '',
-      configSchema: {},
-      isActive: true,
-      credentials: {}
+      slug: '',
+      scopes: [],
+      authUrl: '',
+      tokenUrl: ''
     },
     validate: {
       name: (value) => (value && value.length < 3 ? 'Name must be at least 3 characters' : null),
+      slug: (value) => (!value ? 'Slug is required' : null),
+      authUrl: (value) => (!value ? 'Auth URL is required' : null),
+      tokenUrl: (value) => (!value ? 'Token URL is required' : null),
     },
   });
 
@@ -79,24 +81,16 @@ const CloudProviderEdit: React.FC = () => {
   // Load cloud provider data
   useEffect(() => {
     if (cloudProvider) {
-      // Extract credentials from configSchema if they exist
-      const credentials = cloudProvider.configSchema.credentials || {};
-      
       form.setValues({
         name: cloudProvider.name,
-        type: cloudProvider.type,
-        authType: cloudProvider.authType,
-        configSchema: cloudProvider.configSchema,
-        isActive: cloudProvider.isActive,
-        credentials
+        slug: cloudProvider.slug,
+        scopes: cloudProvider.scopes || [],
+        authUrl: cloudProvider.authUrl,
+        tokenUrl: cloudProvider.tokenUrl
       });
       
-      // Set selected provider type and auth type
-      setSelectedProviderType(cloudProvider.type);
-      setSelectedAuthType(cloudProvider.authType);
-      
-      // Set schema JSON
-      setSchemaJson(JSON.stringify(cloudProvider.configSchema || {}, null, 2));
+      // Set selected provider type based on slug
+      setSelectedProviderType(cloudProvider.slug);
     }
   }, [cloudProvider]);
 
@@ -130,34 +124,10 @@ const CloudProviderEdit: React.FC = () => {
     if (!id) return;
     
     try {
-      // Validate schema JSON
-      if (schemaError) {
-        notifications.show({
-          title: 'Error',
-          message: 'Please fix the schema errors before submitting',
-          color: 'red',
-        });
-        setActiveTab('schema');
-        return;
-      }
-      
-      // Extract credentials from form values
-      const { credentials, ...providerData } = values;
-      
-      // Create the provider data object in the format expected by the API
-      const apiData = {
-        ...providerData,
-        // Store credentials in the configSchema
-        configSchema: {
-          ...providerData.configSchema,
-          credentials: credentials || {}
-        }
-      };
-      
-      console.log('Updating cloud provider data:', apiData);
+      console.log('Updating cloud provider data:', values);
       
       // Update cloud provider
-      await updateCloudProvider({ id, data: apiData });
+      await updateCloudProvider({ id, data: values });
       
       notifications.show({
         title: 'Success',

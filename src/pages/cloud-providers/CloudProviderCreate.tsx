@@ -51,21 +51,16 @@ const CloudProviderCreate: React.FC = () => {
   const form = useForm<CloudProviderCreateType>({
     initialValues: {
       name: '',
-      type: 'dropbox',
-      authType: 'oauth2',
-      configSchema: DEFAULT_SCHEMAS.dropbox,
-      isActive: true,
-      credentials: {
-        client_id: '',
-        client_secret: '',
-        redirect_uri: ''
-      }
+      slug: selectedProviderType,
+      scopes: ['read', 'write'],
+      authUrl: '',
+      tokenUrl: ''
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Name must be at least 3 characters' : null),
-      'credentials.client_id': (value) => (!value ? 'Client ID is required' : null),
-      'credentials.client_secret': (value) => (!value ? 'Client Secret is required' : null),
-      'credentials.redirect_uri': (value) => (!value ? 'Redirect URI is required' : null),
+      slug: (value) => (!value ? 'Slug is required' : null),
+      authUrl: (value) => (!value ? 'Auth URL is required' : null),
+      tokenUrl: (value) => (!value ? 'Token URL is required' : null),
     },
   });
 
@@ -118,35 +113,16 @@ const CloudProviderCreate: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (values: CloudProviderCreateType) => {
     try {
-      // Validate schema JSON
-      if (schemaError) {
-        notifications.show({
-          title: 'Error',
-          message: 'Please fix the schema errors before submitting',
-          color: 'red',
-        });
-        setActiveTab('schema');
-        return;
+      // Update slug based on provider type if not set
+      if (!values.slug) {
+        values.slug = selectedProviderType;
       }
       
-      // Extract credentials from form values
-      const { credentials, ...providerData } = values;
-      
-      // Create the provider data object in the format expected by the API
-      const apiData = {
-        ...providerData,
-        // Store credentials in the configSchema
-        configSchema: {
-          ...providerData.configSchema,
-          credentials: credentials || {}
-        }
-      };
-      
       // Log the values being submitted
-      console.log('Submitting cloud provider data:', apiData);
+      console.log('Submitting cloud provider data:', values);
       
       // Create cloud provider
-      await createCloudProvider(apiData);
+      await createCloudProvider(values);
       
       notifications.show({
         title: 'Success',
@@ -207,7 +183,6 @@ const CloudProviderCreate: React.FC = () => {
             <Tabs.List mb="md">
               <Tabs.Tab value="general">General Information</Tabs.Tab>
               <Tabs.Tab value="auth">Authentication</Tabs.Tab>
-              <Tabs.Tab value="schema">Configuration Schema</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="general">
@@ -231,123 +206,69 @@ const CloudProviderCreate: React.FC = () => {
                   leftSection: getProviderIcon(type.iconType)
                 }))}
                 value={selectedProviderType}
-                onChange={(value) => setSelectedProviderType(value || 'dropbox')}
+                onChange={(value) => {
+                  setSelectedProviderType(value || 'dropbox');
+                  form.setFieldValue('slug', value || 'dropbox');
+                }}
                 required
                 mb="md"
               />
               
-              <Textarea
-                label="Description"
-                placeholder="Enter provider description"
-                minRows={3}
+              <TextInput
+                label="Slug"
+                placeholder="Enter provider slug (e.g., dropbox, gdrive)"
+                required
                 mb="md"
-              />
-              
-              <Switch
-                label="Active"
-                description="Inactive providers cannot be used for new integrations"
-                checked={form.values.isActive}
-                mb="xl"
-                {...form.getInputProps('isActive', { type: 'checkbox' })}
+                {...form.getInputProps('slug')}
               />
             </Tabs.Panel>
 
             <Tabs.Panel value="auth">
               <Title order={3} mb="md">Authentication Configuration</Title>
               
-              <Select
-                label="Authentication Type"
-                placeholder="Select authentication type"
-                data={AUTH_TYPES}
-                value={selectedAuthType}
-                onChange={(value) => setSelectedAuthType(value || 'oauth2')}
+              <TextInput
+                label="Auth URL"
+                placeholder="Enter OAuth authorization URL"
                 required
-                mb="xl"
+                mb="md"
+                {...form.getInputProps('authUrl')}
               />
               
-              <Divider mb="md" label="Required Credentials" labelPosition="center" />
+              <TextInput
+                label="Token URL"
+                placeholder="Enter OAuth token URL"
+                required
+                mb="md"
+                {...form.getInputProps('tokenUrl')}
+              />
               
-              <Stack>
-                {requiredCredentials.map((field) => (
-                  <div key={field.key}>
-                    {field.type === 'password' ? (
-                      <PasswordInput
-                        label={field.label}
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                        required
-                        mb="md"
-                        {...form.getInputProps(`credentials.${field.key}`)}
-                      />
-                    ) : field.type === 'textarea' ? (
-                      <Textarea
-                        label={field.label}
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                        required
-                        minRows={3}
-                        mb="md"
-                        {...form.getInputProps(`credentials.${field.key}`)}
-                      />
-                    ) : (
-                      <TextInput
-                        label={field.label}
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                        required
-                        mb="md"
-                        {...form.getInputProps(`credentials.${field.key}`)}
-                      />
-                    )}
-                  </div>
-                ))}
-              </Stack>
+              <Divider mb="md" label="OAuth Scopes" labelPosition="center" />
+              
+              <Textarea
+                label="Scopes"
+                placeholder="Enter OAuth scopes, one per line"
+                required
+                minRows={3}
+                mb="md"
+                value={form.values.scopes.join('\n')}
+                onChange={(e) => {
+                  const scopesText = e.currentTarget.value;
+                  const scopesArray = scopesText.split('\n').filter(s => s.trim() !== '');
+                  form.setFieldValue('scopes', scopesArray);
+                }}
+              />
               
               <Alert 
                 icon={<IconAlertCircle size={16} />} 
-                title="Credential Security" 
+                title="OAuth Configuration" 
                 color="blue" 
                 mb="md"
               >
-                Credentials are securely stored and encrypted. They will be used by tenant integrations to authenticate with the cloud provider.
+                These settings define how the OAuth flow will work. Client ID and Client Secret will be provided by tenant owners when they integrate with this provider.
               </Alert>
             </Tabs.Panel>
 
-            <Tabs.Panel value="schema">
-              <Title order={3} mb="md">Configuration Schema</Title>
-              
-              <Alert 
-                icon={<IconAlertCircle size={16} />} 
-                title="JSON Schema" 
-                color="blue" 
-                mb="md"
-              >
-                Define the configuration schema for this cloud provider using JSON Schema format. 
-                This schema will be used to validate tenant integrations.
-              </Alert>
-              
-              {schemaError && (
-                <Alert 
-                  icon={<IconAlertCircle size={16} />} 
-                  title="Schema Error" 
-                  color="red" 
-                  mb="md"
-                >
-                  {schemaError}
-                </Alert>
-              )}
-              
-              <Textarea
-                placeholder="Enter JSON schema"
-                minRows={10}
-                value={schemaJson}
-                onChange={(e) => handleSchemaChange(e.currentTarget.value)}
-                mb="md"
-                styles={{ input: { fontFamily: 'monospace' } }}
-              />
-              
-              <Title order={4} mb="md">Schema Preview</Title>
-              <Code block mb="xl">
-                {schemaError ? 'Invalid JSON' : JSON.stringify(form.values.configSchema, null, 2)}
-              </Code>
-            </Tabs.Panel>
+
           </Tabs>
           
           <Group justify="flex-end" mt="xl">
