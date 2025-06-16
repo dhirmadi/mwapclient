@@ -5,18 +5,21 @@ import { PageHeader } from '../../components/layout';
 import { LoadingSpinner } from '../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconEdit, IconTrash, IconEye, IconPlus } from '@tabler/icons-react';
+import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
+import { CloudProvider } from '../../types/cloud-provider';
 
+/**
+ * Cloud Provider List Component
+ * Displays a list of cloud providers and allows CRUD operations
+ */
 const CloudProviderList: React.FC = () => {
   const navigate = useNavigate();
   const { cloudProviders, isLoading, error, refetch, deleteCloudProvider } = useCloudProviders();
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<any>(null);
+  const [selectedProvider, setSelectedProvider] = useState<CloudProvider | null>(null);
   const [confirmText, setConfirmText] = useState('');
-  
-  // Get providers from the React Query hook
-  const providers = cloudProviders || [];
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Check for messages in session storage
   useEffect(() => {
@@ -37,30 +40,34 @@ const CloudProviderList: React.FC = () => {
     }
   }, []);
 
-  const handleCreateCloudProvider = () => {
-    navigate('/admin/cloud-providers/create');
-  };
+  // Navigation handlers
+  const handleCreateCloudProvider = () => navigate('/admin/cloud-providers/create');
+  const handleEditCloudProvider = (id: string) => navigate(`/admin/cloud-providers/${id}/edit`);
 
-  const handleEditCloudProvider = (id: string) => {
-    navigate(`/admin/cloud-providers/${id}/edit`);
-  };
-
-  const openDeleteModal = (provider: any) => {
+  // Delete modal handlers
+  const openDeleteModal = (provider: CloudProvider) => {
     setSelectedProvider(provider);
     setDeleteModalOpen(true);
     setConfirmText('');
   };
 
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setSelectedProvider(null);
+    setConfirmText('');
+  };
+
+  // Delete cloud provider
   const handleDeleteCloudProvider = async () => {
     if (!selectedProvider) return;
     
+    setIsDeleting(true);
+    
     try {
       await deleteCloudProvider(selectedProvider._id);
+      closeDeleteModal();
       
-      // Close the modal first
-      setDeleteModalOpen(false);
-      
-      // Store success message directly in state for immediate display
+      // Show success notification
       notifications.show({
         title: 'Success',
         message: `${selectedProvider.name} has been deleted`,
@@ -69,26 +76,26 @@ const CloudProviderList: React.FC = () => {
       
       // Refresh the list
       refetch();
-      
     } catch (error) {
       console.error('Failed to delete cloud provider:', error);
       
-      // Close the modal first
-      setDeleteModalOpen(false);
-      
-      // Show error directly
+      // Show error notification
       notifications.show({
         title: 'Error',
         message: 'Failed to delete cloud provider',
         color: 'red',
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  // Loading state
   if (isLoading) {
     return <LoadingSpinner />;
   }
   
+  // Error notification
   if (error) {
     notifications.show({
       title: 'Error',
@@ -97,7 +104,8 @@ const CloudProviderList: React.FC = () => {
     });
   }
 
-  if (providers.length === 0) {
+  // Empty state
+  if (cloudProviders.length === 0) {
     return (
       <div>
         <PageHeader
@@ -122,6 +130,7 @@ const CloudProviderList: React.FC = () => {
     );
   }
 
+  // Main content
   return (
     <div>
       <PageHeader
@@ -150,7 +159,7 @@ const CloudProviderList: React.FC = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {providers.map((provider) => (
+            {cloudProviders.map((provider) => (
               <Table.Tr key={provider._id}>
                 <Table.Td>
                   <Text fw={500}>{provider.name}</Text>
@@ -162,9 +171,7 @@ const CloudProviderList: React.FC = () => {
                   <Badge>{provider.slug}</Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Badge color="green">
-                    Active
-                  </Badge>
+                  <Badge color="green">Active</Badge>
                 </Table.Td>
                 <Table.Td>
                   {new Date(provider.createdAt).toLocaleDateString()}
@@ -198,8 +205,9 @@ const CloudProviderList: React.FC = () => {
       {/* Delete Confirmation Modal */}
       <Modal
         opened={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        onClose={closeDeleteModal}
         title="Delete Cloud Provider"
+        centered
       >
         {selectedProvider && (
           <>
@@ -220,16 +228,18 @@ const CloudProviderList: React.FC = () => {
               onChange={(e) => setConfirmText(e.currentTarget.value)}
               placeholder={selectedProvider.name}
               mb="xl"
+              data-autofocus
             />
             
             <Group justify="flex-end">
-              <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              <Button variant="outline" onClick={closeDeleteModal}>
                 Cancel
               </Button>
               <Button 
                 color="red" 
                 onClick={handleDeleteCloudProvider}
-                disabled={confirmText !== selectedProvider.name}
+                disabled={confirmText !== selectedProvider.name || isDeleting}
+                loading={isDeleting}
               >
                 Delete
               </Button>

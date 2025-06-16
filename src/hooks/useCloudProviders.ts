@@ -1,67 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
 import api from '../utils/api';
 import { 
   CloudProvider, 
   CloudProviderCreate, 
   CloudProviderUpdate,
-  CloudProviderIntegration,
   CloudProviderIntegrationCreate
 } from '../types/cloud-provider';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Hook for managing cloud providers
+ */
 export const useCloudProviders = () => {
   const queryClient = useQueryClient();
   const { isSuperAdmin } = useAuth();
 
   // Fetch all cloud providers
   const { 
-    data: cloudProviders, 
+    data: cloudProviders = [], 
     isLoading, 
     error,
     refetch 
   } = useQuery({
     queryKey: ['cloud-providers'],
-    queryFn: async () => {
-      try {
-        const response = await api.fetchCloudProviders();
-        console.log('Cloud providers response:', response);
-        // Handle both response formats: { success: true, data: [...] } or directly the array
-        if (response && response.data) {
-          return response.data;
-        } else if (Array.isArray(response)) {
-          return response;
-        }
-        return [];
-      } catch (error) {
-        console.error('Error fetching cloud providers:', error);
-        return [];
-      }
-    },
+    queryFn: () => api.fetchCloudProviders(),
     enabled: isSuperAdmin,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
   });
-
-  // Fetch a single cloud provider by ID
-  const useCloudProvider = (id?: string) => {
-    return useQuery({
-      queryKey: ['cloud-provider', id],
-      queryFn: async () => {
-        try {
-          const response = await api.fetchCloudProviderById(id!);
-          console.log('Single cloud provider response:', response);
-          // Handle both response formats
-          if (response && response.data) {
-            return response.data;
-          }
-          return response;
-        } catch (error) {
-          console.error('Error fetching cloud provider by ID:', error);
-          throw error;
-        }
-      },
-      enabled: !!id,
-    });
-  };
 
   // Create a new cloud provider
   const createCloudProviderMutation = useMutation({
@@ -83,22 +49,10 @@ export const useCloudProviders = () => {
 
   // Delete a cloud provider
   const deleteCloudProviderMutation = useMutation({
-    mutationFn: async (id: string) => {
-      try {
-        await api.deleteCloudProvider(id);
-        return { success: true };
-      } catch (error) {
-        console.error('Error in deleteCloudProvider mutation:', error);
-        return { success: false, error };
-      }
-    },
+    mutationFn: (id: string) => api.deleteCloudProvider(id),
     onSuccess: () => {
-      // Invalidate and refetch cloud providers
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
     },
-    onError: (error) => {
-      console.error('Delete cloud provider mutation error:', error);
-    }
   });
 
   // Create a tenant integration
@@ -122,6 +76,18 @@ export const useCloudProviders = () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
     },
   });
+
+  /**
+   * Hook for fetching a single cloud provider by ID
+   */
+  const useCloudProvider = (id?: string) => {
+    return useQuery({
+      queryKey: ['cloud-provider', id],
+      queryFn: () => api.fetchCloudProviderById(id!),
+      enabled: !!id && isSuperAdmin,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
 
   return {
     // Cloud Providers
