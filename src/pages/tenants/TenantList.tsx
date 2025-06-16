@@ -13,15 +13,15 @@ const TenantList: React.FC = () => {
   const totalPages = Math.ceil((tenants?.length || 0) / 10);
 
   const handleCreateTenant = () => {
-    navigate('/tenants/create');
+    navigate('/admin/tenants/create');
   };
 
   const handleViewTenant = (id: string) => {
-    navigate(`/tenants/${id}`);
+    navigate(`/admin/tenants/${id}`);
   };
 
   const handleEditTenant = (id: string) => {
-    navigate(`/tenants/${id}/edit`);
+    navigate(`/admin/tenants/${id}/edit`);
   };
 
   if (isLoading) {
@@ -32,7 +32,7 @@ const TenantList: React.FC = () => {
     return <ErrorDisplay error={error} />;
   }
 
-  if (!data || data.length === 0) {
+  if (!tenants || tenants.length === 0) {
     return (
       <div>
         <PageHeader
@@ -73,20 +73,17 @@ const TenantList: React.FC = () => {
           </Table.Thead>
           <Table.Tbody>
             {tenants?.map((tenant: any) => (
-              <Table.Tr key={tenant.id}>
+              <Table.Tr key={tenant._id}>
                 <Table.Td>
                   <Text fw={500}>{tenant.name}</Text>
                   <Text size="xs" color="dimmed">
-                    {tenant.id}
+                    {tenant._id}
                   </Text>
                 </Table.Td>
                 <Table.Td>
-                  {tenant.owner ? (
+                  {tenant.ownerId ? (
                     <div>
-                      <Text>{tenant.owner.firstName} {tenant.owner.lastName}</Text>
-                      <Text size="xs" color="dimmed">
-                        {tenant.owner.email}
-                      </Text>
+                      <Text>Owner ID: {tenant.ownerId}</Text>
                     </div>
                   ) : (
                     <Text color="dimmed">No owner assigned</Text>
@@ -94,9 +91,9 @@ const TenantList: React.FC = () => {
                 </Table.Td>
                 <Table.Td>
                   <Badge
-                    color={tenant.active ? 'green' : 'red'}
+                    color={!tenant.archived ? 'green' : 'red'}
                   >
-                    {tenant.active ? 'Active' : 'Inactive'}
+                    {!tenant.archived ? 'Active' : 'Archived'}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -106,14 +103,14 @@ const TenantList: React.FC = () => {
                   <Group gap="xs">
                     <ActionIcon
                       color="blue"
-                      onClick={() => handleViewTenant(tenant.id)}
+                      onClick={() => handleViewTenant(tenant._id)}
                       title="View tenant"
                     >
                       <IconEye size={16} />
                     </ActionIcon>
                     <ActionIcon
                       color="yellow"
-                      onClick={() => handleEditTenant(tenant.id)}
+                      onClick={() => handleEditTenant(tenant._id)}
                       title="Edit tenant"
                     >
                       <IconEdit size={16} />
