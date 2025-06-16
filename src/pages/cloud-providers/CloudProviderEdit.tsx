@@ -130,15 +130,23 @@ const CloudProviderEdit: React.FC = () => {
       // Update cloud provider
       await updateCloudProvider({ id, data: values });
       
-      notifications.show({
-        title: 'Success',
-        message: 'Cloud provider updated successfully',
-        color: 'green',
-        icon: <IconCheck size={16} />,
-      });
-      
-      // Navigate back to list
+      // First navigate back to list
       navigate('/admin/cloud-providers');
+      
+      // Then show notification after a short delay
+      setTimeout(() => {
+        try {
+          notifications.show({
+            title: 'Success',
+            message: 'Cloud provider updated successfully',
+            color: 'green',
+            icon: <IconCheck size={16} />,
+          });
+        } catch (notificationError) {
+          console.error('Error showing notification:', notificationError);
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Failed to update cloud provider:', error);
       // Log more details about the error
@@ -146,11 +154,16 @@ const CloudProviderEdit: React.FC = () => {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
       }
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to update cloud provider. See console for details.',
-        color: 'red',
-      });
+      
+      try {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to update cloud provider. See console for details.',
+          color: 'red',
+        });
+      } catch (notificationError) {
+        console.error('Error showing notification:', notificationError);
+      }
     }
   };
 
