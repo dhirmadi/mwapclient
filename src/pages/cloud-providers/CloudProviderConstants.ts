@@ -146,3 +146,42 @@ export const AUTH_TYPE_FIELDS: Record<string, Array<{ key: string, label: string
     { key: 'auth_data', label: 'Authentication Data (JSON)', type: 'textarea' }
   ]
 };
+
+// Default OAuth configuration for each provider type
+export const PROVIDER_OAUTH_DEFAULTS: Record<string, { authUrl: string, tokenUrl: string, scopes: string[] }> = {
+  dropbox: {
+    authUrl: 'https://www.dropbox.com/oauth2/authorize',
+    tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
+    scopes: ['files.content.read', 'files.content.write', 'files.metadata.read', 'files.metadata.write']
+  },
+  google_drive: {
+    authUrl: 'https://accounts.google.com/o/oauth2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    scopes: ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive.metadata.readonly']
+  },
+  onedrive: {
+    authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    scopes: ['files.readwrite', 'offline_access']
+  },
+  aws_s3: {
+    authUrl: '',
+    tokenUrl: '',
+    scopes: []
+  },
+  gcp_storage: {
+    authUrl: '',
+    tokenUrl: '',
+    scopes: []
+  },
+  azure_blob: {
+    authUrl: '',
+    tokenUrl: '',
+    scopes: []
+  },
+  custom: {
+    authUrl: '',
+    tokenUrl: '',
+    scopes: []
+  }
+};

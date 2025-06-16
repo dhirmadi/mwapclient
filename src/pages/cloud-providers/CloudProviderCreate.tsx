@@ -35,6 +35,7 @@ import {
   PROVIDER_TYPES, 
   DEFAULT_SCHEMAS, 
   AUTH_TYPE_FIELDS,
+  PROVIDER_OAUTH_DEFAULTS,
   getProviderIcon
 } from './CloudProviderConstants';
 
@@ -67,13 +68,17 @@ const CloudProviderCreate: React.FC = () => {
   // Schema editor state
   const [schemaJson, setSchemaJson] = useState<string>(JSON.stringify(DEFAULT_SCHEMAS.dropbox, null, 2));
 
-  // Update schema when provider type changes
+  // Update form values when provider type changes
   useEffect(() => {
     if (selectedProviderType) {
-      const defaultSchema = DEFAULT_SCHEMAS[selectedProviderType] || DEFAULT_SCHEMAS.custom;
-      setSchemaJson(JSON.stringify(defaultSchema, null, 2));
-      form.setFieldValue('configSchema', defaultSchema);
-      form.setFieldValue('type', selectedProviderType);
+      // Set slug based on provider type
+      form.setFieldValue('slug', selectedProviderType);
+      
+      // Set OAuth defaults if available
+      const oauthDefaults = PROVIDER_OAUTH_DEFAULTS[selectedProviderType] || PROVIDER_OAUTH_DEFAULTS.custom;
+      form.setFieldValue('authUrl', oauthDefaults.authUrl);
+      form.setFieldValue('tokenUrl', oauthDefaults.tokenUrl);
+      form.setFieldValue('scopes', oauthDefaults.scopes);
       
       // Set appropriate auth type based on provider
       let authType = 'oauth2';
@@ -81,7 +86,6 @@ const CloudProviderCreate: React.FC = () => {
         authType = 'api_key';
       }
       setSelectedAuthType(authType);
-      form.setFieldValue('authType', authType);
     }
   }, [selectedProviderType]);
 

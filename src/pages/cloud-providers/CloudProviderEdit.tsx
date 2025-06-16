@@ -43,6 +43,7 @@ import {
   PROVIDER_TYPES, 
   DEFAULT_SCHEMAS, 
   AUTH_TYPE_FIELDS,
+  PROVIDER_OAUTH_DEFAULTS,
   getProviderIcon
 } from './CloudProviderConstants';
 
