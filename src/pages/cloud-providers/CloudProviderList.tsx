@@ -63,11 +63,6 @@ const CloudProviderList: React.FC = () => {
     }
   };
 
-  // Loading state
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-  
   // Error handling
   useEffect(() => {
     if (error) {
@@ -75,6 +70,11 @@ const CloudProviderList: React.FC = () => {
       showError('Failed to load cloud providers');
     }
   }, [error]);
+  
+  // Loading state
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   // Empty state
   if (cloudProviders.length === 0) {
