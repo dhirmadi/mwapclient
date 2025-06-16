@@ -121,7 +121,15 @@ const api = {
   // Tenant endpoints
   fetchTenants: debugApiCall('fetchTenants', async (): Promise<Tenant[]> => {
     const response = await apiClient.get('/tenants');
-    return response.data;
+    // Handle different response formats
+    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    } else if (Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.warn('Unexpected tenants response format:', response.data);
+      return [];
+    }
   }),
   
   fetchTenant: debugApiCall('fetchTenant', async (id?: string): Promise<Tenant> => {

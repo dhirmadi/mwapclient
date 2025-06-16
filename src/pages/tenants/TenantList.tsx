@@ -8,9 +8,12 @@ import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
 
 const TenantList: React.FC = () => {
   const navigate = useNavigate();
-  const { tenants, isLoading, error } = useTenants();
+  const { tenants: tenantsData, isLoading, error } = useTenants();
   const [page, setPage] = React.useState(1);
-  const totalPages = Math.ceil((tenants?.length || 0) / 10);
+  
+  // Ensure tenants is an array
+  const tenants = Array.isArray(tenantsData) ? tenantsData : [];
+  const totalPages = Math.ceil((tenants.length || 0) / 10);
 
   const handleCreateTenant = () => {
     navigate('/admin/tenants/create');
@@ -23,6 +26,15 @@ const TenantList: React.FC = () => {
   const handleEditTenant = (id: string) => {
     navigate(`/admin/tenants/${id}/edit`);
   };
+
+  // Debug the API response
+  React.useEffect(() => {
+    if (tenantsData) {
+      console.log('Tenants data:', tenantsData);
+      console.log('Is array?', Array.isArray(tenantsData));
+      console.log('Type:', typeof tenantsData);
+    }
+  }, [tenantsData]);
 
   if (isLoading) {
     return <LoadingSpinner size="xl" text="Loading tenants..." />;
