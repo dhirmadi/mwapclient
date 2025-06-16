@@ -201,21 +201,39 @@ const api = {
   // Project Type endpoints
   fetchProjectTypes: debugApiCall('fetchProjectTypes', async (): Promise<ProjectType[]> => {
     const response = await apiClient.get('/project-types');
-    return response.data;
+    // Handle both response formats: { success: true, data: [...] } or directly the array
+    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    } else if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
   }),
   
   fetchProjectTypeById: debugApiCall('fetchProjectTypeById', async (id: string): Promise<ProjectType> => {
     const response = await apiClient.get(`/project-types/${id}`);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
   createProjectType: debugApiCall('createProjectType', async (data: Omit<ProjectType, '_id'>): Promise<ProjectType> => {
     const response = await apiClient.post('/project-types', data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
   updateProjectType: debugApiCall('updateProjectType', async (id: string, data: Partial<ProjectType>): Promise<ProjectType> => {
     const response = await apiClient.patch(`/project-types/${id}`, data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   

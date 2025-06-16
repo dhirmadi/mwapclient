@@ -41,6 +41,7 @@ const ProjectTypeList: React.FC = () => {
   const [confirmText, setConfirmText] = useState('');
 
   useEffect(() => {
+    console.log('ProjectTypeList - projectTypes:', projectTypes);
     if (projectTypes) {
       setTypes(Array.isArray(projectTypes) ? projectTypes : []);
       setLoading(false);

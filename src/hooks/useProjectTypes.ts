@@ -18,6 +18,7 @@ export const useProjectTypes = () => {
     queryFn: async () => {
       try {
         const data = await api.fetchProjectTypes();
+        console.log('useProjectTypes - fetchProjectTypes response:', data);
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Error fetching project types:', error);
