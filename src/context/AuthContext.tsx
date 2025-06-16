@@ -62,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             // Always use the real API endpoint
             const userRoles = await api.getUserRoles();
+            console.log('User roles from API:', userRoles);
             
             setRoles(userRoles);
             
