@@ -38,20 +38,37 @@ const CloudProviderList: React.FC = () => {
     try {
       await deleteCloudProvider(selectedProvider._id);
       
-      notifications.show({
-        title: 'Success',
-        message: `${selectedProvider.name} has been deleted`,
-        color: 'green',
-      });
-      
+      // Close the modal first
       setDeleteModalOpen(false);
+      
+      // Then show notification
+      setTimeout(() => {
+        notifications.show({
+          title: 'Success',
+          message: `${selectedProvider.name} has been deleted`,
+          color: 'green',
+        });
+      }, 100);
+      
+      // Refresh the list
+      setTimeout(() => {
+        refetch();
+      }, 500);
+      
     } catch (error) {
       console.error('Failed to delete cloud provider:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to delete cloud provider',
-        color: 'red',
-      });
+      
+      // Close the modal first
+      setDeleteModalOpen(false);
+      
+      // Then show notification
+      setTimeout(() => {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to delete cloud provider',
+          color: 'red',
+        });
+      }, 100);
     }
   };
 

@@ -83,10 +83,22 @@ export const useCloudProviders = () => {
 
   // Delete a cloud provider
   const deleteCloudProviderMutation = useMutation({
-    mutationFn: (id: string) => api.deleteCloudProvider(id),
+    mutationFn: async (id: string) => {
+      try {
+        await api.deleteCloudProvider(id);
+        return { success: true };
+      } catch (error) {
+        console.error('Error in deleteCloudProvider mutation:', error);
+        return { success: false, error };
+      }
+    },
     onSuccess: () => {
+      // Invalidate and refetch cloud providers
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
     },
+    onError: (error) => {
+      console.error('Delete cloud provider mutation error:', error);
+    }
   });
 
   // Create a tenant integration
