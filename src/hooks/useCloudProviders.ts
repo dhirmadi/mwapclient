@@ -23,8 +23,20 @@ export const useCloudProviders = () => {
   } = useQuery({
     queryKey: ['cloud-providers'],
     queryFn: async () => {
-      const response = await api.fetchCloudProviders();
-      return response.data || [];
+      try {
+        const response = await api.fetchCloudProviders();
+        console.log('Cloud providers response:', response);
+        // Handle both response formats: { success: true, data: [...] } or directly the array
+        if (response && response.data) {
+          return response.data;
+        } else if (Array.isArray(response)) {
+          return response;
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching cloud providers:', error);
+        return [];
+      }
     },
     enabled: isSuperAdmin,
   });
@@ -33,7 +45,20 @@ export const useCloudProviders = () => {
   const useCloudProvider = (id?: string) => {
     return useQuery({
       queryKey: ['cloud-provider', id],
-      queryFn: () => api.fetchCloudProviderById(id!),
+      queryFn: async () => {
+        try {
+          const response = await api.fetchCloudProviderById(id!);
+          console.log('Single cloud provider response:', response);
+          // Handle both response formats
+          if (response && response.data) {
+            return response.data;
+          }
+          return response;
+        } catch (error) {
+          console.error('Error fetching cloud provider by ID:', error);
+          throw error;
+        }
+      },
       enabled: !!id,
     });
   };

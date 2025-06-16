@@ -113,7 +113,7 @@ const CloudProviderList: React.FC = () => {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Name</Table.Th>
-              <Table.Th>Type</Table.Th>
+              <Table.Th>Slug</Table.Th>
               <Table.Th>Status</Table.Th>
               <Table.Th>Created</Table.Th>
               <Table.Th>Actions</Table.Th>
@@ -129,13 +129,11 @@ const CloudProviderList: React.FC = () => {
                   </Text>
                 </Table.Td>
                 <Table.Td>
-                  <Badge>{provider.type}</Badge>
+                  <Badge>{provider.slug}</Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Badge
-                    color={provider.isActive ? 'green' : 'red'}
-                  >
-                    {provider.isActive ? 'Active' : 'Inactive'}
+                  <Badge color="green">
+                    Active
                   </Badge>
                 </Table.Td>
                 <Table.Td>
