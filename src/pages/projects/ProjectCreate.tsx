@@ -138,7 +138,7 @@ const ProjectCreate: React.FC = () => {
             <Select
               label="Project Type"
               placeholder="Select a project type"
-              data={projectTypes?.map((type: any) => ({ value: type._id, label: type.name })) || []}
+              data={Array.isArray(projectTypes) ? projectTypes.map((type: any) => ({ value: type._id, label: type.name })) : []}
               {...form.getInputProps('projectTypeId')}
               className="mb-6"
               clearable
