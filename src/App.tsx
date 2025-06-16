@@ -1,4 +1,4 @@
-import { MantineProvider, ErrorBoundary } from '@mantine/core';
+import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { AppRouter } from './router';
 import '@mantine/core/styles.css';
@@ -19,15 +19,13 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <MantineProvider>
-          <Notifications position="top-right" limit={5} containerWidth={400} />
-          <AppRouter />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </MantineProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider>
+        <Notifications position="top-right" limit={5} containerWidth={400} />
+        <AppRouter />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </MantineProvider>
+    </QueryClientProvider>
   );
 }
 
