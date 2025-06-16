@@ -60,15 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('auth_token', token);
           
           try {
-            let userRoles;
-            
-            // In development, use the fallback function
-            if (import.meta.env.DEV) {
-              userRoles = await api.fetchUserRoles();
-            } else {
-              // In production, use the real API
-              userRoles = await api.getUserRoles();
-            }
+            // Always use the real API endpoint
+            const userRoles = await api.getUserRoles();
+            console.log('User roles from API:', userRoles);
             
             setRoles(userRoles);
             
@@ -150,14 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRoleValue >= requiredRoleValue;
   };
 
-  // In development mode, we'll always be authenticated
+  // Use the actual authentication status, even in development mode
   const isDevelopment = import.meta.env.DEV;
-  const effectiveIsAuthenticated = isDevelopment ? true : isAuthenticated;
-  const effectiveUser = isDevelopment && !user ? { 
-    name: 'Development User',
-    email: 'dev@example.com',
-    sub: 'dev-user-id'
-  } : user;
+  const effectiveIsAuthenticated = isAuthenticated;
+  const effectiveUser = user;
   
   // In development mode, we can use the Auth0 bearer token from environment variable
   // but only for testing purposes. In production, the token comes from Auth0 authentication.

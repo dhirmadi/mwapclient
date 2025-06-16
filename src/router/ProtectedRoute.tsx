@@ -33,21 +33,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Outlet />;
   }
 
+  // Debug roles
+  console.log('Protected Route - Required Roles:', requiredRoles);
+  console.log('Protected Route - User Roles:', { isSuperAdmin, isTenantOwner });
+  
   // Check for required roles
   const hasRequiredRole = requiredRoles.some(role => {
     // Check for SuperAdmin role
     if (role === 'SUPERADMIN') {
+      console.log('Checking SUPERADMIN role:', isSuperAdmin);
       return isSuperAdmin;
     }
     
     // Check for TenantOwner role
     if (role === 'TENANT_OWNER') {
+      console.log('Checking TENANT_OWNER role:', isTenantOwner);
       return isTenantOwner;
     }
     
     // Check for Project roles (OWNER, DEPUTY, MEMBER)
     if (['OWNER', 'DEPUTY', 'MEMBER'].includes(role) && projectId) {
-      return hasProjectRole(projectId, role);
+      const hasRole = hasProjectRole(projectId, role);
+      console.log(`Checking project role ${role} for project ${projectId}:`, hasRole);
+      return hasRole;
     }
     
     return false;

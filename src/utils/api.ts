@@ -97,6 +97,10 @@ const api = {
   // Auth endpoints
   getUserRoles: debugApiCall('getUserRoles', async (): Promise<UserRolesResponse> => {
     const response = await apiClient.get('/users/me/roles');
+    // Handle both response formats: { success: true, data: {...} } or directly the object
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
