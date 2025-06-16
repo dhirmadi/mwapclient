@@ -12,11 +12,11 @@ const TenantDetails: React.FC = () => {
   const { data: tenant, isLoading, error } = useTenant(id || '');
 
   const handleBack = () => {
-    navigate('/tenants');
+    navigate('/admin/tenants');
   };
 
   const handleEdit = () => {
-    navigate(`/tenants/${id}/edit`);
+    navigate(`/admin/tenants/${id}/edit`);
   };
 
   if (isLoading) {
@@ -46,7 +46,7 @@ const TenantDetails: React.FC = () => {
     <div>
       <PageHeader
         title={tenant.name}
-        description={`Tenant ID: ${tenant.id}`}
+        description={`Tenant ID: ${tenant.id || tenant._id}`}
       >
         <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
           Back
@@ -62,8 +62,8 @@ const TenantDetails: React.FC = () => {
             <div>
               <Text fw={500} size="lg">Tenant Information</Text>
             </div>
-            <Badge color={tenant.active ? 'green' : 'red'}>
-              {tenant.active ? 'Active' : 'Inactive'}
+            <Badge color={tenant.active === false || tenant.archived === true ? 'red' : 'green'}>
+              {tenant.active === false || tenant.archived === true ? 'Inactive' : 'Active'}
             </Badge>
           </Group>
 
@@ -76,17 +76,15 @@ const TenantDetails: React.FC = () => {
               <Text size="sm" color="dimmed">Created</Text>
               <Text>{new Date(tenant.createdAt).toLocaleString()}</Text>
             </div>
+            {tenant.updatedAt && (
+              <div>
+                <Text size="sm" color="dimmed">Last Updated</Text>
+                <Text>{new Date(tenant.updatedAt).toLocaleString()}</Text>
+              </div>
+            )}
             <div>
-              <Text size="sm" color="dimmed">Last Updated</Text>
-              <Text>{new Date(tenant.updatedAt).toLocaleString()}</Text>
-            </div>
-            <div>
-              <Text size="sm" color="dimmed">Owner</Text>
-              <Text>
-                {tenant.owner
-                  ? `${tenant.owner.firstName} ${tenant.owner.lastName} (${tenant.owner.email})`
-                  : 'No owner assigned'}
-              </Text>
+              <Text size="sm" color="dimmed">Owner ID</Text>
+              <Text>{tenant.ownerId || 'No owner assigned'}</Text>
             </div>
           </div>
         </Card>

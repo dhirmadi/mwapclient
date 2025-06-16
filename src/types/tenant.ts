@@ -4,6 +4,7 @@ export interface Tenant {
   ownerId: string;
   name: string;
   createdAt: string;
+  updatedAt?: string;
   archived?: boolean;
   active?: boolean;
   integrations?: string[];

@@ -10,7 +10,7 @@ import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
 
 const tenantSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters'),
-  active: z.boolean(),
+  archived: z.boolean().optional(),
 });
 
 type TenantFormValues = z.infer<typeof tenantSchema>;
@@ -24,7 +24,7 @@ const TenantEdit: React.FC = () => {
   const form = useForm<TenantFormValues>({
     initialValues: {
       name: '',
-      active: true,
+      archived: false,
     },
     validate: zodResolver(tenantSchema),
   });
@@ -33,7 +33,7 @@ const TenantEdit: React.FC = () => {
     if (tenant) {
       form.setValues({
         name: tenant.name,
-        active: tenant.active,
+        archived: tenant.archived || false,
       });
     }
   }, [tenant]);
@@ -44,13 +44,13 @@ const TenantEdit: React.FC = () => {
       data: values 
     }, {
       onSuccess: () => {
-        navigate(`/tenants/${id}`);
+        navigate(`/admin/tenants/${id}`);
       },
     });
   };
 
   const handleBack = () => {
-    navigate(`/tenants/${id}`);
+    navigate(`/admin/tenants/${id}`);
   };
 
   if (isFetching) {
@@ -68,7 +68,7 @@ const TenantEdit: React.FC = () => {
           title="Tenant Not Found"
           description="The requested tenant could not be found"
         >
-          <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/tenants')}>
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/admin/tenants')}>
             Back to Tenants
           </Button>
         </PageHeader>
@@ -80,7 +80,7 @@ const TenantEdit: React.FC = () => {
     <div>
       <PageHeader
         title={`Edit Tenant: ${tenant.name}`}
-        description={`Tenant ID: ${tenant.id}`}
+        description={`Tenant ID: ${tenant.id || tenant._id}`}
       >
         <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
           Back
@@ -100,8 +100,9 @@ const TenantEdit: React.FC = () => {
           />
 
           <Switch
-            label="Active"
-            {...form.getInputProps('active', { type: 'checkbox' })}
+            label="Archived"
+            description="Toggle to archive this tenant"
+            {...form.getInputProps('archived', { type: 'checkbox' })}
             className="mb-6"
           />
 

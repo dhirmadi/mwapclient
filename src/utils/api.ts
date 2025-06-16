@@ -137,6 +137,22 @@ const api = {
   fetchTenant: debugApiCall('fetchTenant', async (id?: string): Promise<Tenant> => {
     const url = id ? `/tenants/${id}` : '/tenants/me';
     const response = await apiClient.get(url);
+    
+    // Handle different response formats
+    if (response.data && response.data.success === true && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  }),
+  
+  // Alias for fetchTenant with required ID parameter
+  fetchTenantById: debugApiCall('fetchTenantById', async (id: string): Promise<Tenant> => {
+    const response = await apiClient.get(`/tenants/${id}`);
+    
+    // Handle different response formats
+    if (response.data && response.data.success === true && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
