@@ -143,21 +143,39 @@ const api = {
   // Cloud Provider endpoints
   fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<CloudProvider[]> => {
     const response = await apiClient.get('/cloud-providers');
-    return response.data;
+    // Handle both response formats: { success: true, data: [...] } or directly the array
+    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    } else if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
   }),
   
   fetchCloudProviderById: debugApiCall('fetchCloudProviderById', async (id: string): Promise<CloudProvider> => {
     const response = await apiClient.get(`/cloud-providers/${id}`);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
-  createCloudProvider: debugApiCall('createCloudProvider', async (data: Omit<CloudProvider, '_id'>): Promise<CloudProvider> => {
+  createCloudProvider: debugApiCall('createCloudProvider', async (data: CloudProviderCreate): Promise<CloudProvider> => {
     const response = await apiClient.post('/cloud-providers', data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
-  updateCloudProvider: debugApiCall('updateCloudProvider', async (id: string, data: Partial<CloudProvider>): Promise<CloudProvider> => {
+  updateCloudProvider: debugApiCall('updateCloudProvider', async (id: string, data: CloudProviderUpdate): Promise<CloudProvider> => {
     const response = await apiClient.patch(`/cloud-providers/${id}`, data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   

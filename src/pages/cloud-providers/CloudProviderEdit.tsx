@@ -18,7 +18,7 @@ import {
   Divider,
   Stack
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { storeSuccess, showError } from '../../utils/notificationService';
 import { 
   IconAlertCircle, 
   IconCheck, 
@@ -43,6 +43,7 @@ import {
   PROVIDER_TYPES, 
   DEFAULT_SCHEMAS, 
   AUTH_TYPE_FIELDS,
+  PROVIDER_OAUTH_DEFAULTS,
   getProviderIcon
 } from './CloudProviderConstants';
 
@@ -57,18 +58,23 @@ const CloudProviderEdit: React.FC = () => {
   const [selectedProviderType, setSelectedProviderType] = useState<string>('dropbox');
   const [selectedAuthType, setSelectedAuthType] = useState<string>('oauth2');
   const [requiredCredentials, setRequiredCredentials] = useState<Array<{ key: string, label: string, type: string }>>(AUTH_TYPE_FIELDS.oauth2);
+  
+  // No need for notification check anymore
 
   // Form for cloud provider editing
   const form = useForm<CloudProviderUpdate>({
     initialValues: {
       name: '',
-      type: '',
-      authType: '',
-      configSchema: {},
-      isActive: true,
+      slug: '',
+      scopes: [],
+      authUrl: '',
+      tokenUrl: ''
     },
     validate: {
       name: (value) => (value && value.length < 3 ? 'Name must be at least 3 characters' : null),
+      slug: (value) => (!value ? 'Slug is required' : null),
+      authUrl: (value) => (!value ? 'Auth URL is required' : null),
+      tokenUrl: (value) => (!value ? 'Token URL is required' : null),
     },
   });
 
@@ -80,20 +86,24 @@ const CloudProviderEdit: React.FC = () => {
     if (cloudProvider) {
       form.setValues({
         name: cloudProvider.name,
-        type: cloudProvider.type,
-        authType: cloudProvider.authType,
-        configSchema: cloudProvider.configSchema,
-        isActive: cloudProvider.isActive,
+        slug: cloudProvider.slug,
+        scopes: cloudProvider.scopes || [],
+        authUrl: cloudProvider.authUrl,
+        tokenUrl: cloudProvider.tokenUrl
       });
       
-      // Set selected provider type and auth type
-      setSelectedProviderType(cloudProvider.type);
-      setSelectedAuthType(cloudProvider.authType);
-      
-      // Set schema JSON
-      setSchemaJson(JSON.stringify(cloudProvider.configSchema || {}, null, 2));
+      // Set selected provider type based on slug
+      setSelectedProviderType(cloudProvider.slug);
     }
   }, [cloudProvider]);
+  
+  // Handle errors
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading cloud provider:', error);
+      showError('Failed to load cloud provider');
+    }
+  }, [error]);
 
   // Update required credentials when auth type changes
   useEffect(() => {
@@ -125,36 +135,23 @@ const CloudProviderEdit: React.FC = () => {
     if (!id) return;
     
     try {
-      // Validate schema JSON
-      if (schemaError) {
-        notifications.show({
-          title: 'Error',
-          message: 'Please fix the schema errors before submitting',
-          color: 'red',
-        });
-        setActiveTab('schema');
-        return;
-      }
-      
       // Update cloud provider
       await updateCloudProvider({ id, data: values });
       
-      notifications.show({
-        title: 'Success',
-        message: 'Cloud provider updated successfully',
-        color: 'green',
-        icon: <IconCheck size={16} />,
-      });
+      // Store success message for next page
+      storeSuccess('Cloud provider updated successfully');
       
       // Navigate back to list
       navigate('/admin/cloud-providers');
+      
     } catch (error) {
       console.error('Failed to update cloud provider:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to update cloud provider',
-        color: 'red',
-      });
+      
+      // Show error message directly on the form
+      form.setErrors({ name: 'Failed to update cloud provider. Please try again.' });
+      
+      // Also show error notification
+      showError('Failed to update cloud provider');
     }
   };
 
@@ -178,23 +175,21 @@ const CloudProviderEdit: React.FC = () => {
         <PageHeader
           title="Error"
           description="Failed to load cloud provider"
-        />
-        <Alert 
-          icon={<IconAlertCircle size={16} />} 
-          title="Error" 
-          color="red" 
-          mt="md"
         >
-          {error instanceof Error ? error.message : 'An unknown error occurred'}
-        </Alert>
-        <Group mt="xl">
           <Button 
             leftSection={<IconArrowLeft size={16} />}
             onClick={handleBack}
           >
             Back to Cloud Providers
           </Button>
-        </Group>
+        </PageHeader>
+        <Alert 
+          icon={<IconAlertCircle size={16} />} 
+          title="Error" 
+          color="red" 
+        >
+          {error instanceof Error ? error.message : 'An unknown error occurred'}
+        </Alert>
       </div>
     );
   }
@@ -205,15 +200,14 @@ const CloudProviderEdit: React.FC = () => {
         <PageHeader
           title="Cloud Provider Not Found"
           description="The requested cloud provider could not be found"
-        />
-        <Group mt="md">
+        >
           <Button 
             leftSection={<IconArrowLeft size={16} />}
             onClick={handleBack}
           >
             Back to Cloud Providers
           </Button>
-        </Group>
+        </PageHeader>
       </div>
     );
   }
@@ -223,9 +217,7 @@ const CloudProviderEdit: React.FC = () => {
       <PageHeader
         title={`Edit Cloud Provider: ${cloudProvider.name}`}
         description={`Provider ID: ${cloudProvider._id}`}
-      />
-
-      <Group justify="flex-start" mb="md">
+      >
         <Button 
           variant="outline" 
           leftSection={<IconArrowLeft size={16} />}
@@ -233,7 +225,7 @@ const CloudProviderEdit: React.FC = () => {
         >
           Back to Cloud Providers
         </Button>
-      </Group>
+      </PageHeader>
 
       <Paper withBorder p="md" radius="md" pos="relative">
         <LoadingOverlay visible={isUpdating} />
@@ -313,6 +305,7 @@ const CloudProviderEdit: React.FC = () => {
                         label={field.label}
                         placeholder={`Enter new ${field.label.toLowerCase()} or leave blank to keep existing`}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     ) : field.type === 'textarea' ? (
                       <Textarea
@@ -320,12 +313,14 @@ const CloudProviderEdit: React.FC = () => {
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         minRows={3}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     ) : (
                       <TextInput
                         label={field.label}
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         mb="md"
+                        {...form.getInputProps(`credentials.${field.key}`)}
                       />
                     )}
                   </div>

@@ -2,18 +2,36 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { Box } from '@mantine/core';
 
 const MainLayout: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh'
+      }}
+    >
       <Navbar />
-      <main className="flex-grow">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1
+        }}
+      >
+        <Box
+          sx={(theme) => ({
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: `${theme.spacing.md} ${theme.spacing.md}`
+          })}
+        >
           <Outlet />
-        </div>
-      </main>
+        </Box>
+      </Box>
       <Footer />
-    </div>
+    </Box>
   );
 };
 

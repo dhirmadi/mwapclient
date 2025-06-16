@@ -151,13 +151,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // In development mode, we'll always be authenticated
-  const isDevelopment = true; // Force development mode for now
+  const isDevelopment = import.meta.env.DEV;
   const effectiveIsAuthenticated = isDevelopment ? true : isAuthenticated;
   const effectiveUser = isDevelopment && !user ? { 
     name: 'Development User',
     email: 'dev@example.com',
     sub: 'dev-user-id'
   } : user;
+  
+  // In development mode, we can use the Auth0 bearer token from environment variable
+  // but only for testing purposes. In production, the token comes from Auth0 authentication.
+  useEffect(() => {
+    if (isDevelopment && !isAuthenticated) {
+      // Only use the development token if we're not authenticated through Auth0
+      const devToken = import.meta.env.VITE_AUTH0_BEARER_TOKEN;
+      if (devToken) {
+        console.log('Using development Auth0 token for testing');
+        localStorage.setItem('auth_token', devToken);
+      }
+    }
+  }, [isDevelopment, isAuthenticated]);
   
   // Provide auth context to children
   return (

@@ -4,18 +4,20 @@ import {
   CloudProvider, 
   CloudProviderCreate, 
   CloudProviderUpdate,
-  CloudProviderIntegration,
   CloudProviderIntegrationCreate
 } from '../types/cloud-provider';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Hook for managing cloud providers
+ */
 export const useCloudProviders = () => {
   const queryClient = useQueryClient();
   const { isSuperAdmin } = useAuth();
 
   // Fetch all cloud providers
   const { 
-    data: cloudProviders, 
+    data: cloudProviders = [], 
     isLoading, 
     error,
     refetch 
@@ -23,16 +25,9 @@ export const useCloudProviders = () => {
     queryKey: ['cloud-providers'],
     queryFn: () => api.fetchCloudProviders(),
     enabled: isSuperAdmin,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
   });
-
-  // Fetch a single cloud provider by ID
-  const useCloudProvider = (id?: string) => {
-    return useQuery({
-      queryKey: ['cloud-provider', id],
-      queryFn: () => api.fetchCloudProviderById(id!),
-      enabled: !!id,
-    });
-  };
 
   // Create a new cloud provider
   const createCloudProviderMutation = useMutation({
@@ -81,6 +76,18 @@ export const useCloudProviders = () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
     },
   });
+
+  /**
+   * Hook for fetching a single cloud provider by ID
+   */
+  const useCloudProvider = (id?: string) => {
+    return useQuery({
+      queryKey: ['cloud-provider', id],
+      queryFn: () => api.fetchCloudProviderById(id!),
+      enabled: !!id && isSuperAdmin,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
 
   return {
     // Cloud Providers

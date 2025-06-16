@@ -1,4 +1,11 @@
-export { default as Navbar } from './Navbar';
-export { default as Footer } from './Footer';
-export { default as MainLayout } from './MainLayout';
-export { default as PageHeader } from './PageHeader';
+import Navbar from './Navbar';
+import Footer from './Footer';
+import MainLayout from './MainLayout';
+import PageHeader from './PageHeader';
+
+export {
+  Navbar,
+  Footer,
+  MainLayout,
+  PageHeader
+};

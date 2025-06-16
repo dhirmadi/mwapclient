@@ -1,32 +1,86 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Box, Text, Group, Divider } from '@mantine/core';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white border-t border-gray-200 mt-auto">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="mb-4 md:mb-0">
-            <p className="text-sm text-gray-500">
-              &copy; {currentYear} MWAP. All rights reserved.
-            </p>
-          </div>
-          <div className="flex space-x-6">
-            <Link to="/terms" className="text-sm text-gray-500 hover:text-gray-900">
+    <Box
+      component="footer"
+      sx={(theme) => ({
+        backgroundColor: theme.white,
+        borderTop: `1px solid ${theme.colors.gray[2]}`,
+        marginTop: 'auto'
+      })}
+    >
+      <Box
+        sx={(theme) => ({
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: theme.spacing.md
+        })}
+      >
+        <Group position="apart" align="center" sx={(theme) => ({
+          flexDirection: 'column',
+          [theme.fn.largerThan('md')]: {
+            flexDirection: 'row'
+          }
+        })}>
+          <Text 
+            c="dimmed" 
+            size="sm"
+            mb={{ base: 'md', md: 0 }}
+          >
+            &copy; {currentYear} MWAP. All rights reserved.
+          </Text>
+          <Group spacing="lg">
+            <Text 
+              component={Link} 
+              to="/terms" 
+              c="dimmed" 
+              size="sm"
+              sx={(theme) => ({
+                textDecoration: 'none',
+                '&:hover': {
+                  color: theme.black
+                }
+              })}
+            >
               Terms of Service
-            </Link>
-            <Link to="/privacy" className="text-sm text-gray-500 hover:text-gray-900">
+            </Text>
+            <Text 
+              component={Link} 
+              to="/privacy" 
+              c="dimmed" 
+              size="sm"
+              sx={(theme) => ({
+                textDecoration: 'none',
+                '&:hover': {
+                  color: theme.black
+                }
+              })}
+            >
               Privacy Policy
-            </Link>
-            <Link to="/contact" className="text-sm text-gray-500 hover:text-gray-900">
+            </Text>
+            <Text 
+              component={Link} 
+              to="/contact" 
+              c="dimmed" 
+              size="sm"
+              sx={(theme) => ({
+                textDecoration: 'none',
+                '&:hover': {
+                  color: theme.black
+                }
+              })}
+            >
               Contact
-            </Link>
-          </div>
-        </div>
-      </div>
-    </footer>
+            </Text>
+          </Group>
+        </Group>
+      </Box>
+    </Box>
   );
 };
 
