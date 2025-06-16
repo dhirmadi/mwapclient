@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Avatar, Menu, UnstyledButton, Burger, Drawer, Group, Text } from '@mantine/core';
+import { 
+  Avatar, 
+  Menu, 
+  UnstyledButton, 
+  Burger, 
+  Drawer, 
+  Group, 
+  Text, 
+  Box,
+  Button,
+  Divider
+} from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { 
   IconLogout, 
@@ -16,6 +27,9 @@ import {
   IconUsers 
 } from '@tabler/icons-react';
 
+/**
+ * Main navigation component with responsive design
+ */
 const Navbar: React.FC = () => {
   const { user, logout, isSuperAdmin, isTenantOwner } = useAuth();
   const location = useLocation();
@@ -50,69 +64,69 @@ const Navbar: React.FC = () => {
       visible: isSuperAdmin,
     },
     {
-      name: 'Project Types',
-      path: '/admin/project-types',
+      name: 'Templates',
+      path: '/admin/templates',
       icon: <IconTemplate size={18} />,
       visible: isSuperAdmin,
     },
     
-    // TenantOwner items
-    {
-      name: 'Tenant Settings',
-      path: '/tenant/settings',
-      icon: <IconSettings size={18} />,
-      visible: isTenantOwner && !isSuperAdmin,
-    },
-    {
-      name: 'Cloud Integrations',
-      path: '/tenant/integrations',
-      icon: <IconCloud size={18} />,
-      visible: isTenantOwner && !isSuperAdmin,
-    },
-    
-    // Project items (for TenantOwner and regular users)
+    // Tenant Owner items
     {
       name: 'Projects',
       path: '/projects',
       icon: <IconFolder size={18} />,
-      visible: !isSuperAdmin || isTenantOwner,
+      visible: true,
+    },
+    {
+      name: 'Users',
+      path: '/users',
+      icon: <IconUsers size={18} />,
+      visible: isTenantOwner,
+    },
+    {
+      name: 'Settings',
+      path: '/settings',
+      icon: <IconSettings size={18} />,
+      visible: isTenantOwner,
     },
   ];
 
+  // Filter visible nav items
   const filteredNavItems = navItems.filter(item => item.visible);
-  
-  // Get user initials for avatar
+
+  // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!user) return '?';
-    
-    const nameParts = user.name.split(' ');
-    if (nameParts.length >= 2) {
-      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
-    }
-    
+    if (!user || !user.name) return '';
     return user.name.substring(0, 2).toUpperCase();
   };
 
   return (
-    <nav style={{ 
-      backgroundColor: 'white', 
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      padding: '0 1rem',
-      marginBottom: '1rem'
-    }}>
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
-        padding: '0 1rem'
-      }}>
+    <Box
+      component="nav"
+      sx={(theme) => ({
+        backgroundColor: theme.white,
+        boxShadow: theme.shadows.xs,
+        marginBottom: theme.spacing.md
+      })}
+    >
+      <Box
+        sx={(theme) => ({
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: `0 ${theme.spacing.md}`
+        })}
+      >
         <Group justify="space-between" h={60}>
           <Group>
-            <Link to="/" style={{ 
-              fontSize: '1.25rem', 
-              fontWeight: 700, 
-              color: '#3182ce', 
-              textDecoration: 'none'
-            }}>
+            <Link 
+              to="/" 
+              style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: 700, 
+                color: '#3182ce', 
+                textDecoration: 'none'
+              }}
+            >
               MWAP
             </Link>
             <Group ml="md" display={{ base: 'none', sm: 'flex' }} gap="lg">
@@ -199,27 +213,27 @@ const Navbar: React.FC = () => {
                 </Menu.Dropdown>
               </Menu>
             ) : (
-              <Link
+              <Button
+                component={Link}
                 to="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                variant="filled"
+                color="blue"
               >
                 Login
-              </Link>
+              </Button>
             )}
-          </div>
+          </Group>
           
           {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
-            <Burger
-              opened={drawerOpened}
-              onClick={toggleDrawer}
-              className="m-2"
-              size="sm"
-              aria-label="Toggle navigation"
-            />
-          </div>
-        </div>
-      </div>
+          <Burger
+            opened={drawerOpened}
+            onClick={toggleDrawer}
+            size="sm"
+            aria-label="Toggle navigation"
+            display={{ base: 'block', sm: 'none' }}
+          />
+        </Group>
+      </Box>
 
       {/* Mobile menu drawer */}
       <Drawer
@@ -229,82 +243,114 @@ const Navbar: React.FC = () => {
         padding="md"
         title="Navigation"
         zIndex={1000}
-        style={{ justifyContent: 'flex-end' }}
+        position="right"
       >
-        <div className="flex flex-col h-full">
-          <div className="flex-grow">
-            {filteredNavItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center px-4 py-3 mb-1 rounded-md text-base font-medium ${
-                  isActive(item.path)
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                }`}
+        <Box mt="md">
+          {filteredNavItems.map((item) => (
+            <Box 
+              key={item.path}
+              component={Link}
+              to={item.path}
+              sx={(theme) => ({
+                display: 'block',
+                padding: theme.spacing.sm,
+                borderLeft: isActive(item.path) 
+                  ? `4px solid ${theme.colors.blue[6]}` 
+                  : '4px solid transparent',
+                backgroundColor: isActive(item.path) 
+                  ? theme.colors.blue[0] 
+                  : 'transparent',
+                color: isActive(item.path) 
+                  ? theme.colors.blue[8] 
+                  : theme.colors.gray[6],
+                fontWeight: 500,
+                textDecoration: 'none',
+                marginBottom: theme.spacing.xs,
+                transition: 'all 0.2s'
+              })}
+              onClick={closeDrawer}
+            >
+              <Group>
+                {item.icon}
+                <Text>{item.name}</Text>
+              </Group>
+            </Box>
+          ))}
+        </Box>
+
+        {user && (
+          <Box mt="xl">
+            <Divider my="md" />
+            <Group p="md">
+              <Avatar
+                src={user.picture}
+                alt={user.name}
+                radius="xl"
+                size={40}
+                color="blue"
+              >
+                {getUserInitials()}
+              </Avatar>
+              <Box>
+                <Text fw={500}>{user.name}</Text>
+                <Text size="sm" c="dimmed">{user.email}</Text>
+              </Box>
+            </Group>
+            <Box mt="md">
+              <Box
+                component={Link}
+                to="/profile"
+                sx={(theme) => ({
+                  display: 'block',
+                  padding: theme.spacing.sm,
+                  color: theme.colors.gray[7],
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  marginBottom: theme.spacing.xs,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: theme.colors.gray[0]
+                  }
+                })}
                 onClick={closeDrawer}
               >
-                <span className="mr-3">{item.icon}</span>
-                {item.name}
-              </Link>
-            ))}
-          </div>
-          
-          {/* User section at bottom of drawer */}
-          <div className="border-t border-gray-200 pt-4 mt-4">
-            {user ? (
-              <>
-                <div className="flex items-center px-4 mb-4">
-                  <Avatar
-                    src={user.picture}
-                    alt={user.name}
-                    radius="xl"
-                    size={40}
-                    color="blue"
-                  >
-                    {getUserInitials()}
-                  </Avatar>
-                  <div className="ml-3">
-                    <Text fw={500} size="sm">{user.name}</Text>
-                    <Text size="xs" c="dimmed">{user.email}</Text>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Link
-                    to="/profile"
-                    className="flex items-center px-4 py-3 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-md"
-                    onClick={closeDrawer}
-                  >
-                    <IconUser size={18} className="mr-2" />
-                    Profile
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout();
-                      closeDrawer();
-                    }}
-                    className="flex items-center w-full text-left px-4 py-3 text-base font-medium text-red-500 hover:text-red-700 hover:bg-gray-100 rounded-md"
-                  >
-                    <IconLogout size={18} className="mr-2" />
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="px-4">
-                <Link
-                  to="/login"
-                  className="flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={closeDrawer}
-                >
-                  Login
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+                <Group>
+                  <IconUser size={16} />
+                  <Text>Profile</Text>
+                </Group>
+              </Box>
+              <Box
+                component="button"
+                onClick={() => {
+                  logout();
+                  closeDrawer();
+                }}
+                sx={(theme) => ({
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: theme.spacing.sm,
+                  color: theme.colors.red[6],
+                  fontWeight: 500,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: theme.colors.gray[0]
+                  }
+                })}
+              >
+                <Group>
+                  <IconLogout size={16} />
+                  <Text>Logout</Text>
+                </Group>
+              </Box>
+            </Box>
+          </Box>
+        )}
       </Drawer>
-    </nav>
+    </Box>
   );
 };
 

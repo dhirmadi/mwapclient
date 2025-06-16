@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import NavbarNew from './NavbarNew';
+import Navbar from './Navbar';
 import Footer from './Footer';
 import { Box } from '@mantine/core';
 
@@ -13,7 +13,7 @@ const MainLayout: React.FC = () => {
         minHeight: '100vh'
       }}
     >
-      <NavbarNew />
+      <Navbar />
       <Box
         component="main"
         sx={{
