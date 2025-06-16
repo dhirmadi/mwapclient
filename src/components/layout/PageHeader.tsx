@@ -20,12 +20,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   children,
 }) => {
   return (
-    <Box mb="xl">
-      <Group position="apart" mb="md">
+    <Box mb="xl" style={{ paddingTop: '1rem' }}>
+      <Group justify="space-between" mb="md">
         <Box>
-          <Title order={1} mb="xs">{title}</Title>
+          <Title order={1} size="h2" fw={700} mb="xs">{title}</Title>
           {description && (
-            <Text color="dimmed" size="sm">{description}</Text>
+            <Text c="dimmed" size="sm">{description}</Text>
           )}
         </Box>
         <Group>

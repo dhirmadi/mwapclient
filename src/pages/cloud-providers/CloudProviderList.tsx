@@ -108,9 +108,14 @@ const CloudProviderList: React.FC = () => {
       <PageHeader
         title="Cloud Providers"
         description="Manage cloud provider integrations"
-        actionText="Add Cloud Provider"
-        onAction={handleCreateCloudProvider}
-      />
+      >
+        <Button 
+          leftSection={<IconPlus size={16} />}
+          onClick={handleCreateCloudProvider}
+        >
+          Add Cloud Provider
+        </Button>
+      </PageHeader>
 
       <Paper withBorder p="md" radius="md">
         <Table striped highlightOnHover>
