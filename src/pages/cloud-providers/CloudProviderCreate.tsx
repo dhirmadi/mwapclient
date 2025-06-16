@@ -25,6 +25,7 @@ import {
   PROVIDER_OAUTH_DEFAULTS,
   getProviderIcon
 } from './CloudProviderConstants';
+import { checkForStoredNotifications } from '../../utils/notificationUtils';
 
 /**
  * Cloud Provider Create Component
@@ -53,6 +54,11 @@ const CloudProviderCreate: React.FC = () => {
     },
   });
 
+  // Check for stored notifications
+  useEffect(() => {
+    checkForStoredNotifications();
+  }, []);
+  
   // Update form values when provider type changes
   useEffect(() => {
     if (selectedProviderType) {
@@ -83,10 +89,11 @@ const CloudProviderCreate: React.FC = () => {
       // Create cloud provider
       await createCloudProvider(values);
       
-      // Store success message in session storage
-      sessionStorage.setItem('cloudProviderMessage', JSON.stringify({
-        type: 'success',
-        message: 'Cloud provider created successfully'
+      // Store success message using our safe notification utility
+      sessionStorage.setItem('appNotification', JSON.stringify({
+        title: 'Success',
+        message: 'Cloud provider created successfully',
+        color: 'green',
       }));
       
       // Navigate back to list

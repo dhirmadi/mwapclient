@@ -18,7 +18,7 @@ import {
   Divider,
   Stack
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { checkForStoredNotifications, showNotification } from '../../utils/notificationUtils';
 import { 
   IconAlertCircle, 
   IconCheck, 
@@ -58,6 +58,11 @@ const CloudProviderEdit: React.FC = () => {
   const [selectedProviderType, setSelectedProviderType] = useState<string>('dropbox');
   const [selectedAuthType, setSelectedAuthType] = useState<string>('oauth2');
   const [requiredCredentials, setRequiredCredentials] = useState<Array<{ key: string, label: string, type: string }>>(AUTH_TYPE_FIELDS.oauth2);
+  
+  // Check for stored notifications
+  useEffect(() => {
+    checkForStoredNotifications();
+  }, []);
 
   // Form for cloud provider editing
   const form = useForm<CloudProviderUpdate>({
@@ -130,10 +135,11 @@ const CloudProviderEdit: React.FC = () => {
       // Update cloud provider
       await updateCloudProvider({ id, data: values });
       
-      // Store success message in session storage
-      sessionStorage.setItem('cloudProviderMessage', JSON.stringify({
-        type: 'success',
-        message: 'Cloud provider updated successfully'
+      // Store success message using our safe notification utility
+      sessionStorage.setItem('appNotification', JSON.stringify({
+        title: 'Success',
+        message: 'Cloud provider updated successfully',
+        color: 'green',
       }));
       
       // Navigate back to list

@@ -4,9 +4,9 @@ import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { PageHeader } from '../../components/layout';
 import { LoadingSpinner } from '../../components/common';
 import { Button, Table, ActionIcon, Group, Badge, Text, Paper, Modal, TextInput } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
 import { CloudProvider } from '../../types/cloud-provider';
+import { checkForStoredNotifications, showNotification } from '../../utils/notificationUtils';
 
 /**
  * Cloud Provider List Component
@@ -21,23 +21,9 @@ const CloudProviderList: React.FC = () => {
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Check for messages in session storage
+  // Check for stored notifications
   useEffect(() => {
-    const message = sessionStorage.getItem('cloudProviderMessage');
-    if (message) {
-      try {
-        const { type, message: msg } = JSON.parse(message);
-        notifications.show({
-          title: type === 'success' ? 'Success' : 'Error',
-          message: msg,
-          color: type === 'success' ? 'green' : 'red',
-        });
-      } catch (e) {
-        console.error('Error parsing message from session storage:', e);
-      }
-      // Clear the message
-      sessionStorage.removeItem('cloudProviderMessage');
-    }
+    checkForStoredNotifications();
   }, []);
 
   // Navigation handlers
@@ -67,8 +53,8 @@ const CloudProviderList: React.FC = () => {
       await deleteCloudProvider(selectedProvider._id);
       closeDeleteModal();
       
-      // Show success notification
-      notifications.show({
+      // Show success notification safely
+      showNotification({
         title: 'Success',
         message: `${selectedProvider.name} has been deleted`,
         color: 'green',
@@ -79,8 +65,8 @@ const CloudProviderList: React.FC = () => {
     } catch (error) {
       console.error('Failed to delete cloud provider:', error);
       
-      // Show error notification
-      notifications.show({
+      // Show error notification safely
+      showNotification({
         title: 'Error',
         message: 'Failed to delete cloud provider',
         color: 'red',
@@ -95,13 +81,10 @@ const CloudProviderList: React.FC = () => {
     return <LoadingSpinner />;
   }
   
-  // Error notification
+  // Error handling
   if (error) {
-    notifications.show({
-      title: 'Error',
-      message: 'Failed to load cloud providers',
-      color: 'red',
-    });
+    // Log the error but don't try to show a notification directly
+    console.error('Error loading cloud providers:', error);
   }
 
   // Empty state
