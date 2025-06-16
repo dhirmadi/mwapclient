@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { PageHeader } from '../../components/layout';
@@ -17,6 +17,25 @@ const CloudProviderList: React.FC = () => {
   
   // Get providers from the React Query hook
   const providers = cloudProviders || [];
+  
+  // Check for messages in session storage
+  useEffect(() => {
+    const message = sessionStorage.getItem('cloudProviderMessage');
+    if (message) {
+      try {
+        const { type, message: msg } = JSON.parse(message);
+        notifications.show({
+          title: type === 'success' ? 'Success' : 'Error',
+          message: msg,
+          color: type === 'success' ? 'green' : 'red',
+        });
+      } catch (e) {
+        console.error('Error parsing message from session storage:', e);
+      }
+      // Clear the message
+      sessionStorage.removeItem('cloudProviderMessage');
+    }
+  }, []);
 
   const handleCreateCloudProvider = () => {
     navigate('/admin/cloud-providers/create');
@@ -41,19 +60,15 @@ const CloudProviderList: React.FC = () => {
       // Close the modal first
       setDeleteModalOpen(false);
       
-      // Then show notification
-      setTimeout(() => {
-        notifications.show({
-          title: 'Success',
-          message: `${selectedProvider.name} has been deleted`,
-          color: 'green',
-        });
-      }, 100);
+      // Store success message directly in state for immediate display
+      notifications.show({
+        title: 'Success',
+        message: `${selectedProvider.name} has been deleted`,
+        color: 'green',
+      });
       
       // Refresh the list
-      setTimeout(() => {
-        refetch();
-      }, 500);
+      refetch();
       
     } catch (error) {
       console.error('Failed to delete cloud provider:', error);
@@ -61,14 +76,12 @@ const CloudProviderList: React.FC = () => {
       // Close the modal first
       setDeleteModalOpen(false);
       
-      // Then show notification
-      setTimeout(() => {
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to delete cloud provider',
-          color: 'red',
-        });
-      }, 100);
+      // Show error directly
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete cloud provider',
+        color: 'red',
+      });
     }
   };
 
