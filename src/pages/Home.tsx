@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper } from '@mantine/core';
+import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper, Menu, Avatar, ActionIcon, Tooltip } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus } from '@tabler/icons-react';
+import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
 import { useTenants } from '../hooks/useTenants';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, isSuperAdmin, isTenantOwner } = useAuth();
+  const { isAuthenticated, user, isSuperAdmin, isTenantOwner, logout } = useAuth();
   const { currentTenant, isLoadingCurrentTenant } = useTenants();
   const [hasNoTenant, setHasNoTenant] = useState<boolean>(false);
+  
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+  };
+  
+  // Handle profile navigation
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
   
   // Check if user has no tenant
   useEffect(() => {
@@ -32,7 +42,20 @@ const Home: React.FC = () => {
           <Paper shadow="sm" p="md" radius="md" withBorder mb="xl">
             <Group justify="space-between" align="center">
               <Box>
-                <Title order={3} mb="xs">Hello, {user?.name}!</Title>
+                <Group align="center" gap="xs">
+                  <Title order={3} mb="xs" style={{ cursor: 'pointer' }} onClick={handleProfileClick}>
+                    Hello, {user?.name}!
+                  </Title>
+                  <Tooltip label="View Profile">
+                    <ActionIcon 
+                      color={isSuperAdmin ? 'red' : isTenantOwner ? 'blue' : 'green'} 
+                      variant="subtle"
+                      onClick={handleProfileClick}
+                    >
+                      <IconSettings size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
                 <Text>
                   You are logged in as a 
                   <Text component="span" weight={700} color={isSuperAdmin ? 'red' : isTenantOwner ? 'blue' : 'green'}>
@@ -40,9 +63,46 @@ const Home: React.FC = () => {
                   </Text>.
                 </Text>
               </Box>
-              <ThemeIcon size="xl" radius="xl" color={isSuperAdmin ? 'red' : isTenantOwner ? 'blue' : 'green'}>
-                <IconUser size={24} />
-              </ThemeIcon>
+              <Group>
+                <Tooltip label="Logout">
+                  <ActionIcon 
+                    color="gray" 
+                    variant="subtle" 
+                    onClick={handleLogout}
+                    size="lg"
+                  >
+                    <IconLogout size={20} />
+                  </ActionIcon>
+                </Tooltip>
+                <Menu position="bottom-end" shadow="md">
+                  <Menu.Target>
+                    <Avatar 
+                      color={isSuperAdmin ? 'red' : isTenantOwner ? 'blue' : 'green'} 
+                      radius="xl" 
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {user?.name?.charAt(0) || <IconUser size={24} />}
+                    </Avatar>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Label>Account</Menu.Label>
+                    <Menu.Item 
+                      leftSection={<IconUser size={14} />} 
+                      onClick={handleProfileClick}
+                    >
+                      Profile
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item 
+                      leftSection={<IconLogout size={14} />} 
+                      onClick={handleLogout}
+                      color="red"
+                    >
+                      Logout
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
             </Group>
           </Paper>
           
