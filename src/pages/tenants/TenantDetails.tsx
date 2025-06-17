@@ -1,36 +1,95 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTenant } from '../../hooks';
 import { PageHeader } from '../../components/layout';
 import { LoadingSpinner, ErrorDisplay } from '../../components/common';
-import { Button, Card, Group, Text, Badge, Tabs, Alert } from '@mantine/core';
-import { IconEdit, IconArrowLeft, IconUsers, IconSettings, IconInfoCircle } from '@tabler/icons-react';
+import { Button, Card, Group, Text, Badge, Tabs, Alert, Switch } from '@mantine/core';
+import { IconEdit, IconArrowLeft, IconUsers, IconSettings, IconInfoCircle, IconRefresh } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import TenantDebugger from '../../components/debug/TenantDebugger';
+import api from '../../utils/api';
 
 const TenantDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, user } = useAuth();
+  const queryClient = useQueryClient();
+  const [showDebugger, setShowDebugger] = useState(false);
+  const [directTenantData, setDirectTenantData] = useState<any>(null);
+  const [isDirectLoading, setIsDirectLoading] = useState(false);
+  
+  // Use React Query hook
   const { 
     data: tenant, 
     isLoading, 
     error,
-    refetch 
+    refetch,
+    isSuccess
   } = useTenant(id || '');
   
-  // Debug logging
-  React.useEffect(() => {
+  // Fetch tenant data directly (as a backup)
+  const fetchTenantDirectly = async () => {
+    if (!id) return;
+    
+    try {
+      setIsDirectLoading(true);
+      console.log('Fetching tenant directly:', id);
+      const data = await api.fetchTenantById(id);
+      console.log('Direct fetch result:', data);
+      setDirectTenantData(data);
+      
+      // Update the query cache with this data
+      queryClient.setQueryData(['tenant', id], data);
+    } catch (err) {
+      console.error('Error fetching tenant directly:', err);
+    } finally {
+      setIsDirectLoading(false);
+    }
+  };
+  
+  // Advanced debug logging
+  useEffect(() => {
+    console.log('TenantDetails - Component Mounted');
     console.log('TenantDetails - ID:', id);
-    console.log('TenantDetails - Tenant data:', tenant);
+    console.log('TenantDetails - User:', user);
+    console.log('TenantDetails - Is Super Admin:', isSuperAdmin);
+    
+    // Log query cache state
+    const cachedData = queryClient.getQueryData(['tenant', id]);
+    console.log('TenantDetails - Cached Data:', cachedData);
+    
+    return () => {
+      console.log('TenantDetails - Component Unmounted');
+    };
+  }, [id, user, isSuperAdmin, queryClient]);
+  
+  // Monitor tenant data changes
+  useEffect(() => {
+    console.log('TenantDetails - Tenant data changed:', tenant);
     console.log('TenantDetails - Loading:', isLoading);
     console.log('TenantDetails - Error:', error);
+    console.log('TenantDetails - Success:', isSuccess);
     
     // If no tenant data and not loading, try to refetch
     if (!tenant && !isLoading && !error) {
       console.log('No tenant data found, refetching...');
       refetch();
+      
+      // As a backup, also try to fetch directly
+      fetchTenantDirectly();
     }
-  }, [id, tenant, isLoading, error, refetch]);
+  }, [tenant, isLoading, error, isSuccess, refetch]);
+  
+  // Force refetch on mount
+  useEffect(() => {
+    // Clear the cache for this tenant and refetch
+    queryClient.removeQueries({ queryKey: ['tenant', id] });
+    setTimeout(() => {
+      refetch();
+      fetchTenantDirectly();
+    }, 100);
+  }, [id, queryClient, refetch]);
 
   const handleBack = () => {
     navigate('/admin/tenants');
@@ -39,12 +98,22 @@ const TenantDetails: React.FC = () => {
   const handleEdit = () => {
     navigate(`/admin/tenants/${id}/edit`);
   };
+  
+  const handleForceRefresh = () => {
+    // Clear the cache and force a refetch
+    queryClient.removeQueries({ queryKey: ['tenant', id] });
+    refetch();
+    fetchTenantDirectly();
+  };
+  
+  // Determine which tenant data to use (from React Query or direct fetch)
+  const effectiveTenant = tenant || directTenantData;
 
-  if (isLoading) {
+  if (isLoading && isDirectLoading) {
     return <LoadingSpinner size="xl" text="Loading tenant details..." />;
   }
 
-  if (error) {
+  if (error && !effectiveTenant) {
     console.error('Error loading tenant:', error);
     return (
       <div>
@@ -55,15 +124,24 @@ const TenantDetails: React.FC = () => {
           <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
             Back to Tenants
           </Button>
-          <Button onClick={() => refetch()} ml="md">
-            Retry
+          <Button onClick={handleForceRefresh} ml="md" leftSection={<IconRefresh size={16} />}>
+            Force Refresh
           </Button>
         </PageHeader>
+        
+        {/* Show debugger in error state */}
+        <TenantDebugger 
+          tenantId={id || ''} 
+          tenantData={effectiveTenant} 
+          isLoading={isLoading || isDirectLoading} 
+          error={error} 
+          refetch={handleForceRefresh} 
+        />
       </div>
     );
   }
 
-  if (!tenant) {
+  if (!effectiveTenant) {
     console.log('No tenant data available for ID:', id);
     return (
       <div>
@@ -74,10 +152,19 @@ const TenantDetails: React.FC = () => {
           <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
             Back to Tenants
           </Button>
-          <Button onClick={() => refetch()} ml="md">
-            Retry
+          <Button onClick={handleForceRefresh} ml="md" leftSection={<IconRefresh size={16} />}>
+            Force Refresh
           </Button>
         </PageHeader>
+        
+        {/* Show debugger in not found state */}
+        <TenantDebugger 
+          tenantId={id || ''} 
+          tenantData={effectiveTenant} 
+          isLoading={isLoading || isDirectLoading} 
+          error={error} 
+          refetch={handleForceRefresh} 
+        />
       </div>
     );
   }
@@ -85,20 +172,38 @@ const TenantDetails: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title={tenant.name}
-        description={isSuperAdmin ? `Tenant ID: ${tenant.id || tenant._id}` : ''}
+        title={effectiveTenant.name}
+        description={isSuperAdmin ? `Tenant ID: ${effectiveTenant.id || effectiveTenant._id}` : ''}
       >
         <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
           Back
         </Button>
         {isSuperAdmin && (
-          <Button leftSection={<IconEdit size={16} />} onClick={handleEdit}>
+          <Button leftSection={<IconEdit size={16} />} onClick={handleEdit} className="mr-2">
             Edit
           </Button>
         )}
+        <Button 
+          leftSection={<IconRefresh size={16} />} 
+          variant="subtle" 
+          onClick={handleForceRefresh}
+        >
+          Refresh
+        </Button>
       </PageHeader>
 
       <div className="mt-6">
+        {/* Debug toggle for developers */}
+        {import.meta.env.DEV && (
+          <div className="mb-4 flex justify-end">
+            <Switch 
+              label="Show Debugger" 
+              checked={showDebugger} 
+              onChange={(e) => setShowDebugger(e.currentTarget.checked)} 
+            />
+          </div>
+        )}
+        
         {!isSuperAdmin && (
           <Alert icon={<IconInfoCircle size={16} />} title="Limited View" color="blue" mb="md">
             You are viewing limited tenant information. Only tenant administrators can see all details.
@@ -111,8 +216,8 @@ const TenantDetails: React.FC = () => {
               <Text fw={500} size="lg">Tenant Information</Text>
             </div>
             {isSuperAdmin && (
-              <Badge color={tenant.active === false || tenant.archived === true ? 'red' : 'green'}>
-                {tenant.active === false || tenant.archived === true ? 'Inactive' : 'Active'}
+              <Badge color={effectiveTenant.active === false || effectiveTenant.archived === true ? 'red' : 'green'}>
+                {effectiveTenant.active === false || effectiveTenant.archived === true ? 'Inactive' : 'Active'}
               </Badge>
             )}
           </Group>
@@ -120,7 +225,7 @@ const TenantDetails: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Text size="sm" color="dimmed">Name</Text>
-              <Text>{tenant.name}</Text>
+              <Text>{effectiveTenant.name}</Text>
             </div>
             
             {/* Only show these fields to SuperAdmin */}
@@ -128,17 +233,17 @@ const TenantDetails: React.FC = () => {
               <>
                 <div>
                   <Text size="sm" color="dimmed">Created</Text>
-                  <Text>{new Date(tenant.createdAt).toLocaleString()}</Text>
+                  <Text>{new Date(effectiveTenant.createdAt).toLocaleString()}</Text>
                 </div>
-                {tenant.updatedAt && (
+                {effectiveTenant.updatedAt && (
                   <div>
                     <Text size="sm" color="dimmed">Last Updated</Text>
-                    <Text>{new Date(tenant.updatedAt).toLocaleString()}</Text>
+                    <Text>{new Date(effectiveTenant.updatedAt).toLocaleString()}</Text>
                   </div>
                 )}
                 <div>
                   <Text size="sm" color="dimmed">Owner ID</Text>
-                  <Text>{tenant.ownerId || 'No owner assigned'}</Text>
+                  <Text>{effectiveTenant.ownerId || 'No owner assigned'}</Text>
                 </div>
               </>
             )}
@@ -167,6 +272,17 @@ const TenantDetails: React.FC = () => {
               </Tabs.Panel>
             </Tabs>
           </div>
+        )}
+        
+        {/* Show debugger if enabled */}
+        {(showDebugger || import.meta.env.DEV) && (
+          <TenantDebugger 
+            tenantId={id || ''} 
+            tenantData={effectiveTenant} 
+            isLoading={isLoading || isDirectLoading} 
+            error={error} 
+            refetch={handleForceRefresh} 
+          />
         )}
       </div>
     </div>

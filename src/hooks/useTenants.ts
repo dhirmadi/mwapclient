@@ -35,11 +35,34 @@ export const useTenants = () => {
   const useTenant = (id?: string) => {
     return useQuery({
       queryKey: ['tenant', id],
-      queryFn: () => api.fetchTenantById(id!),
+      queryFn: async () => {
+        if (!id) throw new Error('Tenant ID is required');
+        
+        console.log('useTenant hook - Fetching tenant with ID:', id);
+        try {
+          const result = await api.fetchTenantById(id);
+          console.log('useTenant hook - Fetch result:', result);
+          
+          // Validate the result
+          if (!result) {
+            throw new Error('No tenant data returned from API');
+          }
+          
+          // Return the validated result
+          return result;
+        } catch (error) {
+          console.error('useTenant hook - Error fetching tenant:', error);
+          throw error;
+        }
+      },
       enabled: !!id, // Allow fetching tenant details regardless of user role
-      retry: 2,      // Retry failed requests up to 2 times
+      retry: 3,      // Retry failed requests up to 3 times
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
       staleTime: 0,  // Consider data stale immediately (always refetch)
       refetchOnWindowFocus: true, // Refetch when window regains focus
+      refetchOnMount: true,      // Refetch when component mounts
+      refetchOnReconnect: true,  // Refetch when reconnecting
+      cacheTime: 1000 * 60 * 5,  // Cache for 5 minutes
     });
   };
 
