@@ -8,6 +8,7 @@ import { IconEdit, IconArrowLeft, IconUsers, IconSettings, IconInfoCircle, IconR
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import TenantDebugger from '../../components/debug/TenantDebugger';
+import useQueryDebugger from '../../hooks/useQueryDebugger';
 import api from '../../utils/api';
 
 const TenantDetails: React.FC = () => {
@@ -18,6 +19,13 @@ const TenantDetails: React.FC = () => {
   const [showDebugger, setShowDebugger] = useState(false);
   const [directTenantData, setDirectTenantData] = useState<any>(null);
   const [isDirectLoading, setIsDirectLoading] = useState(false);
+  
+  // Use our custom query debugger
+  const queryDebugger = useQueryDebugger(['tenant', id], {
+    logOnMount: true,
+    logOnChange: true,
+    logOnUnmount: true,
+  });
   
   // Use React Query hook
   const { 
@@ -104,6 +112,12 @@ const TenantDetails: React.FC = () => {
     queryClient.removeQueries({ queryKey: ['tenant', id] });
     refetch();
     fetchTenantDirectly();
+    
+    // Log the query state for debugging
+    console.group('Force Refresh Debug Info');
+    console.log('Query State:', queryDebugger.getState());
+    console.log('Query Cache:', queryClient.getQueryCache().getAll());
+    console.groupEnd();
   };
   
   // Determine which tenant data to use (from React Query or direct fetch)
@@ -193,9 +207,25 @@ const TenantDetails: React.FC = () => {
       </PageHeader>
 
       <div className="mt-6">
-        {/* Debug toggle for developers */}
+        {/* Debug controls for developers */}
         {import.meta.env.DEV && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-end items-center gap-4">
+            <Button 
+              size="xs" 
+              variant="outline" 
+              color="gray"
+              onClick={() => {
+                // This will toggle the React Query Devtools
+                const devtools = document.querySelector('.ReactQueryDevtools');
+                if (devtools) {
+                  // @ts-ignore
+                  devtools.click();
+                }
+              }}
+            >
+              Toggle Query Devtools
+            </Button>
+            
             <Switch 
               label="Show Debugger" 
               checked={showDebugger} 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { Notifications } from '@mantine/notifications';
 import { AuthProvider } from '../context/AuthContext';
@@ -39,15 +38,8 @@ import ProjectEdit from '../pages/projects/ProjectEdit';
 import ProjectMembers from '../pages/projects/ProjectMembers';
 import ProjectFiles from '../pages/projects/ProjectFiles';
 
-// Create a client for React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
+// Note: QueryClient is now created in App.tsx to avoid duplication
+// This ensures React Query Devtools work correctly
 
 const AppRouter: React.FC = () => {
   return (
@@ -61,9 +53,8 @@ const AppRouter: React.FC = () => {
         }}
       >
         <AuthProvider>
-          <QueryClientProvider client={queryClient}>
-            <Notifications position={{ top: 'top', right: 'right' }} />
-            <Routes>
+          <Notifications position={{ top: 'top', right: 'right' }} />
+          <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -127,7 +118,6 @@ const AppRouter: React.FC = () => {
               {/* Not Found Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </QueryClientProvider>
         </AuthProvider>
       </Auth0Provider>
     </BrowserRouter>
