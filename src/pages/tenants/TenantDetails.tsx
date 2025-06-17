@@ -9,7 +9,12 @@ import { IconEdit, IconArrowLeft, IconUsers, IconSettings } from '@tabler/icons-
 const TenantDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: tenant, isLoading, error } = useTenant(id || '');
+  const { 
+    data: tenant, 
+    isLoading, 
+    error,
+    refetch 
+  } = useTenant(id || '');
   
   // Debug logging
   React.useEffect(() => {
@@ -17,7 +22,13 @@ const TenantDetails: React.FC = () => {
     console.log('TenantDetails - Tenant data:', tenant);
     console.log('TenantDetails - Loading:', isLoading);
     console.log('TenantDetails - Error:', error);
-  }, [id, tenant, isLoading, error]);
+    
+    // If no tenant data and not loading, try to refetch
+    if (!tenant && !isLoading && !error) {
+      console.log('No tenant data found, refetching...');
+      refetch();
+    }
+  }, [id, tenant, isLoading, error, refetch]);
 
   const handleBack = () => {
     navigate('/admin/tenants');
@@ -32,18 +43,37 @@ const TenantDetails: React.FC = () => {
   }
 
   if (error) {
-    return <ErrorDisplay error={error} />;
+    console.error('Error loading tenant:', error);
+    return (
+      <div>
+        <PageHeader
+          title="Error Loading Tenant"
+          description={`An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`}
+        >
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
+            Back to Tenants
+          </Button>
+          <Button onClick={() => refetch()} ml="md">
+            Retry
+          </Button>
+        </PageHeader>
+      </div>
+    );
   }
 
   if (!tenant) {
+    console.log('No tenant data available for ID:', id);
     return (
       <div>
         <PageHeader
           title="Tenant Not Found"
-          description="The requested tenant could not be found"
+          description={`The tenant with ID ${id} could not be found`}
         >
           <Button leftSection={<IconArrowLeft size={16} />} onClick={handleBack}>
             Back to Tenants
+          </Button>
+          <Button onClick={() => refetch()} ml="md">
+            Retry
           </Button>
         </PageHeader>
       </div>

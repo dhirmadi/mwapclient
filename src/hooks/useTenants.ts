@@ -37,6 +37,9 @@ export const useTenants = () => {
       queryKey: ['tenant', id],
       queryFn: () => api.fetchTenantById(id!),
       enabled: !!id, // Allow fetching tenant details regardless of user role
+      retry: 2,      // Retry failed requests up to 2 times
+      staleTime: 0,  // Consider data stale immediately (always refetch)
+      refetchOnWindowFocus: true, // Refetch when window regains focus
     });
   };
 

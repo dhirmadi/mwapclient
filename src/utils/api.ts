@@ -145,24 +145,33 @@ const api = {
     return response.data;
   }),
   
-  // Workaround for fetchTenantById - fetches all tenants and filters by ID
+  // Fetch a tenant by ID
   fetchTenantById: debugApiCall('fetchTenantById', async (id: string): Promise<Tenant> => {
     console.log(`Fetching tenant by ID: ${id}`);
     
     try {
-      // First try the direct endpoint (which currently returns 404)
+      // Try the direct endpoint
       const response = await apiClient.get(`/tenants/${id}`);
+      console.log('Direct tenant response:', response.data);
       
       // Handle different response formats
       if (response.data && response.data.success === true && response.data.data) {
+        console.log('Returning tenant from success.data format:', response.data.data);
         return response.data.data;
+      } else if (response.data && typeof response.data === 'object' && response.data.id) {
+        console.log('Returning tenant from direct object format:', response.data);
+        return response.data;
+      } else {
+        console.log('Unexpected response format, falling back to workaround');
+        throw new Error('Unexpected response format');
       }
-      return response.data;
     } catch (error) {
       console.log('Error fetching tenant by ID directly, falling back to workaround', error);
       
       // Fallback: Fetch all tenants and filter by ID
       const allTenantsResponse = await apiClient.get('/tenants');
+      console.log('All tenants response:', allTenantsResponse.data);
+      
       let allTenants = [];
       
       // Handle different response formats
@@ -174,8 +183,11 @@ const api = {
         throw new Error('Unexpected response format when fetching all tenants');
       }
       
+      console.log('All tenants array:', allTenants);
+      
       // Find the tenant with the matching ID
       const tenant = allTenants.find((t: any) => (t.id === id || t._id === id));
+      console.log('Found tenant:', tenant);
       
       if (!tenant) {
         throw new Error(`Tenant with ID ${id} not found`);
