@@ -1,92 +1,120 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCreateTenant } from '../../hooks';
 import { PageHeader } from '../../components/layout';
-import { ErrorDisplay } from '../../components/common';
-import { Button, TextInput, Switch, Card, Group } from '@mantine/core';
+import { ErrorDisplay, LoadingSpinner } from '../../components/common';
+import { Button, TextInput, Card, Group, Title, Text, Paper, Container } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { z } from 'zod';
-import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
+import { IconArrowLeft, IconDeviceFloppy, IconBuildingSkyscraper } from '@tabler/icons-react';
+import { useAuth } from '../../context/AuthContext';
+import { useTenants } from '../../hooks/useTenants';
 
 const tenantSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters'),
-  active: z.boolean().default(true),
 });
 
 type TenantFormValues = z.infer<typeof tenantSchema>;
 
 const TenantCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { mutate, isLoading, error } = useCreateTenant();
+  const location = useLocation();
+  const { isAuthenticated, isSuperAdmin } = useAuth();
+  const { currentTenant, isLoadingCurrentTenant } = useTenants();
+  const { createTenant, isCreating, error, isSuccess } = useCreateTenant();
 
   const form = useForm<TenantFormValues>({
     initialValues: {
       name: '',
-      active: true,
     },
     validate: zodResolver(tenantSchema),
   });
 
+  // Check if user already has a tenant or is a super admin
+  React.useEffect(() => {
+    if (!isLoadingCurrentTenant && !isCreating) {
+      if (currentTenant && !isSuperAdmin) {
+        // User already has a tenant, redirect to home
+        navigate('/');
+      }
+    }
+    
+    if (isSuccess) {
+      // Redirect to home after successful creation
+      navigate('/');
+    }
+  }, [currentTenant, isLoadingCurrentTenant, isCreating, isSuccess, isSuperAdmin, navigate]);
+
   const handleSubmit = (values: TenantFormValues) => {
-    mutate(values, {
+    createTenant(values, {
       onSuccess: () => {
-        navigate('/tenants');
+        navigate('/');
       },
     });
   };
 
   const handleBack = () => {
-    navigate('/tenants');
+    navigate('/');
   };
 
+  if (isLoadingCurrentTenant) {
+    return <LoadingSpinner />;
+  }
+
+  // If user is not authenticated, redirect to login
+  if (!isAuthenticated) {
+    navigate('/login', { state: { from: location } });
+    return null;
+  }
+
   return (
-    <div>
-      <PageHeader
-        title="Create Tenant"
-        description="Add a new tenant to the platform"
-      >
-        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
-          Back
-        </Button>
-      </PageHeader>
+    <Container size="md" py="xl">
+      <Paper shadow="md" p="xl" radius="md" withBorder mb="xl">
+        <Group mb="md">
+          <IconBuildingSkyscraper size={32} color="teal" />
+          <Title order={1} color="teal">Create Your Tenant</Title>
+        </Group>
+        <Text size="lg" mb="xl" color="dimmed">
+          A tenant is your organization's workspace on the platform. Create your tenant to get started.
+        </Text>
+      </Paper>
 
       {error && <ErrorDisplay error={error} className="mt-4" />}
 
       <Card shadow="sm" p="lg" radius="md" withBorder className="mt-6">
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <TextInput
-            label="Tenant Name"
-            placeholder="Enter tenant name"
+            label="Organization Name"
+            description="Enter the name of your organization or team"
+            placeholder="e.g., Acme Corporation, My Team, etc."
             required
+            size="lg"
             {...form.getInputProps('name')}
-            className="mb-4"
-          />
-
-          <Switch
-            label="Active"
-            {...form.getInputProps('active', { type: 'checkbox' })}
             className="mb-6"
           />
 
-          <Group style={{ justifyContent: 'flex-end' }}>
+          <Group style={{ justifyContent: 'space-between' }}>
             <Button
               type="button"
               variant="outline"
               onClick={handleBack}
+              leftSection={<IconArrowLeft size={16} />}
             >
-              Cancel
+              Back to Home
             </Button>
             <Button
               type="submit"
               leftSection={<IconDeviceFloppy size={16} />}
-              loading={isLoading}
+              loading={isCreating}
+              size="lg"
+              color="teal"
             >
-              Save
+              Create Tenant
             </Button>
           </Group>
         </form>
       </Card>
-    </div>
+    </Container>
   );
 };
 

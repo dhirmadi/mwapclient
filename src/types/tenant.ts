@@ -1,10 +1,14 @@
 export interface Tenant {
-  _id: string;
+  id?: string;
+  _id?: string;
   ownerId: string;
   name: string;
   createdAt: string;
-  archived: boolean;
-  integrations: string[];
+  updatedAt?: string;
+  archived?: boolean;
+  active?: boolean;
+  integrations?: string[];
+  settings?: Record<string, any>;
 }
 
 export interface TenantCreate {

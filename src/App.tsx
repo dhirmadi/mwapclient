@@ -4,25 +4,45 @@ import '@mantine/core/styles.css';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import NotificationContainer from './components/notifications/NotificationContainer';
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+import { useState } from 'react';
 
 function App() {
+  // Create a client with enhanced debugging capabilities
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 2,
+        refetchOnWindowFocus: true,
+        staleTime: 1000 * 60, // 1 minute
+        gcTime: 1000 * 60 * 5, // 5 minutes
+      },
+    },
+    // Add query logger for debugging
+    logger: {
+      log: (message) => {
+        console.log('React Query:', message);
+      },
+      warn: (message) => {
+        console.warn('React Query Warning:', message);
+      },
+      error: (message) => {
+        console.error('React Query Error:', message);
+      },
+    },
+  }));
+
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
         <AppRouter />
         <NotificationContainer />
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* Enhanced React Query Devtools with better visibility */}
+        <ReactQueryDevtools 
+          initialIsOpen={false} 
+          position="bottom"
+          buttonPosition="bottom-right"
+          styleNonce="react-query"
+        />
       </MantineProvider>
     </QueryClientProvider>
   );
