@@ -349,7 +349,7 @@ const TenantIntegrations: React.FC = () => {
         description="Manage cloud storage integrations for your tenant"
       >
         <Button 
-          leftIcon={<IconPlus size={16} />} 
+          leftSection={<IconPlus size={16} />}
           onClick={openAddIntegrationModal}
           disabled={loading || !Array.isArray(cloudProviders) || cloudProviders.length === 0}
         >
@@ -468,7 +468,7 @@ const TenantIntegrations: React.FC = () => {
                         fullWidth 
                         variant={isUsed ? "outline" : "filled"} 
                         color={isUsed ? "gray" : "blue"}
-                        leftIcon={isUsed ? <IconCheck size={16} /> : <IconPlus size={16} />}
+                        leftSection={isUsed ? <IconCheck size={16} /> : <IconPlus size={16} />}
                         onClick={() => !isUsed && handleAddIntegration(provider)}
                         disabled={isUsed}
                       >
