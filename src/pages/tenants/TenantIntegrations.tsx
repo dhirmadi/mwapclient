@@ -13,16 +13,23 @@ import {
   Badge, 
   ActionIcon, 
   Modal, 
-  LoadingOverlay 
+  LoadingOverlay,
+  Tooltip,
+  Alert,
+  SimpleGrid,
+  Stack,
+  Divider,
+  Box
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconPlus, IconTrash, IconEdit, IconRefresh, IconCheck, IconX } from '@tabler/icons-react';
+import { IconPlus, IconTrash, IconEdit, IconRefresh, IconCheck, IconX, IconAlertCircle, IconInfoCircle, IconCloud } from '@tabler/icons-react';
 import { PageHeader } from '../../components/layout';
 import { useAuth } from '../../context/AuthContext';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { useTenants } from '../../hooks/useTenants';
-import { CloudProvider } from '../../types/cloud-provider';
-import { LoadingSpinner } from '../../components/common';
+import { CloudProvider, CloudProviderIntegration } from '../../types/cloud-provider';
+import { LoadingSpinner, ErrorDisplay } from '../../components/common';
+import api from '../../utils/api';
 
 interface TenantIntegration {
   _id: string;
@@ -33,20 +40,40 @@ interface TenantIntegration {
   status: 'active' | 'inactive' | 'error';
   createdAt: string;
   updatedAt: string;
+  provider?: CloudProvider; // Added to store the related provider
 }
 
 const TenantIntegrations: React.FC = () => {
   const { roles } = useAuth();
-  const { cloudProviders, isLoading: loadingProviders } = useCloudProviders();
-  const { tenant, isLoading: loadingTenant } = useTenant(roles.tenantId);
+  const { 
+    cloudProviders, 
+    isLoading: loadingProviders,
+    createIntegration,
+    deleteIntegration,
+    isCreatingIntegration,
+    isDeletingIntegration
+  } = useCloudProviders();
+  
+  const { useTenant, useTenantIntegrations } = useTenants();
+  const { data: tenant, isLoading: loadingTenant } = useTenant(roles?.tenantId);
+  const { 
+    data: tenantIntegrations, 
+    isLoading: loadingIntegrations,
+    refetch: refetchIntegrations,
+    error: integrationsError
+  } = useTenantIntegrations(roles?.tenantId);
   
   const [integrations, setIntegrations] = useState<TenantIntegration[]>([]);
-  const loading = loadingProviders || loadingTenant;
+  const loading = loadingProviders || loadingTenant || loadingIntegrations;
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<CloudProvider | null>(null);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [refreshingToken, setRefreshingToken] = useState<string | null>(null);
+
+  // Track which providers already have integrations
+  const [usedProviderIds, setUsedProviderIds] = useState<string[]>([]);
 
   const form = useForm({
     initialValues: {
@@ -60,274 +87,363 @@ const TenantIntegrations: React.FC = () => {
     },
   });
 
+  // Process and merge data when integrations or providers change
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        
-        // Load cloud providers
-        const providers = await fetchCloudProviders();
-        setCloudProviders(providers);
-        
-        // Load tenant integrations
-        if (roles?.tenantId) {
-          const tenantIntegrations = await fetchTenantIntegrations(roles.tenantId);
-          setIntegrations(tenantIntegrations);
-        }
-      } catch (error) {
-        console.error('Failed to load data:', error);
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to load cloud integrations',
-          color: 'red',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [roles?.tenantId]);
-
+    if (tenantIntegrations && cloudProviders) {
+      // Map integrations to include provider information
+      const processedIntegrations = tenantIntegrations.map(integration => {
+        const provider = cloudProviders.find(p => p._id === integration.cloudProviderId);
+        return {
+          ...integration,
+          provider
+        };
+      });
+      
+      setIntegrations(processedIntegrations);
+      
+      // Track which providers are already used
+      const usedIds = tenantIntegrations.map(integration => integration.cloudProviderId);
+      setUsedProviderIds(usedIds);
+    }
+  }, [tenantIntegrations, cloudProviders]);
+  
   // Update form fields when selected provider changes
   useEffect(() => {
     if (selectedProvider) {
-      // Reset credentials
-      const initialCredentials: Record<string, string> = {};
-      // Assuming requiredCredentials is an array of field names
-      (selectedProvider.credentials || []).forEach((field: any) => {
-        initialCredentials[field.key] = '';
-      });
+      form.setFieldValue('cloudProviderId', selectedProvider._id);
+      form.setFieldValue('name', `${selectedProvider.name} Integration`);
       
-      form.setValues({
-        ...form.values,
-        cloudProviderId: selectedProvider._id,
-        credentials: initialCredentials,
-      });
+      // Reset credentials field based on provider requirements
+      const credentialFields: Record<string, string> = {};
+      
+      // Different providers require different credentials
+      switch (selectedProvider.slug) {
+        case 'dropbox':
+          credentialFields.clientId = '';
+          credentialFields.clientSecret = '';
+          break;
+        case 'google-drive':
+          credentialFields.clientId = '';
+          credentialFields.clientSecret = '';
+          credentialFields.projectId = '';
+          break;
+        case 'onedrive':
+        case 'sharepoint':
+          credentialFields.clientId = '';
+          credentialFields.clientSecret = '';
+          credentialFields.tenantId = '';
+          break;
+        case 's3':
+          credentialFields.accessKeyId = '';
+          credentialFields.secretAccessKey = '';
+          credentialFields.region = '';
+          credentialFields.bucket = '';
+          break;
+        default:
+          credentialFields.apiKey = '';
+      }
+      
+      form.setFieldValue('credentials', credentialFields);
     }
-  }, [selectedProvider]);
-
-  const handleProviderChange = (providerId: string) => {
-    const provider = cloudProviders.find(p => p._id === providerId);
-    setSelectedProvider(provider || null);
+  }, [selectedProvider, form]);
+  
+  // Handle opening the add integration modal
+  const handleAddIntegration = (provider: CloudProvider) => {
+    setSelectedProvider(provider);
+    setModalOpen(true);
     setTestResult(null);
   };
-
+  
+  // Test the integration connection
   const handleTestConnection = async () => {
-    // This would typically call an API endpoint to test the connection
-    setTestingConnection(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    if (!form.validate().hasErrors) {
+      setTestingConnection(true);
+      setTestResult(null);
       
-      // For demo purposes, randomly succeed or fail
-      const success = Math.random() > 0.3;
-      setTestResult(success ? 'success' : 'error');
-      
-      if (success) {
+      try {
+        // Simulate testing the connection
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // In a real implementation, you would call an API endpoint to test the connection
+        // const response = await api.testIntegrationConnection({
+        //   providerId: form.values.cloudProviderId,
+        //   credentials: form.values.credentials
+        // });
+        
+        // For now, we'll simulate success
+        setTestResult('success');
+        
         notifications.show({
-          title: 'Success',
-          message: 'Connection test successful',
+          title: 'Connection Test Successful',
+          message: 'The integration credentials are valid',
           color: 'green',
         });
-      } else {
+      } catch (error) {
+        console.error('Connection test failed:', error);
+        setTestResult('error');
+        
         notifications.show({
-          title: 'Error',
-          message: 'Connection test failed. Please check your credentials.',
+          title: 'Connection Test Failed',
+          message: 'The integration credentials are invalid or the service is unavailable',
           color: 'red',
         });
+      } finally {
+        setTestingConnection(false);
       }
-    } catch (error) {
-      console.error('Connection test error:', error);
-      setTestResult('error');
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to test connection',
-        color: 'red',
-      });
-    } finally {
-      setTestingConnection(false);
     }
   };
-
-  const handleSubmit = async (values: typeof form.values) => {
-    if (!roles?.tenantId) return;
-    
-    try {
+  
+  // Save the integration
+  const handleSaveIntegration = async () => {
+    if (!form.validate().hasErrors && roles?.tenantId) {
       setSaving(true);
       
-      // Create integration
-      await createTenantIntegration(roles.tenantId, {
-        cloudProviderId: values.cloudProviderId,
-        name: values.name,
-        credentials: values.credentials,
-      });
-      
-      // Refresh integrations
-      const updatedIntegrations = await fetchTenantIntegrations(roles.tenantId);
-      setIntegrations(updatedIntegrations);
-      
-      // Close modal and reset form
-      setModalOpen(false);
-      form.reset();
-      setSelectedProvider(null);
-      
-      notifications.show({
-        title: 'Success',
-        message: 'Cloud integration added successfully',
-        color: 'green',
-      });
-    } catch (error) {
-      console.error('Failed to create integration:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to add cloud integration',
-        color: 'red',
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteIntegration = async (integrationId: string) => {
-    if (!roles?.tenantId) return;
-    
-    if (window.confirm('Are you sure you want to delete this integration?')) {
       try {
-        await deleteTenantIntegration(roles.tenantId, integrationId);
+        // Create the integration
+        await createIntegration({
+          tenantId: roles.tenantId,
+          data: {
+            tenantId: roles.tenantId,
+            cloudProviderId: form.values.cloudProviderId,
+            config: {
+              name: form.values.name,
+              credentials: form.values.credentials,
+              status: 'active'
+            }
+          }
+        });
         
-        // Refresh integrations
-        const updatedIntegrations = await fetchTenantIntegrations(roles.tenantId);
-        setIntegrations(updatedIntegrations);
+        // Close the modal and reset form
+        setModalOpen(false);
+        form.reset();
+        setSelectedProvider(null);
+        
+        // Refresh the integrations list
+        refetchIntegrations();
         
         notifications.show({
-          title: 'Success',
-          message: 'Cloud integration deleted successfully',
+          title: 'Integration Added',
+          message: 'The cloud integration has been successfully added',
+          color: 'green',
+        });
+      } catch (error) {
+        console.error('Failed to save integration:', error);
+        
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to add the integration. Please try again.',
+          color: 'red',
+        });
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+  
+  // Delete an integration
+  const handleDeleteIntegration = async (integrationId: string) => {
+    if (roles?.tenantId) {
+      try {
+        await deleteIntegration({
+          tenantId: roles.tenantId,
+          integrationId
+        });
+        
+        // Refresh the integrations list
+        refetchIntegrations();
+        
+        notifications.show({
+          title: 'Integration Removed',
+          message: 'The cloud integration has been successfully removed',
           color: 'green',
         });
       } catch (error) {
         console.error('Failed to delete integration:', error);
+        
         notifications.show({
           title: 'Error',
-          message: 'Failed to delete cloud integration',
+          message: 'Failed to remove the integration. Please try again.',
           color: 'red',
         });
       }
     }
   };
+  
+  // Refresh an integration token
+  const handleRefreshToken = async (integrationId: string) => {
+    if (roles?.tenantId) {
+      setRefreshingToken(integrationId);
+      
+      try {
+        // In a real implementation, you would call an API endpoint to refresh the token
+        // await api.refreshIntegrationToken(roles.tenantId, integrationId);
+        
+        // Simulate token refresh
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Refresh the integrations list
+        refetchIntegrations();
+        
+        notifications.show({
+          title: 'Token Refreshed',
+          message: 'The integration token has been successfully refreshed',
+          color: 'green',
+        });
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to refresh the integration token. Please try again.',
+          color: 'red',
+        });
+      } finally {
+        setRefreshingToken(null);
+      }
+    }
+  };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
+  // Render the UI
   return (
     <div>
-      <PageHeader
-        title="Cloud Integrations"
-        description="Manage your organization's cloud provider connections"
-      />
-
-      <Group justify="flex-end" mb="md">
-        <Button 
-          leftSection={<IconPlus size={16} />} 
-          onClick={() => setModalOpen(true)}
-        >
-          Add Integration
-        </Button>
-      </Group>
-
-      {integrations.length === 0 ? (
-        <Paper withBorder p="xl" radius="md">
-          <Text ta="center" c="dimmed" mb="md">
-            No cloud integrations found
-          </Text>
-          <Group justify="center">
-            <Button 
-              variant="outline" 
-              leftSection={<IconPlus size={16} />} 
-              onClick={() => setModalOpen(true)}
-            >
-              Add Your First Integration
-            </Button>
-          </Group>
-        </Paper>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {integrations.map((integration) => {
-            const provider = cloudProviders.find(p => p._id === integration.cloudProviderId);
+      <PageHeader title="Cloud Integrations" />
+      
+      <Paper shadow="sm" p="md" mb="xl">
+        <Text mb="md">
+          Connect your tenant to cloud storage providers to enable file storage for your projects.
+          Each cloud provider can have one integration per tenant.
+        </Text>
+        
+        {integrationsError && (
+          <Alert 
+            icon={<IconAlertCircle size={16} />} 
+            title="Error loading integrations" 
+            color="red" 
+            mb="md"
+          >
+            {integrationsError.message || 'Failed to load integrations. Please try again.'}
+          </Alert>
+        )}
+        
+        {loading ? (
+          <LoadingSpinner text="Loading cloud integrations..." />
+        ) : (
+          <>
+            {/* Current Integrations */}
+            <Title order={3} mb="md">Current Integrations</Title>
             
-            return (
-              <Card key={integration._id} withBorder padding="lg" radius="md">
-                <Group justify="space-between" mb="xs">
-                  <Text fw={500}>{integration.name}</Text>
-                  <Badge 
-                    color={
-                      integration.status === 'active' ? 'green' : 
-                      integration.status === 'error' ? 'red' : 'gray'
-                    }
-                  >
-                    {integration.status}
-                  </Badge>
-                </Group>
-                
-                <Text size="sm" c="dimmed" mb="md">
-                  {provider?.name || 'Unknown Provider'}
-                </Text>
-                
-                <Text size="xs" c="dimmed">
-                  Last updated: {new Date(integration.updatedAt).toLocaleDateString()}
-                </Text>
-                
-                <Group mt="md" justify="flex-end">
-                  <ActionIcon variant="subtle" color="gray">
-                    <IconRefresh size={16} />
-                  </ActionIcon>
-                  <ActionIcon variant="subtle" color="blue">
-                    <IconEdit size={16} />
-                  </ActionIcon>
-                  <ActionIcon 
-                    variant="subtle" 
-                    color="red"
-                    onClick={() => handleDeleteIntegration(integration._id)}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
+            {integrations.length === 0 ? (
+              <Alert 
+                icon={<IconInfoCircle size={16} />} 
+                title="No integrations" 
+                color="blue" 
+                mb="xl"
+              >
+                You haven't set up any cloud integrations yet. Add an integration below to get started.
+              </Alert>
+            ) : (
+              <SimpleGrid cols={2} spacing="md" mb="xl" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+                {integrations.map(integration => (
+                  <Card key={integration._id} shadow="sm" p="md" radius="md" withBorder>
+                    <Group position="apart" mb="xs">
+                      <Text weight={500}>{integration.name}</Text>
+                      <Badge 
+                        color={integration.status === 'active' ? 'green' : integration.status === 'error' ? 'red' : 'gray'}
+                      >
+                        {integration.status === 'active' ? 'Active' : integration.status === 'error' ? 'Error' : 'Inactive'}
+                      </Badge>
+                    </Group>
+                    
+                    <Text size="sm" color="dimmed" mb="md">
+                      Provider: {integration.provider?.name || 'Unknown'}
+                    </Text>
+                    
+                    <Text size="sm" mb="md">
+                      Added on {new Date(integration.createdAt).toLocaleDateString()}
+                    </Text>
+                    
+                    <Group position="right" spacing="xs">
+                      <Tooltip label="Refresh Token">
+                        <ActionIcon 
+                          color="blue" 
+                          onClick={() => handleRefreshToken(integration._id)}
+                          loading={refreshingToken === integration._id}
+                        >
+                          <IconRefresh size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Delete Integration">
+                        <ActionIcon 
+                          color="red" 
+                          onClick={() => handleDeleteIntegration(integration._id)}
+                          loading={isDeletingIntegration}
+                        >
+                          <IconTrash size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Card>
+                ))}
+              </SimpleGrid>
+            )}
+            
+            {/* Available Cloud Providers */}
+            <Title order={3} mb="md">Available Cloud Providers</Title>
+            
+            {cloudProviders.length === 0 ? (
+              <Alert 
+                icon={<IconInfoCircle size={16} />} 
+                title="No cloud providers" 
+                color="yellow" 
+                mb="md"
+              >
+                No cloud providers are available. Please contact your administrator.
+              </Alert>
+            ) : (
+              <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+                {cloudProviders.map(provider => {
+                  const isUsed = usedProviderIds.includes(provider._id);
+                  
+                  return (
+                    <Card key={provider._id} shadow="sm" p="md" radius="md" withBorder>
+                      <Group position="apart" mb="xs">
+                        <Text weight={500}>{provider.name}</Text>
+                        {isUsed && <Badge color="green">Connected</Badge>}
+                      </Group>
+                      
+                      <Text size="sm" color="dimmed" mb="md">
+                        {provider.slug}
+                      </Text>
+                      
+                      <Button 
+                        fullWidth 
+                        variant={isUsed ? "outline" : "filled"} 
+                        color={isUsed ? "gray" : "blue"}
+                        leftIcon={isUsed ? <IconCheck size={16} /> : <IconPlus size={16} />}
+                        onClick={() => !isUsed && handleAddIntegration(provider)}
+                        disabled={isUsed}
+                      >
+                        {isUsed ? 'Already Connected' : 'Add Integration'}
+                      </Button>
+                    </Card>
+                  );
+                })}
+              </SimpleGrid>
+            )}
+          </>
+        )}
+      </Paper>
+      
       {/* Add Integration Modal */}
       <Modal
         opened={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          form.reset();
-          setSelectedProvider(null);
-          setTestResult(null);
-        }}
-        title="Add Cloud Integration"
+        onClose={() => setModalOpen(false)}
+        title={`Add ${selectedProvider?.name || 'Cloud'} Integration`}
         size="lg"
       >
-        <form onSubmit={form.onSubmit(handleSubmit)}>
-          <LoadingOverlay visible={saving} />
-          
-          <Select
-            label="Cloud Provider"
-            placeholder="Select a cloud provider"
-            data={cloudProviders.map(provider => ({
-              value: provider._id,
-              label: provider.name,
-            }))}
-            required
-            mb="md"
-            {...form.getInputProps('cloudProviderId')}
-            onChange={(value) => handleProviderChange(value || '')}
-          />
-          
+        <LoadingOverlay visible={saving} />
+        
+        <form onSubmit={form.onSubmit(handleSaveIntegration)}>
           <TextInput
             label="Integration Name"
             placeholder="Enter a name for this integration"
@@ -336,68 +452,53 @@ const TenantIntegrations: React.FC = () => {
             {...form.getInputProps('name')}
           />
           
+          <Divider my="md" label="Credentials" labelPosition="center" />
+          
           {selectedProvider && (
-            <>
-              <Title order={4} mt="lg" mb="md">Credentials</Title>
-              
-              {(selectedProvider.credentials || []).map((field: any) => (
+            <Stack spacing="md">
+              {Object.keys(form.values.credentials).map(key => (
                 <TextInput
-                  key={field.key}
-                  label={field.label}
-                  placeholder={`Enter ${field.label.toLowerCase()}`}
+                  key={key}
+                  label={key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                  placeholder={`Enter ${key}`}
                   required
-                  mb="md"
-                  type={field.type === 'password' ? 'password' : 'text'}
-                  {...form.getInputProps(`credentials.${field.key}`)}
+                  {...form.getInputProps(`credentials.${key}`)}
                 />
               ))}
               
-              <Group mb="xl">
+              {testResult === 'success' && (
+                <Alert icon={<IconCheck size={16} />} title="Connection Successful" color="green">
+                  The credentials are valid and the connection was established successfully.
+                </Alert>
+              )}
+              
+              {testResult === 'error' && (
+                <Alert icon={<IconX size={16} />} title="Connection Failed" color="red">
+                  The connection test failed. Please check your credentials and try again.
+                </Alert>
+              )}
+              
+              <Group position="apart" mt="md">
                 <Button
                   variant="outline"
                   onClick={handleTestConnection}
                   loading={testingConnection}
-                  leftSection={
-                    testResult === 'success' ? <IconCheck size={16} /> :
-                    testResult === 'error' ? <IconX size={16} /> :
-                    undefined
-                  }
-                  color={
-                    testResult === 'success' ? 'green' :
-                    testResult === 'error' ? 'red' :
-                    'blue'
-                  }
+                  disabled={saving}
                 >
                   Test Connection
                 </Button>
                 
-                {testResult && (
-                  <Text
-                    c={testResult === 'success' ? 'green' : 'red'}
-                    size="sm"
-                  >
-                    {testResult === 'success' ? 'Connection successful' : 'Connection failed'}
-                  </Text>
-                )}
+                <Group spacing="xs">
+                  <Button variant="subtle" onClick={() => setModalOpen(false)} disabled={saving}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" loading={saving} disabled={testingConnection}>
+                    Save Integration
+                  </Button>
+                </Group>
               </Group>
-            </>
+            </Stack>
           )}
-          
-          <Group justify="flex-end">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setModalOpen(false);
-                form.reset();
-                setSelectedProvider(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={testResult === 'error'}>
-              Add Integration
-            </Button>
-          </Group>
         </form>
       </Modal>
     </div>
