@@ -36,7 +36,7 @@ export const useTenants = () => {
     return useQuery({
       queryKey: ['tenant', id],
       queryFn: () => api.fetchTenantById(id!),
-      enabled: !!id && isSuperAdmin,
+      enabled: !!id, // Allow fetching tenant details regardless of user role
     });
   };
 

@@ -10,6 +10,14 @@ const TenantDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: tenant, isLoading, error } = useTenant(id || '');
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('TenantDetails - ID:', id);
+    console.log('TenantDetails - Tenant data:', tenant);
+    console.log('TenantDetails - Loading:', isLoading);
+    console.log('TenantDetails - Error:', error);
+  }, [id, tenant, isLoading, error]);
 
   const handleBack = () => {
     navigate('/admin/tenants');
