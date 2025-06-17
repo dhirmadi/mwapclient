@@ -359,7 +359,6 @@ const TenantIntegrations: React.FC = () => {
       <Breadcrumbs 
         items={[
           { title: 'Dashboard', href: '/' },
-          { title: 'Tenant Management', href: '/tenant-management' },
           { title: 'Cloud Integrations' }
         ]}
       />
@@ -367,11 +366,11 @@ const TenantIntegrations: React.FC = () => {
       <Group mb="md">
         <Button 
           component={Link} 
-          to="/tenant-management" 
+          to="/" 
           variant="subtle" 
           leftSection={<IconArrowLeft size={16} />}
         >
-          Back to Tenant Management
+          Back to Dashboard
         </Button>
       </Group>
       
