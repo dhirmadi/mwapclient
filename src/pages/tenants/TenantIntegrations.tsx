@@ -108,11 +108,12 @@ const TenantIntegrations: React.FC = () => {
     // Ensure tenantIntegrations is an array
     const integrationsArray = Array.isArray(tenantIntegrations) 
       ? tenantIntegrations 
-      : tenantIntegrations.data && Array.isArray(tenantIntegrations.data) 
+      : tenantIntegrations?.data && Array.isArray(tenantIntegrations.data) 
         ? tenantIntegrations.data 
         : [];
     
     console.log('Tenant integrations data:', tenantIntegrations);
+    console.log('Cloud providers data:', cloudProviders);
     console.log('Processed integrations array:', integrationsArray);
     
     // Map integrations to include provider information
@@ -381,7 +382,7 @@ const TenantIntegrations: React.FC = () => {
         <Button 
           leftSection={<IconPlus size={16} />}
           onClick={openAddIntegrationModal}
-          disabled={loading || !Array.isArray(cloudProviders) || cloudProviders.length === 0}
+          disabled={loading || !cloudProviders || (Array.isArray(cloudProviders) && cloudProviders.length === 0)}
         >
           Add Integration
         </Button>
@@ -469,7 +470,7 @@ const TenantIntegrations: React.FC = () => {
             {/* Available Cloud Providers */}
             <Title order={3} mb="md">Available Cloud Providers</Title>
             
-            {!Array.isArray(cloudProviders) || cloudProviders.length === 0 ? (
+            {!cloudProviders || (Array.isArray(cloudProviders) && cloudProviders.length === 0) ? (
               <Alert 
                 icon={<IconInfoCircle size={16} />} 
                 title="No cloud providers" 
@@ -480,7 +481,7 @@ const TenantIntegrations: React.FC = () => {
               </Alert>
             ) : (
               <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
-                {cloudProviders.map(provider => {
+                {Array.isArray(cloudProviders) ? cloudProviders.map(provider => {
                   const isUsed = Array.isArray(usedProviderIds) && usedProviderIds.includes(provider._id);
                   
                   return (
@@ -506,7 +507,7 @@ const TenantIntegrations: React.FC = () => {
                       </Button>
                     </Card>
                   );
-                })}
+                }) : null}
               </SimpleGrid>
             )}
           </>

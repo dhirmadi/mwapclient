@@ -15,7 +15,7 @@ export const useCloudProviders = () => {
   const queryClient = useQueryClient();
   const { isSuperAdmin } = useAuth();
 
-  // Fetch all cloud providers
+  // Fetch all cloud providers - available to both superadmins and tenant managers
   const { 
     data: cloudProviders = [], 
     isLoading, 
@@ -24,7 +24,7 @@ export const useCloudProviders = () => {
   } = useQuery({
     queryKey: ['cloud-providers'],
     queryFn: () => api.fetchCloudProviders(),
-    enabled: isSuperAdmin,
+    // Enable for all users, not just superadmins
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
