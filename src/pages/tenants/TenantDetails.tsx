@@ -115,14 +115,7 @@ const TenantDetails: React.FC = () => {
           </Button>
         </PageHeader>
         
-        {/* Show debugger in error state */}
-        <TenantDebugger 
-          tenantId={id || ''} 
-          tenantData={effectiveTenant} 
-          isLoading={isLoading || isDirectLoading} 
-          error={error} 
-          refetch={handleForceRefresh} 
-        />
+
       </div>
     );
   }
@@ -143,14 +136,7 @@ const TenantDetails: React.FC = () => {
           </Button>
         </PageHeader>
         
-        {/* Show debugger in not found state */}
-        <TenantDebugger 
-          tenantId={id || ''} 
-          tenantData={effectiveTenant} 
-          isLoading={isLoading || isDirectLoading} 
-          error={error} 
-          refetch={handleForceRefresh} 
-        />
+
       </div>
     );
   }
