@@ -25,7 +25,7 @@ const TenantList: React.FC = () => {
   
   // Filter out any archived tenants from the active list (in case the API doesn't do this)
   const activeTenantsFiltered = activeTenantsArray.filter(tenant => 
-    tenant.archived !== true && tenant.active !== false
+    tenant.archived !== true
   );
   
   // Calculate pagination

@@ -138,14 +138,16 @@ const api = {
   
   // Fetch archived tenants specifically
   fetchArchivedTenants: debugApiCall('fetchArchivedTenants', async (): Promise<Tenant[]> => {
-    const response = await apiClient.get('/tenants?archived=true');
+    const response = await apiClient.get('/tenants?includeArchived=true');
     console.log('Archived Tenants API response:', response.data);
     
     // Handle the specific response format
     if (response.data && response.data.success === true && Array.isArray(response.data.data)) {
-      return response.data.data;
+      // Filter to only include archived tenants
+      return response.data.data.filter((tenant: any) => tenant.archived === true);
     } else if (Array.isArray(response.data)) {
-      return response.data;
+      // Filter to only include archived tenants
+      return response.data.filter((tenant: any) => tenant.archived === true);
     } else {
       console.warn('Unexpected archived tenants response format:', response.data);
       return [];
