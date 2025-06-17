@@ -3,19 +3,31 @@ import api from '../utils/api';
 import { Tenant, TenantCreate, TenantUpdate } from '../types/tenant';
 import { useAuth } from '../context/AuthContext';
 
-export const useTenants = () => {
+export const useTenants = (includeArchived: boolean = false) => {
   const queryClient = useQueryClient();
   const { isSuperAdmin } = useAuth();
 
-  // Fetch all tenants (SuperAdmin only)
+  // Fetch active tenants (SuperAdmin only)
   const { 
     data: tenants, 
     isLoading, 
     error,
     refetch 
   } = useQuery({
-    queryKey: ['tenants'],
-    queryFn: () => api.fetchTenants(),
+    queryKey: ['tenants', 'active'],
+    queryFn: () => api.fetchTenants(includeArchived),
+    enabled: isSuperAdmin,
+  });
+  
+  // Fetch archived tenants separately (SuperAdmin only)
+  const {
+    data: archivedTenants,
+    isLoading: isLoadingArchived,
+    error: archivedError,
+    refetch: refetchArchived
+  } = useQuery({
+    queryKey: ['tenants', 'archived'],
+    queryFn: () => api.fetchArchivedTenants(),
     enabled: isSuperAdmin,
   });
 
@@ -105,12 +117,16 @@ export const useTenants = () => {
   return {
     // Tenants
     tenants,
+    archivedTenants,
     currentTenant,
     isLoading,
+    isLoadingArchived,
     isLoadingCurrentTenant,
     error,
+    archivedError,
     currentTenantError,
     refetch,
+    refetchArchived,
     refetchCurrentTenant,
     useTenant,
     createTenant: createTenantMutation.mutate,

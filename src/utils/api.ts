@@ -119,8 +119,10 @@ const api = {
   }),
   
   // Tenant endpoints
-  fetchTenants: debugApiCall('fetchTenants', async (): Promise<Tenant[]> => {
-    const response = await apiClient.get('/tenants');
+  fetchTenants: debugApiCall('fetchTenants', async (includeArchived: boolean = false): Promise<Tenant[]> => {
+    // Add query parameter to include archived tenants if requested
+    const url = includeArchived ? '/tenants?includeArchived=true' : '/tenants';
+    const response = await apiClient.get(url);
     console.log('Tenants API response:', response.data);
     
     // Handle the specific response format: { success: true, data: Array(1) }
@@ -130,6 +132,22 @@ const api = {
       return response.data;
     } else {
       console.warn('Unexpected tenants response format:', response.data);
+      return [];
+    }
+  }),
+  
+  // Fetch archived tenants specifically
+  fetchArchivedTenants: debugApiCall('fetchArchivedTenants', async (): Promise<Tenant[]> => {
+    const response = await apiClient.get('/tenants?archived=true');
+    console.log('Archived Tenants API response:', response.data);
+    
+    // Handle the specific response format
+    if (response.data && response.data.success === true && Array.isArray(response.data.data)) {
+      return response.data.data;
+    } else if (Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.warn('Unexpected archived tenants response format:', response.data);
       return [];
     }
   }),
