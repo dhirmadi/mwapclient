@@ -68,15 +68,15 @@ const AppRouter: React.FC = () => {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/tenants/create" element={<TenantCreate />} />
 
-                  {/* Tenant Details Route - Accessible to all authenticated users */}
+                  {/* Tenant Routes - Accessible to all authenticated users */}
                   <Route path="/admin/tenants/:id" element={<TenantDetails />} />
+                  <Route path="/admin/tenants/:id/edit" element={<TenantEdit />} />
 
                   {/* SuperAdmin Routes */}
                   <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN']} />}>
                     <Route path="/admin/dashboard" element={<Dashboard />} />
                     <Route path="/admin/tenants" element={<TenantList />} />
                     <Route path="/admin/tenants/create" element={<TenantCreate />} />
-                    <Route path="/admin/tenants/:id/edit" element={<TenantEdit />} />
                     <Route path="/admin/cloud-providers" element={<CloudProviderList />} />
                     <Route path="/admin/cloud-providers/create" element={<CloudProviderCreate />} />
                     <Route path="/admin/cloud-providers/:id/edit" element={<CloudProviderEdit />} />

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTenant, useUpdateTenant } from '../../hooks';
 import { PageHeader } from '../../components/layout';
@@ -6,7 +6,9 @@ import { LoadingSpinner, ErrorDisplay } from '../../components/common';
 import { Button, TextInput, Switch, Card, Group } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { z } from 'zod';
-import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
+import { IconArrowLeft, IconDeviceFloppy, IconRefresh } from '@tabler/icons-react';
+import { useQueryClient } from '@tanstack/react-query';
+import api from '../../utils/api';
 
 const tenantSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -18,8 +20,49 @@ type TenantFormValues = z.infer<typeof tenantSchema>;
 const TenantEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: tenant, isLoading: isFetching, error: fetchError } = useTenant(id || '');
+  const queryClient = useQueryClient();
+  const [directTenantData, setDirectTenantData] = useState<any>(null);
+  const [isDirectLoading, setIsDirectLoading] = useState(false);
+  
+  // Use React Query hook
+  const { 
+    data: tenant, 
+    isLoading: isFetching, 
+    error: fetchError,
+    refetch 
+  } = useTenant(id || '');
+  
   const { updateTenant, isUpdating, error: updateError } = useUpdateTenant();
+  
+  // Fetch tenant data directly (as a backup)
+  const fetchTenantDirectly = async () => {
+    if (!id) return;
+    
+    try {
+      setIsDirectLoading(true);
+      console.log('Fetching tenant directly for edit:', id);
+      const data = await api.fetchTenantById(id);
+      console.log('Direct fetch result for edit:', data);
+      setDirectTenantData(data);
+      
+      // Update the query cache with this data
+      queryClient.setQueryData(['tenant', id], data);
+    } catch (err) {
+      console.error('Error fetching tenant directly for edit:', err);
+    } finally {
+      setIsDirectLoading(false);
+    }
+  };
+  
+  // Force refetch on mount
+  useEffect(() => {
+    // Clear the cache for this tenant and refetch
+    queryClient.removeQueries({ queryKey: ['tenant', id] });
+    setTimeout(() => {
+      refetch();
+      fetchTenantDirectly();
+    }, 100);
+  }, [id, queryClient, refetch]);
 
   const form = useForm<TenantFormValues>({
     initialValues: {
@@ -29,14 +72,25 @@ const TenantEdit: React.FC = () => {
     validate: zodResolver(tenantSchema),
   });
 
+  // Determine which tenant data to use (from React Query or direct fetch)
+  const effectiveTenant = tenant || directTenantData;
+  
+  // Update form when tenant data is available
   useEffect(() => {
-    if (tenant) {
+    if (effectiveTenant) {
       form.setValues({
-        name: tenant.name,
-        archived: tenant.archived || false,
+        name: effectiveTenant.name,
+        archived: effectiveTenant.archived || false,
       });
     }
-  }, [tenant]);
+  }, [effectiveTenant]);
+  
+  const handleForceRefresh = () => {
+    // Clear the cache and force a refetch
+    queryClient.removeQueries({ queryKey: ['tenant', id] });
+    refetch();
+    fetchTenantDirectly();
+  };
 
   const handleSubmit = (values: TenantFormValues) => {
     updateTenant({ 
@@ -53,15 +107,29 @@ const TenantEdit: React.FC = () => {
     navigate(`/admin/tenants/${id}`);
   };
 
-  if (isFetching) {
+  if (isFetching && isDirectLoading) {
     return <LoadingSpinner size="xl" text="Loading tenant..." />;
   }
 
-  if (fetchError) {
-    return <ErrorDisplay error={fetchError} />;
+  if (fetchError && !effectiveTenant) {
+    return (
+      <div>
+        <PageHeader
+          title="Error Loading Tenant"
+          description={`An error occurred: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`}
+        >
+          <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/admin/tenants')}>
+            Back to Tenants
+          </Button>
+          <Button onClick={handleForceRefresh} ml="md" leftSection={<IconRefresh size={16} />}>
+            Force Refresh
+          </Button>
+        </PageHeader>
+      </div>
+    );
   }
 
-  if (!tenant) {
+  if (!effectiveTenant) {
     return (
       <div>
         <PageHeader
@@ -71,6 +139,9 @@ const TenantEdit: React.FC = () => {
           <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/admin/tenants')}>
             Back to Tenants
           </Button>
+          <Button onClick={handleForceRefresh} ml="md" leftSection={<IconRefresh size={16} />}>
+            Force Refresh
+          </Button>
         </PageHeader>
       </div>
     );
@@ -79,11 +150,18 @@ const TenantEdit: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title={`Edit Tenant: ${tenant.name}`}
-        description={`Tenant ID: ${tenant.id || tenant._id}`}
+        title={`Edit Tenant: ${effectiveTenant.name}`}
+        description={`Tenant ID: ${effectiveTenant.id || effectiveTenant._id}`}
       >
-        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack}>
+        <Button leftSection={<IconArrowLeft size={16} />} variant="outline" onClick={handleBack} className="mr-2">
           Back
+        </Button>
+        <Button 
+          leftSection={<IconRefresh size={16} />} 
+          variant="subtle" 
+          onClick={handleForceRefresh}
+        >
+          Refresh
         </Button>
       </PageHeader>
 

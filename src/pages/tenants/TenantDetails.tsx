@@ -3,29 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTenant } from '../../hooks';
 import { PageHeader } from '../../components/layout';
 import { LoadingSpinner, ErrorDisplay } from '../../components/common';
-import { Button, Card, Group, Text, Badge, Tabs, Alert, Switch } from '@mantine/core';
+import { Button, Card, Group, Text, Badge, Tabs, Alert } from '@mantine/core';
 import { IconEdit, IconArrowLeft, IconUsers, IconSettings, IconInfoCircle, IconRefresh } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
-import TenantDebugger from '../../components/debug/TenantDebugger';
-import useQueryDebugger from '../../hooks/useQueryDebugger';
 import api from '../../utils/api';
 
 const TenantDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isSuperAdmin, user } = useAuth();
+  const { isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
-  const [showDebugger, setShowDebugger] = useState(false);
   const [directTenantData, setDirectTenantData] = useState<any>(null);
   const [isDirectLoading, setIsDirectLoading] = useState(false);
-  
-  // Use our custom query debugger
-  const queryDebugger = useQueryDebugger(['tenant', id], {
-    logOnMount: true,
-    logOnChange: true,
-    logOnUnmount: true,
-  });
   
   // Use React Query hook
   const { 
@@ -56,29 +46,17 @@ const TenantDetails: React.FC = () => {
     }
   };
   
-  // Advanced debug logging
+  // Log basic component info
   useEffect(() => {
-    console.log('TenantDetails - Component Mounted');
-    console.log('TenantDetails - ID:', id);
-    console.log('TenantDetails - User:', user);
-    console.log('TenantDetails - Is Super Admin:', isSuperAdmin);
-    
-    // Log query cache state
-    const cachedData = queryClient.getQueryData(['tenant', id]);
-    console.log('TenantDetails - Cached Data:', cachedData);
+    console.log('TenantDetails - Component Mounted, ID:', id);
     
     return () => {
       console.log('TenantDetails - Component Unmounted');
     };
-  }, [id, user, isSuperAdmin, queryClient]);
+  }, [id]);
   
   // Monitor tenant data changes
   useEffect(() => {
-    console.log('TenantDetails - Tenant data changed:', tenant);
-    console.log('TenantDetails - Loading:', isLoading);
-    console.log('TenantDetails - Error:', error);
-    console.log('TenantDetails - Success:', isSuccess);
-    
     // If no tenant data and not loading, try to refetch
     if (!tenant && !isLoading && !error) {
       console.log('No tenant data found, refetching...');
@@ -87,7 +65,7 @@ const TenantDetails: React.FC = () => {
       // As a backup, also try to fetch directly
       fetchTenantDirectly();
     }
-  }, [tenant, isLoading, error, isSuccess, refetch]);
+  }, [tenant, isLoading, error, refetch]);
   
   // Force refetch on mount
   useEffect(() => {
@@ -112,12 +90,6 @@ const TenantDetails: React.FC = () => {
     queryClient.removeQueries({ queryKey: ['tenant', id] });
     refetch();
     fetchTenantDirectly();
-    
-    // Log the query state for debugging
-    console.group('Force Refresh Debug Info');
-    console.log('Query State:', queryDebugger.getState());
-    console.log('Query Cache:', queryClient.getQueryCache().getAll());
-    console.groupEnd();
   };
   
   // Determine which tenant data to use (from React Query or direct fetch)
@@ -207,32 +179,7 @@ const TenantDetails: React.FC = () => {
       </PageHeader>
 
       <div className="mt-6">
-        {/* Debug controls for developers */}
-        {import.meta.env.DEV && (
-          <div className="mb-4 flex justify-end items-center gap-4">
-            <Button 
-              size="xs" 
-              variant="outline" 
-              color="gray"
-              onClick={() => {
-                // This will toggle the React Query Devtools
-                const devtools = document.querySelector('.ReactQueryDevtools');
-                if (devtools) {
-                  // @ts-ignore
-                  devtools.click();
-                }
-              }}
-            >
-              Toggle Query Devtools
-            </Button>
-            
-            <Switch 
-              label="Show Debugger" 
-              checked={showDebugger} 
-              onChange={(e) => setShowDebugger(e.currentTarget.checked)} 
-            />
-          </div>
-        )}
+
         
         {!isSuperAdmin && (
           <Alert icon={<IconInfoCircle size={16} />} title="Limited View" color="blue" mb="md">
@@ -304,16 +251,7 @@ const TenantDetails: React.FC = () => {
           </div>
         )}
         
-        {/* Show debugger if enabled */}
-        {(showDebugger || import.meta.env.DEV) && (
-          <TenantDebugger 
-            tenantId={id || ''} 
-            tenantData={effectiveTenant} 
-            isLoading={isLoading || isDirectLoading} 
-            error={error} 
-            refetch={handleForceRefresh} 
-          />
-        )}
+
       </div>
     </div>
   );
