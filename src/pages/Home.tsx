@@ -1,15 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper, Menu, Avatar, ActionIcon, Tooltip } from '@mantine/core';
+import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper, Menu, Avatar, ActionIcon, Tooltip, Loader } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
 import { useTenants } from '../hooks/useTenants';
+import { useProjects } from '../hooks/useProjects';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, isSuperAdmin, isTenantOwner, logout } = useAuth();
+  const { isAuthenticated, user, isSuperAdmin, isTenantOwner, logout, roles } = useAuth();
   const { currentTenant, isLoadingCurrentTenant } = useTenants();
   const [hasNoTenant, setHasNoTenant] = useState<boolean>(false);
+  
+  // Get tenant integrations
+  const { 
+    data: tenantIntegrations, 
+    isLoading: isLoadingIntegrations 
+  } = useTenants().useTenantIntegrations(roles?.tenantId);
+  
+  // Get projects
+  const { 
+    projects, 
+    isLoading: isLoadingProjects 
+  } = useProjects();
+  
+  // Determine what quick actions to show for tenant owners
+  const [hasIntegrations, setHasIntegrations] = useState<boolean>(false);
+  const [hasProjects, setHasProjects] = useState<boolean>(false);
+  
+  useEffect(() => {
+    if (isTenantOwner && tenantIntegrations) {
+      setHasIntegrations(tenantIntegrations.length > 0);
+    }
+    
+    if (isTenantOwner && projects) {
+      setHasProjects(projects.length > 0);
+    }
+  }, [isTenantOwner, tenantIntegrations, projects]);
   
   // Handle logout
   const handleLogout = () => {
@@ -143,19 +170,51 @@ const Home: React.FC = () => {
               </Card>
             )}
             
-            {isTenantOwner && (
+            {/* Show loading state while fetching data */}
+            {isTenantOwner && (isLoadingIntegrations || isLoadingProjects) && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
-                    <Title order={3}>Tenant Management</Title>
+                    <Title order={3}>Loading...</Title>
+                    <Loader size="sm" />
+                  </Group>
+                </Card.Section>
+                <Text mb="md">Loading tenant data...</Text>
+              </Card>
+            )}
+            
+            {/* Project Management - Show when tenant has integrations and projects */}
+            {isTenantOwner && hasIntegrations && hasProjects && !(isLoadingIntegrations || isLoadingProjects) && (
+              <Card shadow="sm" p="lg" radius="md" withBorder>
+                <Card.Section p="md">
+                  <Group justify="space-between">
+                    <Title order={3}>Projects</Title>
                     <ThemeIcon size="lg" radius="md" color="green">
                       <IconFolder size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
-                <Text mb="md">Manage your tenant's projects and cloud integrations.</Text>
-                <Button component={Link} to="/tenant/management" variant="filled" color="green" fullWidth>
-                  Manage Tenant
+                <Text mb="md">Manage your tenant's projects.</Text>
+                <Button component={Link} to="/projects" variant="filled" color="green" fullWidth>
+                  Manage Projects
+                </Button>
+              </Card>
+            )}
+            
+            {/* Create Project - Show when tenant has integrations but no projects */}
+            {isTenantOwner && hasIntegrations && !hasProjects && !(isLoadingIntegrations || isLoadingProjects) && (
+              <Card shadow="sm" p="lg" radius="md" withBorder>
+                <Card.Section p="md" bg="teal.6">
+                  <Group justify="space-between">
+                    <Title order={3} c="white">Create Project</Title>
+                    <ThemeIcon size="lg" radius="md" color="white" variant="outline">
+                      <IconPlus size={20} />
+                    </ThemeIcon>
+                  </Group>
+                </Card.Section>
+                <Text mb="md">You have cloud integrations set up. Create your first project to get started.</Text>
+                <Button component={Link} to="/projects/create" variant="filled" color="teal" fullWidth>
+                  Create Project
                 </Button>
               </Card>
             )}
@@ -211,6 +270,7 @@ const Home: React.FC = () => {
               </Card>
             )}
             
+            {/* Tenant Settings - Always show for tenant owners */}
             {isTenantOwner && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
@@ -228,19 +288,30 @@ const Home: React.FC = () => {
               </Card>
             )}
             
+            {/* Cloud Integrations - Always show for tenant owners */}
             {isTenantOwner && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
-                    <Title order={3}>Integrations</Title>
+                    <Title order={3}>Cloud Integrations</Title>
                     <ThemeIcon size="lg" radius="md" color="indigo">
                       <IconCloud size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
-                <Text mb="md">Manage your organization's cloud provider integrations.</Text>
-                <Button component={Link} to="/tenant/integrations" variant="filled" color="indigo" fullWidth>
-                  Manage Integrations
+                <Text mb="md">
+                  {hasIntegrations 
+                    ? "Manage your organization's cloud provider integrations." 
+                    : "Set up cloud integrations to enable project creation."}
+                </Text>
+                <Button 
+                  component={Link} 
+                  to="/tenant/integrations" 
+                  variant="filled" 
+                  color={hasIntegrations ? "indigo" : "teal"}
+                  fullWidth
+                >
+                  {hasIntegrations ? "Manage Integrations" : "Set Up Integrations"}
                 </Button>
               </Card>
             )}
