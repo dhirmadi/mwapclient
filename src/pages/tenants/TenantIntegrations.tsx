@@ -90,8 +90,18 @@ const TenantIntegrations: React.FC = () => {
   // Process and merge data when integrations or providers change
   useEffect(() => {
     if (tenantIntegrations && cloudProviders) {
+      // Ensure tenantIntegrations is an array
+      const integrationsArray = Array.isArray(tenantIntegrations) 
+        ? tenantIntegrations 
+        : tenantIntegrations.data && Array.isArray(tenantIntegrations.data) 
+          ? tenantIntegrations.data 
+          : [];
+      
+      console.log('Tenant integrations data:', tenantIntegrations);
+      console.log('Processed integrations array:', integrationsArray);
+      
       // Map integrations to include provider information
-      const processedIntegrations = tenantIntegrations.map(integration => {
+      const processedIntegrations = integrationsArray.map(integration => {
         const provider = cloudProviders.find(p => p._id === integration.cloudProviderId);
         return {
           ...integration,
@@ -102,7 +112,7 @@ const TenantIntegrations: React.FC = () => {
       setIntegrations(processedIntegrations);
       
       // Track which providers are already used
-      const usedIds = tenantIntegrations.map(integration => integration.cloudProviderId);
+      const usedIds = integrationsArray.map(integration => integration.cloudProviderId);
       setUsedProviderIds(usedIds);
     }
   }, [tenantIntegrations, cloudProviders]);
@@ -332,7 +342,7 @@ const TenantIntegrations: React.FC = () => {
             {/* Current Integrations */}
             <Title order={3} mb="md">Current Integrations</Title>
             
-            {integrations.length === 0 ? (
+            {!Array.isArray(integrations) || integrations.length === 0 ? (
               <Alert 
                 icon={<IconInfoCircle size={16} />} 
                 title="No integrations" 
@@ -345,8 +355,8 @@ const TenantIntegrations: React.FC = () => {
               <SimpleGrid cols={2} spacing="md" mb="xl" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
                 {integrations.map(integration => (
                   <Card key={integration._id} shadow="sm" p="md" radius="md" withBorder>
-                    <Group position="apart" mb="xs">
-                      <Text weight={500}>{integration.name}</Text>
+                    <Group justify="space-between" mb="xs">
+                      <Text weight={500}>{integration.name || 'Unnamed Integration'}</Text>
                       <Badge 
                         color={integration.status === 'active' ? 'green' : integration.status === 'error' ? 'red' : 'gray'}
                       >
@@ -359,10 +369,10 @@ const TenantIntegrations: React.FC = () => {
                     </Text>
                     
                     <Text size="sm" mb="md">
-                      Added on {new Date(integration.createdAt).toLocaleDateString()}
+                      Added on {integration.createdAt ? new Date(integration.createdAt).toLocaleDateString() : 'Unknown date'}
                     </Text>
                     
-                    <Group position="right" spacing="xs">
+                    <Group justify="flex-end" spacing="xs">
                       <Tooltip label="Refresh Token">
                         <ActionIcon 
                           color="blue" 
@@ -390,7 +400,7 @@ const TenantIntegrations: React.FC = () => {
             {/* Available Cloud Providers */}
             <Title order={3} mb="md">Available Cloud Providers</Title>
             
-            {cloudProviders.length === 0 ? (
+            {!Array.isArray(cloudProviders) || cloudProviders.length === 0 ? (
               <Alert 
                 icon={<IconInfoCircle size={16} />} 
                 title="No cloud providers" 
@@ -402,11 +412,11 @@ const TenantIntegrations: React.FC = () => {
             ) : (
               <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
                 {cloudProviders.map(provider => {
-                  const isUsed = usedProviderIds.includes(provider._id);
+                  const isUsed = Array.isArray(usedProviderIds) && usedProviderIds.includes(provider._id);
                   
                   return (
                     <Card key={provider._id} shadow="sm" p="md" radius="md" withBorder>
-                      <Group position="apart" mb="xs">
+                      <Group justify="space-between" mb="xs">
                         <Text weight={500}>{provider.name}</Text>
                         {isUsed && <Badge color="green">Connected</Badge>}
                       </Group>
@@ -478,7 +488,7 @@ const TenantIntegrations: React.FC = () => {
                 </Alert>
               )}
               
-              <Group position="apart" mt="md">
+              <Group justify="space-between" mt="md">
                 <Button
                   variant="outline"
                   onClick={handleTestConnection}
