@@ -29,6 +29,7 @@ import ProjectTypeEdit from '../pages/project-types/ProjectTypeEdit';
 // TenantOwner Pages
 import TenantSettings from '../pages/tenants/TenantSettings';
 import TenantIntegrations from '../pages/tenants/TenantIntegrations';
+import TenantManagement from '../pages/tenants/TenantManagement';
 
 // Project Pages
 import ProjectList from '../pages/projects/ProjectList';
@@ -83,6 +84,7 @@ const AppRouter: React.FC = () => {
                     <Route path="/admin/project-types" element={<ProjectTypeList />} />
                     <Route path="/admin/project-types/create" element={<ProjectTypeCreate />} />
                     <Route path="/admin/project-types/:id/edit" element={<ProjectTypeEdit />} />
+                    <Route path="/admin/projects" element={<ProjectList />} />
                   </Route>
 
                   {/* TenantOwner Routes */}
@@ -90,6 +92,7 @@ const AppRouter: React.FC = () => {
                     <Route path="/tenant/dashboard" element={<Dashboard />} />
                     <Route path="/tenant/settings" element={<TenantSettings />} />
                     <Route path="/tenant/integrations" element={<TenantIntegrations />} />
+                    <Route path="/tenant/management" element={<TenantManagement />} />
                   </Route>
 
                   {/* Project Routes */}

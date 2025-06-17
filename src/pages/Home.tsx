@@ -49,7 +49,7 @@ const Home: React.FC = () => {
           <Title order={2} mb="md">Quick Actions</Title>
           
           <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
-            {hasNoTenant && (
+            {hasNoTenant && !isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
@@ -83,19 +83,19 @@ const Home: React.FC = () => {
               </Card>
             )}
             
-            {(isTenantOwner || !isSuperAdmin) && (
+            {isTenantOwner && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
-                    <Title order={3}>Projects</Title>
+                    <Title order={3}>Tenant Management</Title>
                     <ThemeIcon size="lg" radius="md" color="green">
                       <IconFolder size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
-                <Text mb="md">View and manage your projects.</Text>
-                <Button component={Link} to="/projects" variant="filled" color="green" fullWidth>
-                  View Projects
+                <Text mb="md">Manage your tenant's projects and cloud integrations.</Text>
+                <Button component={Link} to="/tenant/management" variant="filled" color="green" fullWidth>
+                  Manage Tenant
                 </Button>
               </Card>
             )}
@@ -130,6 +130,23 @@ const Home: React.FC = () => {
                 <Text mb="md">Define and configure project templates and types.</Text>
                 <Button component={Link} to="/admin/project-types" variant="filled" color="orange" fullWidth>
                   Manage Types
+                </Button>
+              </Card>
+            )}
+            
+            {isSuperAdmin && (
+              <Card shadow="sm" p="lg" radius="md" withBorder>
+                <Card.Section p="md">
+                  <Group justify="space-between">
+                    <Title order={3}>Project Administration</Title>
+                    <ThemeIcon size="lg" radius="md" color="grape">
+                      <IconFolder size={20} />
+                    </ThemeIcon>
+                  </Group>
+                </Card.Section>
+                <Text mb="md">Administer all projects across tenants.</Text>
+                <Button component={Link} to="/admin/projects" variant="filled" color="grape" fullWidth>
+                  Administer Projects
                 </Button>
               </Card>
             )}
