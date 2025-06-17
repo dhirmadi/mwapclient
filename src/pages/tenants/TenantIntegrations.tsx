@@ -22,8 +22,20 @@ import {
   Box
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconPlus, IconTrash, IconEdit, IconRefresh, IconCheck, IconX, IconAlertCircle, IconInfoCircle, IconCloud } from '@tabler/icons-react';
-import { PageHeader } from '../../components/layout';
+import { 
+  IconPlus, 
+  IconTrash, 
+  IconEdit, 
+  IconRefresh, 
+  IconCheck, 
+  IconX, 
+  IconAlertCircle, 
+  IconInfoCircle, 
+  IconCloud,
+  IconArrowLeft
+} from '@tabler/icons-react';
+import { PageHeader, Breadcrumbs } from '../../components/layout';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { useTenants } from '../../hooks/useTenants';
@@ -344,6 +356,25 @@ const TenantIntegrations: React.FC = () => {
   // Render the UI
   return (
     <div>
+      <Breadcrumbs 
+        items={[
+          { title: 'Dashboard', href: '/' },
+          { title: 'Tenant Management', href: '/tenant-management' },
+          { title: 'Cloud Integrations' }
+        ]}
+      />
+      
+      <Group mb="md">
+        <Button 
+          component={Link} 
+          to="/tenant-management" 
+          variant="subtle" 
+          leftSection={<IconArrowLeft size={16} />}
+        >
+          Back to Tenant Management
+        </Button>
+      </Group>
+      
       <PageHeader 
         title="Cloud Integrations" 
         description="Manage cloud storage integrations for your tenant"
