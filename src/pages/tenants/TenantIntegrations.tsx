@@ -89,33 +89,41 @@ const TenantIntegrations: React.FC = () => {
 
   // Process and merge data when integrations or providers change
   useEffect(() => {
-    if (tenantIntegrations && cloudProviders) {
-      // Ensure tenantIntegrations is an array
-      const integrationsArray = Array.isArray(tenantIntegrations) 
-        ? tenantIntegrations 
-        : tenantIntegrations.data && Array.isArray(tenantIntegrations.data) 
-          ? tenantIntegrations.data 
-          : [];
-      
-      console.log('Tenant integrations data:', tenantIntegrations);
-      console.log('Processed integrations array:', integrationsArray);
-      
-      // Map integrations to include provider information
-      const processedIntegrations = integrationsArray.map(integration => {
-        const provider = cloudProviders.find(p => p._id === integration.cloudProviderId);
-        return {
-          ...integration,
-          provider
-        };
-      });
-      
+    if (!tenantIntegrations || !cloudProviders) {
+      return;
+    }
+    
+    // Ensure tenantIntegrations is an array
+    const integrationsArray = Array.isArray(tenantIntegrations) 
+      ? tenantIntegrations 
+      : tenantIntegrations.data && Array.isArray(tenantIntegrations.data) 
+        ? tenantIntegrations.data 
+        : [];
+    
+    console.log('Tenant integrations data:', tenantIntegrations);
+    console.log('Processed integrations array:', integrationsArray);
+    
+    // Map integrations to include provider information
+    const processedIntegrations = integrationsArray.map(integration => {
+      const provider = cloudProviders.find(p => p._id === integration.cloudProviderId);
+      return {
+        ...integration,
+        provider
+      };
+    });
+    
+    // Track which providers are already used
+    const usedIds = integrationsArray.map(integration => integration.cloudProviderId);
+    
+    // Only update state if the data has actually changed
+    if (JSON.stringify(processedIntegrations) !== JSON.stringify(integrations)) {
       setIntegrations(processedIntegrations);
-      
-      // Track which providers are already used
-      const usedIds = integrationsArray.map(integration => integration.cloudProviderId);
+    }
+    
+    if (JSON.stringify(usedIds) !== JSON.stringify(usedProviderIds)) {
       setUsedProviderIds(usedIds);
     }
-  }, [tenantIntegrations, cloudProviders]);
+  }, [tenantIntegrations, cloudProviders, JSON.stringify(integrations), JSON.stringify(usedProviderIds)]);
   
   // Update form fields when selected provider changes
   useEffect(() => {
@@ -313,10 +321,41 @@ const TenantIntegrations: React.FC = () => {
     }
   };
 
+  // Open modal with a specific provider
+  const openAddIntegrationModal = () => {
+    // If there are available providers (not already used), select the first one
+    if (Array.isArray(cloudProviders) && cloudProviders.length > 0) {
+      const availableProviders = cloudProviders.filter(
+        provider => !usedProviderIds.includes(provider._id)
+      );
+      
+      if (availableProviders.length > 0) {
+        handleAddIntegration(availableProviders[0]);
+      } else {
+        notifications.show({
+          title: 'No Available Providers',
+          message: 'All cloud providers are already integrated with this tenant.',
+          color: 'yellow',
+        });
+      }
+    }
+  };
+
   // Render the UI
   return (
     <div>
-      <PageHeader title="Cloud Integrations" />
+      <PageHeader 
+        title="Cloud Integrations" 
+        description="Manage cloud storage integrations for your tenant"
+      >
+        <Button 
+          leftIcon={<IconPlus size={16} />} 
+          onClick={openAddIntegrationModal}
+          disabled={loading || !Array.isArray(cloudProviders) || cloudProviders.length === 0}
+        >
+          Add Integration
+        </Button>
+      </PageHeader>
       
       <Paper shadow="sm" p="md" mb="xl">
         <Text mb="md">
