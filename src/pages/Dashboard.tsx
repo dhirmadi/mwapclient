@@ -16,12 +16,21 @@ const SuperAdminDashboard: React.FC = () => {
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
+        <Title order={2} mb="md">Quick Actions</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg" mb="xl">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/tenants">
-            <Title order={3} mb="md">Tenants</Title>
-            <Text c="dimmed">Manage platform tenants</Text>
+            <Title order={3} mb="md">Tenant Administration</Title>
+            <Text c="dimmed">Manage all platform tenants</Text>
           </Card>
           
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/projects">
+            <Title order={3} mb="md">Project Administration</Title>
+            <Text c="dimmed">Manage all platform projects</Text>
+          </Card>
+        </SimpleGrid>
+        
+        <Title order={2} mb="md">Administration</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/cloud-providers">
             <Title order={3} mb="md">Cloud Providers</Title>
             <Text c="dimmed">Configure cloud provider integrations</Text>
@@ -49,25 +58,24 @@ const TenantOwnerDashboard: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title={`Tenant Dashboard: ${roles?.tenantId || ''}`}
-        description="Manage your organization's projects and integrations"
+        title={`Tenant Dashboard: ${roles?.tenantName || roles?.tenantId || ''}`}
+        description="Manage your organization's settings and resources"
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
-          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
-            <Title order={3} mb="md">Projects</Title>
-            <Text c="dimmed">Manage your organization's projects</Text>
+        <Title order={2} mb="md">Quick Actions</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg" mb="xl">
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenant/management">
+            <Title order={3} mb="md">Tenant Management</Title>
+            <Text c="dimmed">Manage your tenant's projects and integrations</Text>
           </Card>
-          
+        </SimpleGrid>
+        
+        <Title order={2} mb="md">Settings</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenant/settings">
             <Title order={3} mb="md">Tenant Settings</Title>
             <Text c="dimmed">Configure your organization settings</Text>
-          </Card>
-          
-          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenant/integrations">
-            <Title order={3} mb="md">Cloud Integrations</Title>
-            <Text c="dimmed">Manage cloud provider connections</Text>
           </Card>
           
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/profile">
@@ -88,16 +96,25 @@ const ProjectMemberDashboard: React.FC = () => {
     <div>
       <PageHeader
         title={`Welcome, ${user?.name || 'User'}`}
-        description="Access your projects"
+        description="Access your projects or create a new tenant"
       />
 
       <div className="mt-6">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
+        <Title order={2} mb="md">Quick Actions</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg" mb="xl">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
             <Title order={3} mb="md">My Projects</Title>
             <Text c="dimmed">View and access your projects</Text>
           </Card>
           
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenants/create">
+            <Title order={3} mb="md">Create Tenant</Title>
+            <Text c="dimmed">Create a new tenant organization</Text>
+          </Card>
+        </SimpleGrid>
+        
+        <Title order={2} mb="md">Settings</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/profile">
             <Title order={3} mb="md">Profile</Title>
             <Text c="dimmed">Manage your account settings</Text>

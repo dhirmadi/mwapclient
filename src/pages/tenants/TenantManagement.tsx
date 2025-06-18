@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Tabs, Title, Text, Paper, Group, Button, Card, Badge, ActionIcon, Tooltip } from '@mantine/core';
+import { Tabs, Title, Text, Paper, Group, Button, Card, Badge, ActionIcon, Tooltip, Breadcrumbs } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
-import { IconFolder, IconCloud, IconPlus, IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
+import { IconFolder, IconCloud, IconPlus, IconEdit, IconTrash, IconEye, IconArrowLeft } from '@tabler/icons-react';
 import { PageHeader } from '../../components/layout';
 import { LoadingSpinner, ErrorDisplay, EmptyState } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { useTenants } from '../../hooks/useTenants';
 import { useProjects } from '../../hooks/useProjects';
 import useProjectAccess from '../../hooks/useProjectAccess';
+import TenantIntegrations from './TenantIntegrations';
 
 const TenantManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +49,24 @@ const TenantManagement: React.FC = () => {
 
   return (
     <div>
+      <Breadcrumbs 
+        items={[
+          { title: 'Dashboard', href: '/' },
+          { title: 'Tenant Management' }
+        ]}
+      />
+      
+      <Group mb="md">
+        <Button 
+          component={Link} 
+          to="/" 
+          variant="subtle" 
+          leftSection={<IconArrowLeft size={16} />}
+        >
+          Back to Dashboard
+        </Button>
+      </Group>
+      
       <PageHeader
         title="Tenant Management"
         description={`Manage your tenant: ${currentTenant.name}`}
@@ -152,26 +171,7 @@ const TenantManagement: React.FC = () => {
         </Tabs.Panel>
 
         <Tabs.Panel value="integrations" pt="xl">
-          <Paper p="md" withBorder>
-            <Group justify="space-between" mb="md">
-              <Title order={3}>Cloud Storage Integrations</Title>
-              {isTenantOwner && (
-                <Button 
-                  component={Link} 
-                  to="/tenant/integrations" 
-                  leftSection={<IconCloud size={16} />}
-                >
-                  Manage Integrations
-                </Button>
-              )}
-            </Group>
-            <Text>
-              Configure cloud storage integrations for your projects. These integrations allow your projects to access cloud storage based on the project type.
-            </Text>
-            <Text mt="md">
-              Go to the Integrations page to set up and manage your cloud storage providers.
-            </Text>
-          </Paper>
+          <TenantIntegrations />
         </Tabs.Panel>
       </Tabs>
     </div>
