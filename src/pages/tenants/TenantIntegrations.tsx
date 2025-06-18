@@ -39,21 +39,13 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { useTenants } from '../../hooks/useTenants';
-import { CloudProvider, CloudProviderIntegration } from '../../types/cloud-provider';
+import { 
+  CloudProvider, 
+  CloudProviderIntegration, 
+  CloudProviderIntegrationCreate 
+} from '../../types/cloud-provider';
 import { LoadingSpinner, ErrorDisplay } from '../../components/common';
 import api from '../../utils/api';
-
-interface TenantIntegration {
-  _id: string;
-  tenantId: string;
-  cloudProviderId: string;
-  name: string;
-  credentials: Record<string, string>;
-  status: 'active' | 'inactive' | 'error';
-  createdAt: string;
-  updatedAt: string;
-  provider?: CloudProvider; // Added to store the related provider
-}
 
 const TenantIntegrations: React.FC = () => {
   const { roles } = useAuth();
@@ -75,7 +67,7 @@ const TenantIntegrations: React.FC = () => {
     error: integrationsError
   } = useTenantIntegrations(roles?.tenantId);
   
-  const [integrations, setIntegrations] = useState<TenantIntegration[]>([]);
+  const [integrations, setIntegrations] = useState<CloudProviderIntegration[]>([]);
   const loading = loadingProviders || loadingTenant || loadingIntegrations;
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -89,13 +81,13 @@ const TenantIntegrations: React.FC = () => {
 
   const form = useForm({
     initialValues: {
-      cloudProviderId: '',
-      name: '',
-      credentials: {} as Record<string, string>,
+      providerId: '',
+      status: 'active' as const,
+      scopesGranted: [] as string[],
+      metadata: {} as Record<string, unknown>,
     },
     validate: {
-      cloudProviderId: (value) => (!value ? 'Please select a cloud provider' : null),
-      name: (value) => (value.length < 3 ? 'Name must be at least 3 characters' : null),
+      providerId: (value) => (!value ? 'Please select a cloud provider' : null),
     },
   });
 
@@ -119,7 +111,7 @@ const TenantIntegrations: React.FC = () => {
     // Map integrations to include provider information
     const processedIntegrations = integrationsArray.map(integration => {
       const provider = Array.isArray(cloudProviders) 
-        ? cloudProviders.find(p => p._id === integration.cloudProviderId)
+        ? cloudProviders.find(p => p._id === integration.providerId)
         : undefined;
       return {
         ...integration,
@@ -128,7 +120,7 @@ const TenantIntegrations: React.FC = () => {
     });
     
     // Track which providers are already used
-    const usedIds = integrationsArray.map(integration => integration.cloudProviderId);
+    const usedIds = integrationsArray.map(integration => integration.providerId);
     
     // Update state without comparison to avoid infinite loops
     setIntegrations(processedIntegrations);
@@ -138,40 +130,16 @@ const TenantIntegrations: React.FC = () => {
   // Update form fields when selected provider changes
   useEffect(() => {
     if (selectedProvider) {
-      form.setFieldValue('cloudProviderId', selectedProvider._id);
-      form.setFieldValue('name', `${selectedProvider.name} Integration`);
+      form.setFieldValue('providerId', selectedProvider._id);
+      form.setFieldValue('scopesGranted', selectedProvider.scopes || []);
       
-      // Reset credentials field based on provider requirements
-      const credentialFields: Record<string, string> = {};
+      // Set up metadata based on provider type
+      const metadata: Record<string, unknown> = {
+        providerName: selectedProvider.name,
+        providerSlug: selectedProvider.slug
+      };
       
-      // Different providers require different credentials
-      switch (selectedProvider.slug) {
-        case 'dropbox':
-          credentialFields.clientId = '';
-          credentialFields.clientSecret = '';
-          break;
-        case 'google-drive':
-          credentialFields.clientId = '';
-          credentialFields.clientSecret = '';
-          credentialFields.projectId = '';
-          break;
-        case 'onedrive':
-        case 'sharepoint':
-          credentialFields.clientId = '';
-          credentialFields.clientSecret = '';
-          credentialFields.tenantId = '';
-          break;
-        case 's3':
-          credentialFields.accessKeyId = '';
-          credentialFields.secretAccessKey = '';
-          credentialFields.region = '';
-          credentialFields.bucket = '';
-          break;
-        default:
-          credentialFields.apiKey = '';
-      }
-      
-      form.setFieldValue('credentials', credentialFields);
+      form.setFieldValue('metadata', metadata);
     }
   }, [selectedProvider, form]);
   
@@ -227,17 +195,14 @@ const TenantIntegrations: React.FC = () => {
       setSaving(true);
       
       try {
-        // Create the integration
+        // Create the integration using the new schema
         await createIntegration({
           tenantId: roles.tenantId,
           data: {
-            tenantId: roles.tenantId,
-            cloudProviderId: form.values.cloudProviderId,
-            config: {
-              name: form.values.name,
-              credentials: form.values.credentials,
-              status: 'active'
-            }
+            providerId: form.values.providerId,
+            status: form.values.status,
+            scopesGranted: form.values.scopesGranted,
+            metadata: form.values.metadata
           }
         });
         
@@ -304,10 +269,14 @@ const TenantIntegrations: React.FC = () => {
       
       try {
         // In a real implementation, you would call an API endpoint to refresh the token
-        // await api.refreshIntegrationToken(roles.tenantId, integrationId);
+        // For now, we'll update the integration with a new expiration date
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 3600 * 1000); // 1 hour from now
         
-        // Simulate token refresh
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await api.updateTenantIntegration(roles.tenantId, integrationId, {
+          tokenExpiresAt: expiresAt.toISOString(),
+          status: 'active'
+        });
         
         // Refresh the integrations list
         refetchIntegrations();
@@ -423,20 +392,40 @@ const TenantIntegrations: React.FC = () => {
                 {integrations.map(integration => (
                   <Card key={integration._id} shadow="sm" p="md" radius="md" withBorder>
                     <Group justify="space-between" mb="xs">
-                      <Text weight={500}>{integration.name || 'Unnamed Integration'}</Text>
+                      <Text weight={500}>
+                        {integration.provider?.name || integration.metadata?.providerName || 'Cloud'} Integration
+                      </Text>
                       <Badge 
-                        color={integration.status === 'active' ? 'green' : integration.status === 'error' ? 'red' : 'gray'}
+                        color={
+                          integration.status === 'active' ? 'green' : 
+                          integration.status === 'error' ? 'red' : 
+                          integration.status === 'expired' ? 'orange' :
+                          integration.status === 'revoked' ? 'red' : 'gray'
+                        }
                       >
-                        {integration.status === 'active' ? 'Active' : integration.status === 'error' ? 'Error' : 'Inactive'}
+                        {integration.status.charAt(0).toUpperCase() + integration.status.slice(1)}
                       </Badge>
                     </Group>
                     
                     <Text size="sm" color="dimmed" mb="md">
-                      Provider: {integration.provider?.name || 'Unknown'}
+                      Provider: {integration.provider?.name || integration.metadata?.providerName || 'Unknown'}
                     </Text>
                     
+                    {integration.tokenExpiresAt && (
+                      <Text size="sm" color={
+                        new Date(integration.tokenExpiresAt) < new Date() ? 'red' : 'dimmed'
+                      } mb="xs">
+                        Token expires: {new Date(integration.tokenExpiresAt).toLocaleString()}
+                      </Text>
+                    )}
+                    
                     <Text size="sm" mb="md">
-                      Added on {integration.createdAt ? new Date(integration.createdAt).toLocaleDateString() : 'Unknown date'}
+                      Connected on {integration.connectedAt ? 
+                        new Date(integration.connectedAt).toLocaleDateString() : 
+                        integration.createdAt ? 
+                          new Date(integration.createdAt).toLocaleDateString() : 
+                          'Unknown date'
+                      }
                     </Text>
                     
                     <Group justify="flex-end" spacing="xs">
@@ -488,8 +477,16 @@ const TenantIntegrations: React.FC = () => {
                         {isUsed && <Badge color="green">Connected</Badge>}
                       </Group>
                       
+                      <Text size="sm" color="dimmed" mb="xs">
+                        Type: {provider.slug}
+                      </Text>
+                      
+                      <Text size="sm" color="dimmed" mb="xs">
+                        OAuth Grant Type: {provider.grantType || "authorization_code"}
+                      </Text>
+                      
                       <Text size="sm" color="dimmed" mb="md">
-                        {provider.slug}
+                        Scopes: {provider.scopes.join(', ')}
                       </Text>
                       
                       <Button 
@@ -521,27 +518,37 @@ const TenantIntegrations: React.FC = () => {
         <LoadingOverlay visible={saving} />
         
         <form onSubmit={form.onSubmit(handleSaveIntegration)}>
-          <TextInput
-            label="Integration Name"
-            placeholder="Enter a name for this integration"
-            required
-            mb="md"
-            {...form.getInputProps('name')}
-          />
-          
-          <Divider my="md" label="Credentials" labelPosition="center" />
-          
           {selectedProvider && (
             <Stack spacing="md">
-              {Object.keys(form.values.credentials).map(key => (
-                <TextInput
-                  key={key}
-                  label={key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                  placeholder={`Enter ${key}`}
-                  required
-                  {...form.getInputProps(`credentials.${key}`)}
-                />
-              ))}
+              <Text>
+                You are about to create an integration with <strong>{selectedProvider.name}</strong>.
+              </Text>
+              
+              <Alert icon={<IconInfoCircle size={16} />} color="blue">
+                This integration will allow your tenant to connect to {selectedProvider.name} 
+                for cloud storage access. The following scopes will be requested:
+                <ul>
+                  {selectedProvider.scopes.map(scope => (
+                    <li key={scope}>{scope}</li>
+                  ))}
+                </ul>
+              </Alert>
+              
+              <Divider my="md" label="OAuth Information" labelPosition="center" />
+              
+              <TextInput
+                label="Client ID"
+                placeholder="Enter the OAuth client ID"
+                readOnly
+                value={selectedProvider.clientId}
+              />
+              
+              <TextInput
+                label="Authorization URL"
+                placeholder="OAuth authorization URL"
+                readOnly
+                value={selectedProvider.authUrl}
+              />
               
               {testResult === 'success' && (
                 <Alert icon={<IconCheck size={16} />} title="Connection Successful" color="green">
