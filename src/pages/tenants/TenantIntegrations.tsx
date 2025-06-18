@@ -118,7 +118,9 @@ const TenantIntegrations: React.FC = () => {
     
     // Map integrations to include provider information
     const processedIntegrations = integrationsArray.map(integration => {
-      const provider = cloudProviders.find(p => p._id === integration.cloudProviderId);
+      const provider = Array.isArray(cloudProviders) 
+        ? cloudProviders.find(p => p._id === integration.cloudProviderId)
+        : undefined;
       return {
         ...integration,
         provider
@@ -128,15 +130,10 @@ const TenantIntegrations: React.FC = () => {
     // Track which providers are already used
     const usedIds = integrationsArray.map(integration => integration.cloudProviderId);
     
-    // Only update state if the data has actually changed
-    if (JSON.stringify(processedIntegrations) !== JSON.stringify(integrations)) {
-      setIntegrations(processedIntegrations);
-    }
-    
-    if (JSON.stringify(usedIds) !== JSON.stringify(usedProviderIds)) {
-      setUsedProviderIds(usedIds);
-    }
-  }, [tenantIntegrations, cloudProviders, JSON.stringify(integrations), JSON.stringify(usedProviderIds)]);
+    // Update state without comparison to avoid infinite loops
+    setIntegrations(processedIntegrations);
+    setUsedProviderIds(usedIds);
+  }, [tenantIntegrations, cloudProviders]);
   
   // Update form fields when selected provider changes
   useEffect(() => {
