@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
 import { UserRolesResponse } from '../types/auth';
+import { extractData, createApiError } from '../utils/apiResponseHandler';
+import { notifications } from '@mantine/notifications';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -60,20 +62,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('auth_token', token);
           
           try {
-            // Always use the real API endpoint
-            const userRoles = await api.getUserRoles();
-            console.log('User roles from API:', userRoles);
+            // Use the API with our new response handler
+            const response = await api.getUserRoles();
+            const userRoles = extractData<UserRolesResponse>(response);
+            
+            if (!userRoles) {
+              throw new Error('No user roles returned from API');
+            }
             
             setRoles(userRoles);
             
             // Set role flags
             setIsSuperAdmin(userRoles.isSuperAdmin || false);
             setIsTenantOwner(userRoles.isTenantOwner || false);
+            
+            // Show welcome notification
+            const roleText = userRoles.isSuperAdmin 
+              ? 'SuperAdmin' 
+              : userRoles.isTenantOwner 
+                ? 'Tenant Owner' 
+                : 'User';
+                
+            notifications.show({
+              title: `Welcome, ${user.name || 'User'}`,
+              message: `You are logged in as ${roleText}`,
+              color: 'green',
+              autoClose: 3000,
+            });
           } catch (error) {
             console.error('Failed to fetch user roles:', error);
             
-            // Only use default roles if explicitly requested
-            const useDefaultRoles = false;
+            // Show error notification
+            notifications.show({
+              title: 'Authentication Error',
+              message: 'Failed to fetch user roles. Some features may be unavailable.',
+              color: 'red',
+            });
+            
+            // Only use default roles in development mode if explicitly requested
+            const isDevelopment = import.meta.env.DEV;
+            const useDefaultRoles = isDevelopment && import.meta.env.VITE_USE_DEFAULT_ROLES === 'true';
+            
             if (useDefaultRoles) {
               console.log('Using default roles for development');
               const defaultRoles: UserRolesResponse = {
@@ -87,10 +116,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setRoles(defaultRoles);
               setIsSuperAdmin(true);
               setIsTenantOwner(true);
+              
+              notifications.show({
+                title: 'Development Mode',
+                message: 'Using default roles for development',
+                color: 'blue',
+              });
             }
           }
         } catch (error) {
           console.error('Failed to get token:', error);
+          
+          notifications.show({
+            title: 'Authentication Error',
+            message: 'Failed to get authentication token. Please try logging in again.',
+            color: 'red',
+          });
         } finally {
           setRolesLoading(false);
         }

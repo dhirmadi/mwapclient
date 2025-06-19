@@ -5,6 +5,7 @@ import { Notifications } from '@mantine/notifications';
 import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
+import { Permission } from '../utils/permissions';
 
 // Pages
 import Home from '../pages/Home';
@@ -73,8 +74,8 @@ const AppRouter: React.FC = () => {
                   <Route path="/admin/tenants/:id" element={<TenantDetails />} />
                   <Route path="/admin/tenants/:id/edit" element={<TenantEdit />} />
 
-                  {/* SuperAdmin Routes */}
-                  <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN']} />}>
+                  {/* SuperAdmin Routes - Using Permission System */}
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.MANAGE_TENANTS, Permission.MANAGE_CLOUD_PROVIDERS, Permission.MANAGE_PROJECT_TYPES]} />}>
                     <Route path="/admin/dashboard" element={<Dashboard />} />
                     <Route path="/admin/tenants" element={<TenantList />} />
                     <Route path="/admin/tenants/create" element={<TenantCreate />} />
@@ -87,34 +88,46 @@ const AppRouter: React.FC = () => {
                     <Route path="/admin/projects" element={<ProjectList />} />
                   </Route>
 
-                  {/* TenantOwner Routes */}
-                  <Route element={<ProtectedRoute requiredRoles={['TENANT_OWNER']} />}>
+                  {/* TenantOwner Routes - Using Permission System */}
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.MANAGE_TENANT_SETTINGS]} />}>
                     <Route path="/tenant/dashboard" element={<Dashboard />} />
                     <Route path="/tenant/settings" element={<TenantSettings />} />
-                    <Route path="/tenant/integrations" element={<TenantIntegrations />} />
                     <Route path="/tenant/management" element={<TenantManagement />} />
                   </Route>
+                  
+                  {/* Tenant Integrations - Specific permission */}
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.MANAGE_TENANT_INTEGRATIONS]} />}>
+                    <Route path="/tenant/integrations" element={<TenantIntegrations />} />
+                  </Route>
 
-                  {/* Project Routes */}
+                  {/* Project Routes - All authenticated users can view projects list */}
                   <Route path="/projects" element={<ProjectList />} />
                   
-                  {/* Project Create - Only TenantOwner can create projects */}
-                  <Route element={<ProtectedRoute requiredRoles={['TENANT_OWNER']} />}>
+                  {/* Project Create - Only users with CREATE_PROJECTS permission */}
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.CREATE_PROJECTS]} />}>
                     <Route path="/projects/create" element={<ProjectCreate />} />
                   </Route>
                   
                   {/* Project Details - Any project member can view */}
-                  <Route path="/projects/:id" element={<ProjectDetails />} />
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.VIEW_PROJECT]} projectIdParam="id" />}>
+                    <Route path="/projects/:id" element={<ProjectDetails />} />
+                  </Route>
                   
-                  {/* Project Edit - Only Project Owner and Deputy can edit */}
-                  <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+                  {/* Project Edit - Only users with EDIT_PROJECT permission */}
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.EDIT_PROJECT]} projectIdParam="id" />}>
+                    <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+                  </Route>
                   
-                  {/* Project Members - Only Project Owner can manage members */}
-                  <Route path="/projects/:id/members" element={<ProjectMembers />} />
+                  {/* Project Members - Only users with MANAGE_PROJECT_MEMBERS permission */}
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.MANAGE_PROJECT_MEMBERS]} projectIdParam="id" />}>
+                    <Route path="/projects/:id/members" element={<ProjectMembers />} />
+                  </Route>
                   
                   {/* Project Files - Any project member can view */}
-                  <Route path="/projects/:id/files" element={<ProjectFiles />} />
-                  <Route path="/projects/:id/files/*" element={<ProjectFiles />} />
+                  <Route element={<ProtectedRoute requiredPermissions={[Permission.VIEW_PROJECT]} projectIdParam="id" />}>
+                    <Route path="/projects/:id/files" element={<ProjectFiles />} />
+                    <Route path="/projects/:id/files/*" element={<ProjectFiles />} />
+                  </Route>
                 </Route>
               </Route>
 

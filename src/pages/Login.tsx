@@ -1,50 +1,43 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '@mantine/core';
-import { LoadingSpinner } from '../components/common';
+import { Button, Title, Text, Container, Paper, Group } from '@mantine/core';
+import AuthRedirect from '../components/auth/AuthRedirect';
+import { IconLogin } from '@tabler/icons-react';
 
+/**
+ * Login page component
+ * 
+ * This component renders the login page with Auth0 authentication.
+ * It uses AuthRedirect to handle authentication redirects.
+ */
 const Login: React.FC = () => {
-  const { isAuthenticated, isLoading, login } = useAuth();
-  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner size="lg" text="Loading..." />
-      </div>
-    );
-  }
-
+  // If already authenticated, AuthRedirect will handle the redirect
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome to MWAP
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Modular Web Application Platform
-          </p>
-        </div>
-        <div className="mt-8 space-y-6">
-          <Button
-            onClick={login}
-            fullWidth
-            size="lg"
-            className="group relative flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Sign in with Auth0
-          </Button>
-        </div>
-      </div>
-    </div>
+    <AuthRedirect>
+      {!isAuthenticated && (
+        <Container size="xs" py="xl">
+          <Paper shadow="md" p="xl" radius="md" withBorder>
+            <Title order={1} align="center" mb="md">Welcome to MWAP</Title>
+            <Text align="center" size="lg" mb="xl" color="dimmed">
+              Modular Web Application Platform
+            </Text>
+            
+            <Group position="center">
+              <Button
+                onClick={login}
+                size="lg"
+                leftIcon={<IconLogin size={20} />}
+                color="blue"
+              >
+                Sign in with Auth0
+              </Button>
+            </Group>
+          </Paper>
+        </Container>
+      )}
+    </AuthRedirect>
   );
 };
 
