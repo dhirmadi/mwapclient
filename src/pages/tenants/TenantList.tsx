@@ -14,7 +14,9 @@ const TenantList: React.FC = () => {
     isLoading, 
     isLoadingArchived,
     error,
-    archivedError
+    archivedError,
+    refetch,
+    refetchArchived
   } = useTenants(true);
   const [activePage, setActivePage] = React.useState(1);
   const [archivedPage, setArchivedPage] = React.useState(1);
@@ -44,6 +46,13 @@ const TenantList: React.FC = () => {
     navigate(`/admin/tenants/${id}/edit`);
   };
 
+  // Fetch tenants when component mounts
+  React.useEffect(() => {
+    // Explicitly fetch tenants when component mounts
+    refetch();
+    refetchArchived();
+  }, [refetch, refetchArchived]);
+  
   // Debug the API response
   React.useEffect(() => {
     if (tenantsData) {
