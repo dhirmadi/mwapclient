@@ -94,6 +94,13 @@ const TenantIntegrations: React.FC = () => {
     },
   });
 
+  // Fetch integrations when component mounts
+  useEffect(() => {
+    if (roles?.tenantId) {
+      refetchIntegrations();
+    }
+  }, [roles?.tenantId, refetchIntegrations]);
+
   // Process and merge data when integrations or providers change
   useEffect(() => {
     if (!tenantIntegrations || !cloudProviders) {

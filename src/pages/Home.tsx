@@ -15,8 +15,16 @@ const Home: React.FC = () => {
   // Get tenant integrations
   const { 
     data: tenantIntegrations, 
-    isLoading: isLoadingIntegrations 
+    isLoading: isLoadingIntegrations,
+    refetch: refetchIntegrations
   } = useTenants().useTenantIntegrations(roles?.tenantId);
+  
+  // Fetch integrations when component mounts
+  useEffect(() => {
+    if (roles?.tenantId) {
+      refetchIntegrations();
+    }
+  }, [roles?.tenantId, refetchIntegrations]);
   
   // Get projects
   const { 
