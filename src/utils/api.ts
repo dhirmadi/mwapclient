@@ -312,23 +312,47 @@ const api = {
 
   // Cloud Provider endpoints
   fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<CloudProvider[]> => {
-    const response = await apiClient.get('/cloud-providers');
-    // Handle both response formats: { success: true, data: [...] } or directly the array
-    if (response.data && response.data.success && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
+    try {
+      const response = await apiClient.get('/cloud-providers');
+      console.log('Cloud Providers API response:', response.data);
+      
+      // Handle both response formats: { success: true, data: [...] } or directly the array
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      console.warn('Unexpected cloud providers response format:', response.data);
+      return [];
+    } catch (error) {
+      console.error('Error fetching cloud providers:', error);
+      // Return empty array instead of throwing to prevent UI crashes
+      return [];
     }
-    return [];
   }),
   
   fetchCloudProviderById: debugApiCall('fetchCloudProviderById', async (id: string): Promise<CloudProvider> => {
-    const response = await apiClient.get(`/cloud-providers/${id}`);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      if (!id) {
+        throw new Error('Cloud Provider ID is required');
+      }
+      
+      const response = await apiClient.get(`/cloud-providers/${id}`);
+      
+      // Handle both response formats
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      } else if (response.data && (response.data.id || response.data._id)) {
+        return response.data;
+      }
+      
+      console.warn('Unexpected cloud provider response format:', response.data);
+      throw new Error('Invalid cloud provider data received from API');
+    } catch (error) {
+      console.error(`Error fetching cloud provider with ID ${id}:`, error);
+      throw error;
     }
-    return response.data;
   }),
   
   createCloudProvider: debugApiCall('createCloudProvider', async (data: CloudProviderCreate): Promise<CloudProvider> => {
@@ -355,36 +379,95 @@ const api = {
 
   // Tenant Integration endpoints
   fetchTenantIntegrations: debugApiCall('fetchTenantIntegrations', async (tenantId: string): Promise<CloudProviderIntegration[]> => {
-    const response = await apiClient.get(`/tenants/${tenantId}/integrations`);
-    // Handle both response formats: { success: true, data: [...] } or directly the array
-    if (response.data && response.data.success && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
+    try {
+      if (!tenantId) {
+        console.warn('fetchTenantIntegrations called without tenantId');
+        return [];
+      }
+      
+      const response = await apiClient.get(`/tenants/${tenantId}/integrations`);
+      console.log('Tenant Integrations API response:', response.data);
+      
+      // Handle both response formats: { success: true, data: [...] } or directly the array
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      console.warn('Unexpected tenant integrations response format:', response.data);
+      return [];
+    } catch (error) {
+      console.error(`Error fetching integrations for tenant ${tenantId}:`, error);
+      // Return empty array instead of throwing to prevent UI crashes
+      return [];
     }
-    return [];
   }),
   
   createTenantIntegration: debugApiCall('createTenantIntegration', async (tenantId: string, data: CloudProviderIntegrationCreate): Promise<CloudProviderIntegration> => {
-    const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      if (!tenantId) {
+        throw new Error('Tenant ID is required to create an integration');
+      }
+      
+      if (!data.providerId) {
+        throw new Error('Provider ID is required to create an integration');
+      }
+      
+      const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
+      console.log('Create Tenant Integration API response:', response.data);
+      
+      // Handle both response formats
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      } else if (response.data && (response.data.id || response.data._id)) {
+        return response.data;
+      }
+      
+      console.warn('Unexpected create integration response format:', response.data);
+      throw new Error('Invalid integration data received from API');
+    } catch (error) {
+      console.error(`Error creating integration for tenant ${tenantId}:`, error);
+      throw error;
     }
-    return response.data;
   }),
   
   updateTenantIntegration: debugApiCall('updateTenantIntegration', async (tenantId: string, integrationId: string, data: Partial<CloudProviderIntegration>): Promise<CloudProviderIntegration> => {
-    const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      if (!tenantId || !integrationId) {
+        throw new Error('Tenant ID and Integration ID are required to update an integration');
+      }
+      
+      const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
+      console.log('Update Tenant Integration API response:', response.data);
+      
+      // Handle both response formats
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      } else if (response.data && (response.data.id || response.data._id)) {
+        return response.data;
+      }
+      
+      console.warn('Unexpected update integration response format:', response.data);
+      throw new Error('Invalid integration data received from API');
+    } catch (error) {
+      console.error(`Error updating integration ${integrationId} for tenant ${tenantId}:`, error);
+      throw error;
     }
-    return response.data;
   }),
   
   deleteTenantIntegration: debugApiCall('deleteTenantIntegration', async (tenantId: string, integrationId: string): Promise<void> => {
-    await apiClient.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
+    try {
+      if (!tenantId || !integrationId) {
+        throw new Error('Tenant ID and Integration ID are required to delete an integration');
+      }
+      
+      await apiClient.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
+      console.log(`Successfully deleted integration ${integrationId} for tenant ${tenantId}`);
+    } catch (error) {
+      console.error(`Error deleting integration ${integrationId} for tenant ${tenantId}:`, error);
+      throw error;
+    }
   }),
 
   // Project Type endpoints

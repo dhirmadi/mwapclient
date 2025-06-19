@@ -136,7 +136,8 @@ const Home: React.FC = () => {
           <Title order={2} mb="md">Quick Actions</Title>
           
           <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
-            {hasNoTenant && !isSuperAdmin && (
+            {/* Show tenant creation card for users without a tenant OR for SuperAdmins */}
+            {(hasNoTenant || isSuperAdmin) && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
@@ -146,7 +147,11 @@ const Home: React.FC = () => {
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
-                <Text mb="md">You don't have a tenant yet. Create your own tenant to get started.</Text>
+                <Text mb="md">
+                  {isSuperAdmin 
+                    ? "Create a new tenant organization on the platform." 
+                    : "You don't have a tenant yet. Create your own tenant to get started."}
+                </Text>
                 <Button component={Link} to="/tenants/create" variant="filled" color="teal" fullWidth>
                   Create Tenant
                 </Button>

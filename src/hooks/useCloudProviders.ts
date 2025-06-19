@@ -26,7 +26,12 @@ export const useCloudProviders = () => {
     queryFn: () => api.fetchCloudProviders(),
     // Enable for all users, not just superadmins
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
+    retry: 3, // Increase retry attempts for better reliability
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
+    onError: (error) => {
+      console.error('Error fetching cloud providers:', error);
+      // We don't throw here to prevent UI crashes - the API method already returns an empty array on error
+    }
   });
 
   // Create a new cloud provider
@@ -60,10 +65,17 @@ export const useCloudProviders = () => {
     mutationFn: ({ tenantId, data }: { tenantId: string; data: CloudProviderIntegrationCreate }) => 
       api.createTenantIntegration(tenantId, data),
     onSuccess: (_, variables) => {
+      // Invalidate related queries to ensure UI is updated
       queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
       queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
       queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+      
+      // Also invalidate projects as they may depend on integrations
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
+    onError: (error, variables) => {
+      console.error(`Error creating integration for tenant ${variables.tenantId}:`, error);
+    }
   });
 
   // Delete a tenant integration
@@ -71,10 +83,17 @@ export const useCloudProviders = () => {
     mutationFn: ({ tenantId, integrationId }: { tenantId: string; integrationId: string }) => 
       api.deleteTenantIntegration(tenantId, integrationId),
     onSuccess: (_, variables) => {
+      // Invalidate related queries to ensure UI is updated
       queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
       queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
       queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+      
+      // Also invalidate projects as they may depend on integrations
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
+    onError: (error, variables) => {
+      console.error(`Error deleting integration ${variables.integrationId} for tenant ${variables.tenantId}:`, error);
+    }
   });
 
   /**
@@ -84,8 +103,13 @@ export const useCloudProviders = () => {
     return useQuery({
       queryKey: ['cloud-provider', id],
       queryFn: () => api.fetchCloudProviderById(id!),
-      enabled: !!id && isSuperAdmin,
+      enabled: !!id, // Enable for all users who need cloud provider details, not just superadmins
       staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
+      onError: (error) => {
+        console.error(`Error fetching cloud provider with ID ${id}:`, error);
+      }
     });
   };
 
