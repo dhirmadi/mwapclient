@@ -55,7 +55,7 @@ export const useTenants = (includeArchived: boolean = false) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
   });
 
-  // Fetch current tenant (non-SuperAdmin users)
+  // Fetch current tenant (for all users)
   const { 
     data: currentTenant, 
     isLoading: isLoadingCurrentTenant,
@@ -67,17 +67,36 @@ export const useTenants = (includeArchived: boolean = false) => {
       try {
         const response = await api.fetchTenant();
         return extractData<Tenant>(response);
-      } catch (error) {
+      } catch (error: any) {
         // Don't throw for 404 errors (user doesn't have a tenant yet)
-        if (error.response?.status === 404) {
+        // This is expected for SuperAdmins or new users
+        if (error.response?.status === 404 || 
+            (error.message && error.message.includes('Tenant not found'))) {
+          console.log('User does not have a tenant yet - this is normal for SuperAdmins');
           return null;
         }
+        
+        // For other errors, throw a formatted error
+        console.error('Error fetching current tenant:', error);
         throw createApiError(error, 'Failed to fetch current tenant');
       }
     },
-    // Enable for all users - SuperAdmins might have a tenant too
-    retry: 2,
+    // Enable for all users
+    retry: (failureCount, error: any) => {
+      // Don't retry for 404 errors
+      if (error.response?.status === 404 || 
+          (error.message && error.message.includes('Tenant not found'))) {
+        return false;
+      }
+      // Retry other errors up to 2 times
+      return failureCount < 2;
+    },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
+    // Don't show error notifications for 404 errors
+    useErrorBoundary: (error: any) => {
+      return !(error.response?.status === 404 || 
+              (error.message && error.message.includes('Tenant not found')));
+    },
   });
 
   // Fetch a single tenant by ID

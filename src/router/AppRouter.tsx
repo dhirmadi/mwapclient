@@ -55,7 +55,7 @@ const AppRouter: React.FC = () => {
         }}
       >
         <AuthProvider>
-          <Notifications position={{ top: 'top', right: 'right' }} />
+          <Notifications position="top-right" />
           <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />

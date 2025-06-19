@@ -70,11 +70,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       });
       
       if (!hasProjectPermission) {
-        notifications.show({
-          title: 'Access Denied',
-          message: `You don't have permission to access this project resource`,
-          color: 'red',
-        });
+        try {
+          notifications.show({
+            title: 'Access Denied',
+            message: `You don't have permission to access this project resource`,
+            color: 'red',
+          });
+        } catch (error) {
+          console.warn('Could not show access denied notification:', error);
+        }
         return <Navigate to="/unauthorized" replace />;
       }
     } else {
@@ -84,11 +88,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       );
       
       if (!hasRequiredPermission) {
-        notifications.show({
-          title: 'Access Denied',
-          message: `You don't have the required permissions to access this resource`,
-          color: 'red',
-        });
+        try {
+          notifications.show({
+            title: 'Access Denied',
+            message: `You don't have the required permissions to access this resource`,
+            color: 'red',
+          });
+        } catch (error) {
+          console.warn('Could not show access denied notification:', error);
+        }
         return <Navigate to="/unauthorized" replace />;
       }
     }
@@ -99,11 +107,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const hasRequiredProjectRole = permissions.canInProject(projectId, projectRole);
     
     if (!hasRequiredProjectRole) {
-      notifications.show({
-        title: 'Access Denied',
-        message: `You need ${projectRole} role or higher to access this project resource`,
-        color: 'red',
-      });
+      try {
+        notifications.show({
+          title: 'Access Denied',
+          message: `You need ${projectRole} role or higher to access this project resource`,
+          color: 'red',
+        });
+      } catch (error) {
+        console.warn('Could not show access denied notification:', error);
+      }
       return <Navigate to="/unauthorized" replace />;
     }
   }
@@ -130,11 +142,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     });
 
     if (!hasRequiredRole) {
-      notifications.show({
-        title: 'Access Denied',
-        message: `You need ${requiredRoles.join(' or ')} role to access this resource`,
-        color: 'red',
-      });
+      try {
+        notifications.show({
+          title: 'Access Denied',
+          message: `You need ${requiredRoles.join(' or ')} role to access this resource`,
+          color: 'red',
+        });
+      } catch (error) {
+        console.warn('Could not show access denied notification:', error);
+      }
       return <Navigate to="/unauthorized" replace />;
     }
   }

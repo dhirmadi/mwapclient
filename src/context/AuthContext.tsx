@@ -83,21 +83,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ? 'Tenant Owner' 
                 : 'User';
                 
-            notifications.show({
-              title: `Welcome, ${user.name || 'User'}`,
-              message: `You are logged in as ${roleText}`,
-              color: 'green',
-              autoClose: 3000,
-            });
+            // Use setTimeout to ensure the notifications component is mounted
+            setTimeout(() => {
+              try {
+                notifications.show({
+                  title: `Welcome, ${user.name || 'User'}`,
+                  message: `You are logged in as ${roleText}`,
+                  color: 'green',
+                  autoClose: 3000,
+                });
+              } catch (error) {
+                console.warn('Could not show welcome notification:', error);
+              }
+            }, 500);
           } catch (error) {
             console.error('Failed to fetch user roles:', error);
             
             // Show error notification
-            notifications.show({
-              title: 'Authentication Error',
-              message: 'Failed to fetch user roles. Some features may be unavailable.',
-              color: 'red',
-            });
+            setTimeout(() => {
+              try {
+                notifications.show({
+                  title: 'Authentication Error',
+                  message: 'Failed to fetch user roles. Some features may be unavailable.',
+                  color: 'red',
+                });
+              } catch (error) {
+                console.warn('Could not show error notification:', error);
+              }
+            }, 500);
             
             // Only use default roles in development mode if explicitly requested
             const isDevelopment = import.meta.env.DEV;
@@ -117,21 +130,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setIsSuperAdmin(true);
               setIsTenantOwner(true);
               
-              notifications.show({
-                title: 'Development Mode',
-                message: 'Using default roles for development',
-                color: 'blue',
-              });
+              setTimeout(() => {
+                try {
+                  notifications.show({
+                    title: 'Development Mode',
+                    message: 'Using default roles for development',
+                    color: 'blue',
+                  });
+                } catch (error) {
+                  console.warn('Could not show development notification:', error);
+                }
+              }, 500);
             }
           }
         } catch (error) {
           console.error('Failed to get token:', error);
           
-          notifications.show({
-            title: 'Authentication Error',
-            message: 'Failed to get authentication token. Please try logging in again.',
-            color: 'red',
-          });
+          setTimeout(() => {
+            try {
+              notifications.show({
+                title: 'Authentication Error',
+                message: 'Failed to get authentication token. Please try logging in again.',
+                color: 'red',
+              });
+            } catch (error) {
+              console.warn('Could not show authentication error notification:', error);
+            }
+          }, 500);
         } finally {
           setRolesLoading(false);
         }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import api from '../utils/api';
 import { 
@@ -9,6 +9,8 @@ import {
   CloudProviderIntegrationCreate
 } from '../types/cloud-provider';
 import { useAuth } from './AuthContext';
+import { extractData, extractArrayData, createApiError } from '../utils/apiResponseHandler';
+import { useLoadingState } from '../hooks/useLoadingState';
 
 interface CloudProviderContextType {
   // Cloud Providers
@@ -63,7 +65,7 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loadingProviders, setLoadingProviders] = useState<Record<string, boolean>>({});
   const [providerErrors, setProviderErrors] = useState<Record<string, Error | null>>({});
   
-  // Fetch all cloud providers
+  // Fetch all cloud providers with optimized error handling
   const { 
     data: cloudProviders = [], 
     isLoading: isLoadingProviders, 
@@ -71,8 +73,17 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     refetch: refetchProvidersOriginal
   } = useQuery({
     queryKey: ['cloud-providers'],
-    queryFn: () => api.fetchCloudProviders(),
+    queryFn: async () => {
+      try {
+        const response = await api.fetchCloudProviders();
+        return extractArrayData<CloudProvider>(response);
+      } catch (error) {
+        console.error('Error fetching cloud providers:', error);
+        throw createApiError(error, 'Failed to fetch cloud providers');
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
@@ -85,23 +96,35 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     refetch: refetchIntegrationsOriginal
   } = useQuery({
     queryKey: ['tenant-integrations', tenantId],
-    queryFn: () => api.fetchTenantIntegrations(tenantId!),
+    queryFn: async () => {
+      if (!tenantId) {
+        return [];
+      }
+      try {
+        const response = await api.fetchTenantIntegrations(tenantId);
+        return extractArrayData<CloudProviderIntegration>(response);
+      } catch (error) {
+        console.error(`Error fetching integrations for tenant ${tenantId}:`, error);
+        throw createApiError(error, `Failed to fetch integrations for tenant ${tenantId}`);
+      }
+    },
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
   
-  // Wrap refetch functions to handle errors
-  const refetchProviders = async () => {
+  // Memoized refetch functions to prevent unnecessary re-renders
+  const refetchProviders = useCallback(async () => {
     try {
       await refetchProvidersOriginal();
     } catch (error) {
       console.error('Error refetching cloud providers:', error);
     }
-  };
+  }, [refetchProvidersOriginal]);
   
-  const refetchIntegrations = async () => {
+  const refetchIntegrations = useCallback(async () => {
     try {
       if (tenantId) {
         await refetchIntegrationsOriginal();
@@ -109,10 +132,10 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error('Error refetching tenant integrations:', error);
     }
-  };
+  }, [tenantId, refetchIntegrationsOriginal]);
   
-  // Function to fetch a single cloud provider
-  const fetchCloudProvider = async (id: string): Promise<CloudProvider> => {
+  // Memoized function to fetch a single cloud provider
+  const fetchCloudProvider = useCallback(async (id: string): Promise<CloudProvider> => {
     if (!id) {
       throw new Error('Cloud Provider ID is required');
     }
@@ -121,25 +144,27 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoadingProviders(prev => ({ ...prev, [id]: true }));
       setProviderErrors(prev => ({ ...prev, [id]: null }));
       
-      const provider = await api.fetchCloudProviderById(id);
+      const response = await api.fetchCloudProviderById(id);
+      const provider = extractData<CloudProvider>(response);
       
       // Cache the provider in React Query
       queryClient.setQueryData(['cloud-provider', id], provider);
       
       return provider;
     } catch (error) {
-      const typedError = error instanceof Error ? error : new Error('Unknown error');
-      setProviderErrors(prev => ({ ...prev, [id]: typedError }));
-      throw error;
+      console.error(`Error fetching cloud provider ${id}:`, error);
+      const apiError = createApiError(error, `Failed to fetch cloud provider ${id}`);
+      setProviderErrors(prev => ({ ...prev, [id]: apiError }));
+      throw apiError;
     } finally {
       setLoadingProviders(prev => ({ ...prev, [id]: false }));
     }
-  };
+  }, [queryClient]);
   
-  // Get a cloud provider from cache or fetch it
-  const getCloudProvider = (id: string): CloudProvider | undefined => {
+  // Memoized function to get a cloud provider from cache or fetch it
+  const getCloudProvider = useCallback((id: string): CloudProvider | undefined => {
     // First check if it's in the cloudProviders array
-    const provider = cloudProviders.find(p => p._id === id || p.id === id);
+    const provider = getProviderById(id);
     if (provider) return provider;
     
     // Then check if it's in the React Query cache
@@ -152,17 +177,17 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     
     return undefined;
-  };
+  }, [getProviderById, queryClient, fetchCloudProvider]);
   
-  // Check if a provider is loading
-  const isLoadingProvider = (id: string): boolean => {
+  // Memoized function to check if a provider is loading
+  const isLoadingProvider = useCallback((id: string): boolean => {
     return loadingProviders[id] || false;
-  };
+  }, [loadingProviders]);
   
-  // Get error for a provider
-  const providerError = (id: string): Error | null => {
+  // Memoized function to get error for a provider
+  const providerError = useCallback((id: string): Error | null => {
     return providerErrors[id] || null;
-  };
+  }, [providerErrors]);
   
   // Create a new cloud provider (SuperAdmin only)
   const createCloudProviderMutation = useMutation({
@@ -254,28 +279,30 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
   
+  // Memoized utility functions to prevent unnecessary re-renders
+  
   // Utility function to get a provider by ID
-  const getProviderById = (id: string): CloudProvider | undefined => {
+  const getProviderById = useCallback((id: string): CloudProvider | undefined => {
     return cloudProviders.find(p => p._id === id || p.id === id);
-  };
+  }, [cloudProviders]);
   
   // Utility function to get an integration by ID
-  const getIntegrationById = (id: string): CloudProviderIntegration | undefined => {
+  const getIntegrationById = useCallback((id: string): CloudProviderIntegration | undefined => {
     return tenantIntegrations.find(i => i._id === id);
-  };
+  }, [tenantIntegrations]);
   
   // Utility function to get an integration by provider ID
-  const getIntegrationByProviderId = (providerId: string): CloudProviderIntegration | undefined => {
+  const getIntegrationByProviderId = useCallback((providerId: string): CloudProviderIntegration | undefined => {
     return tenantIntegrations.find(i => i.providerId === providerId);
-  };
+  }, [tenantIntegrations]);
   
   // Utility function to check if tenant has an integration for a provider
-  const hasIntegrationForProvider = (providerId: string): boolean => {
+  const hasIntegrationForProvider = useCallback((providerId: string): boolean => {
     return tenantIntegrations.some(i => i.providerId === providerId);
-  };
+  }, [tenantIntegrations]);
   
-  // Expose the context value
-  const contextValue: CloudProviderContextType = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo<CloudProviderContextType>(() => ({
     // Cloud Providers
     cloudProviders,
     isLoadingProviders,
@@ -318,7 +345,37 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     getIntegrationById,
     getIntegrationByProviderId,
     hasIntegrationForProvider,
-  };
+  }), [
+    // Dependencies for memoization
+    cloudProviders,
+    isLoadingProviders,
+    providersError,
+    refetchProviders,
+    getCloudProvider,
+    fetchCloudProvider,
+    isLoadingProvider,
+    providerError,
+    createCloudProviderMutation.mutateAsync,
+    updateCloudProviderMutation.mutateAsync,
+    deleteCloudProviderMutation.mutateAsync,
+    createCloudProviderMutation.isPending,
+    updateCloudProviderMutation.isPending,
+    deleteCloudProviderMutation.isPending,
+    tenantIntegrations,
+    isLoadingIntegrations,
+    integrationsError,
+    refetchIntegrations,
+    createIntegrationMutation.mutateAsync,
+    updateIntegrationMutation.mutateAsync,
+    deleteIntegrationMutation.mutateAsync,
+    createIntegrationMutation.isPending,
+    updateIntegrationMutation.isPending,
+    deleteIntegrationMutation.isPending,
+    getProviderById,
+    getIntegrationById,
+    getIntegrationByProviderId,
+    hasIntegrationForProvider,
+  ]);
   
   return (
     <CloudProviderContext.Provider value={contextValue}>
