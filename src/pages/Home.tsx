@@ -145,7 +145,7 @@ const Home: React.FC = () => {
           
           <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
             {/* Show tenant creation card for users without a tenant OR for SuperAdmins */}
-            {(hasNoTenant) && (
+            {(hasNoTenant || isSuperAdmin) && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
