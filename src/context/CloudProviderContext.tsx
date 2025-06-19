@@ -134,6 +134,28 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [tenantId, refetchIntegrationsOriginal]);
   
+  // Memoized utility functions to prevent unnecessary re-renders
+  
+  // Utility function to get a provider by ID
+  const getProviderById = useCallback((id: string): CloudProvider | undefined => {
+    return cloudProviders.find(p => p._id === id || p.id === id);
+  }, [cloudProviders]);
+  
+  // Utility function to get an integration by ID
+  const getIntegrationById = useCallback((id: string): CloudProviderIntegration | undefined => {
+    return tenantIntegrations.find(i => i._id === id);
+  }, [tenantIntegrations]);
+  
+  // Utility function to get an integration by provider ID
+  const getIntegrationByProviderId = useCallback((providerId: string): CloudProviderIntegration | undefined => {
+    return tenantIntegrations.find(i => i.providerId === providerId);
+  }, [tenantIntegrations]);
+  
+  // Utility function to check if tenant has an integration for a provider
+  const hasIntegrationForProvider = useCallback((providerId: string): boolean => {
+    return tenantIntegrations.some(i => i.providerId === providerId);
+  }, [tenantIntegrations]);
+  
   // Memoized function to fetch a single cloud provider
   const fetchCloudProvider = useCallback(async (id: string): Promise<CloudProvider> => {
     if (!id) {
@@ -279,27 +301,6 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
   
-  // Memoized utility functions to prevent unnecessary re-renders
-  
-  // Utility function to get a provider by ID
-  const getProviderById = useCallback((id: string): CloudProvider | undefined => {
-    return cloudProviders.find(p => p._id === id || p.id === id);
-  }, [cloudProviders]);
-  
-  // Utility function to get an integration by ID
-  const getIntegrationById = useCallback((id: string): CloudProviderIntegration | undefined => {
-    return tenantIntegrations.find(i => i._id === id);
-  }, [tenantIntegrations]);
-  
-  // Utility function to get an integration by provider ID
-  const getIntegrationByProviderId = useCallback((providerId: string): CloudProviderIntegration | undefined => {
-    return tenantIntegrations.find(i => i.providerId === providerId);
-  }, [tenantIntegrations]);
-  
-  // Utility function to check if tenant has an integration for a provider
-  const hasIntegrationForProvider = useCallback((providerId: string): boolean => {
-    return tenantIntegrations.some(i => i.providerId === providerId);
-  }, [tenantIntegrations]);
   
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo<CloudProviderContextType>(() => ({
