@@ -2,7 +2,13 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { UserRolesResponse } from '../types/auth';
 import { Project, ProjectCreate } from '../types/project';
 import { Tenant, TenantCreate } from '../types/tenant';
-import { CloudProvider } from '../types/cloud-provider';
+import { 
+  CloudProvider, 
+  CloudProviderCreate, 
+  CloudProviderUpdate,
+  CloudProviderIntegration,
+  CloudProviderIntegrationCreate
+} from '../types/cloud-provider';
 import { ProjectType } from '../types/project-type';
 import { ProjectMember } from '../types/project';
 import { File } from '../types/file';
@@ -348,13 +354,32 @@ const api = {
   }),
 
   // Tenant Integration endpoints
-  fetchTenantIntegrations: debugApiCall('fetchTenantIntegrations', async (tenantId: string): Promise<any[]> => {
+  fetchTenantIntegrations: debugApiCall('fetchTenantIntegrations', async (tenantId: string): Promise<CloudProviderIntegration[]> => {
     const response = await apiClient.get(`/tenants/${tenantId}/integrations`);
+    // Handle both response formats: { success: true, data: [...] } or directly the array
+    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    } else if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  }),
+  
+  createTenantIntegration: debugApiCall('createTenantIntegration', async (tenantId: string, data: CloudProviderIntegrationCreate): Promise<CloudProviderIntegration> => {
+    const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   
-  createTenantIntegration: debugApiCall('createTenantIntegration', async (tenantId: string, data: any): Promise<any> => {
-    const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
+  updateTenantIntegration: debugApiCall('updateTenantIntegration', async (tenantId: string, integrationId: string, data: Partial<CloudProviderIntegration>): Promise<CloudProviderIntegration> => {
+    const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
     return response.data;
   }),
   

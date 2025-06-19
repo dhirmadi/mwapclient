@@ -68,13 +68,19 @@ const CloudProviderEdit: React.FC = () => {
       slug: '',
       scopes: [],
       authUrl: '',
-      tokenUrl: ''
+      tokenUrl: '',
+      clientId: '',
+      clientSecret: '',
+      grantType: 'authorization_code',
+      tokenMethod: 'POST',
+      metadata: {}
     },
     validate: {
       name: (value) => (value && value.length < 3 ? 'Name must be at least 3 characters' : null),
       slug: (value) => (!value ? 'Slug is required' : null),
       authUrl: (value) => (!value ? 'Auth URL is required' : null),
       tokenUrl: (value) => (!value ? 'Token URL is required' : null),
+      clientId: (value) => (!value ? 'Client ID is required' : null),
     },
   });
 
@@ -89,11 +95,21 @@ const CloudProviderEdit: React.FC = () => {
         slug: cloudProvider.slug,
         scopes: cloudProvider.scopes || [],
         authUrl: cloudProvider.authUrl,
-        tokenUrl: cloudProvider.tokenUrl
+        tokenUrl: cloudProvider.tokenUrl,
+        clientId: cloudProvider.clientId || '',
+        clientSecret: '', // Don't load the secret, it will be updated only if provided
+        grantType: cloudProvider.grantType || 'authorization_code',
+        tokenMethod: cloudProvider.tokenMethod || 'POST',
+        metadata: cloudProvider.metadata || {}
       });
       
       // Set selected provider type based on slug
       setSelectedProviderType(cloudProvider.slug);
+      
+      // If there's a schema, set it
+      if (cloudProvider.configSchema) {
+        setSchemaJson(JSON.stringify(cloudProvider.configSchema, null, 2));
+      }
     }
   }, [cloudProvider]);
   
@@ -235,6 +251,7 @@ const CloudProviderEdit: React.FC = () => {
             <Tabs.List mb="md">
               <Tabs.Tab value="general">General Information</Tabs.Tab>
               <Tabs.Tab value="auth">Authentication</Tabs.Tab>
+              <Tabs.Tab value="metadata">Metadata</Tabs.Tab>
               <Tabs.Tab value="schema">Configuration Schema</Tabs.Tab>
             </Tabs.List>
 
@@ -282,50 +299,76 @@ const CloudProviderEdit: React.FC = () => {
             </Tabs.Panel>
 
             <Tabs.Panel value="auth">
-              <Title order={3} mb="md">Authentication Configuration</Title>
+              <Title order={3} mb="md">OAuth Configuration</Title>
               
-              <Select
-                label="Authentication Type"
-                placeholder="Select authentication type"
-                data={AUTH_TYPES}
-                value={selectedAuthType}
-                onChange={(value) => setSelectedAuthType(value || 'oauth2')}
+              <TextInput
+                label="Client ID"
+                placeholder="Enter OAuth client ID"
                 required
-                mb="xl"
-                disabled // Prevent changing auth type after creation
+                mb="md"
+                {...form.getInputProps('clientId')}
               />
               
-              <Divider mb="md" label="Required Credentials" labelPosition="center" />
+              <PasswordInput
+                label="Client Secret"
+                placeholder="Enter new client secret or leave blank to keep existing"
+                mb="md"
+                {...form.getInputProps('clientSecret')}
+              />
               
-              <Stack>
-                {requiredCredentials.map((field) => (
-                  <div key={field.key}>
-                    {field.type === 'password' ? (
-                      <PasswordInput
-                        label={field.label}
-                        placeholder={`Enter new ${field.label.toLowerCase()} or leave blank to keep existing`}
-                        mb="md"
-                        {...form.getInputProps(`credentials.${field.key}`)}
-                      />
-                    ) : field.type === 'textarea' ? (
-                      <Textarea
-                        label={field.label}
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                        minRows={3}
-                        mb="md"
-                        {...form.getInputProps(`credentials.${field.key}`)}
-                      />
-                    ) : (
-                      <TextInput
-                        label={field.label}
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                        mb="md"
-                        {...form.getInputProps(`credentials.${field.key}`)}
-                      />
-                    )}
-                  </div>
-                ))}
-              </Stack>
+              <TextInput
+                label="Auth URL"
+                placeholder="Enter OAuth authorization URL"
+                required
+                mb="md"
+                {...form.getInputProps('authUrl')}
+              />
+              
+              <TextInput
+                label="Token URL"
+                placeholder="Enter OAuth token URL"
+                required
+                mb="md"
+                {...form.getInputProps('tokenUrl')}
+              />
+              
+              <Select
+                label="Grant Type"
+                placeholder="Select OAuth grant type"
+                data={[
+                  { value: 'authorization_code', label: 'Authorization Code' },
+                  { value: 'client_credentials', label: 'Client Credentials' },
+                  { value: 'password', label: 'Password' },
+                  { value: 'implicit', label: 'Implicit' }
+                ]}
+                mb="md"
+                {...form.getInputProps('grantType')}
+              />
+              
+              <Select
+                label="Token Method"
+                placeholder="Select token request method"
+                data={[
+                  { value: 'POST', label: 'POST' },
+                  { value: 'GET', label: 'GET' }
+                ]}
+                mb="md"
+                {...form.getInputProps('tokenMethod')}
+              />
+              
+              <Textarea
+                label="Scopes"
+                placeholder="Enter OAuth scopes, one per line"
+                required
+                minRows={3}
+                mb="md"
+                value={form.values.scopes.join('\n')}
+                onChange={(e) => {
+                  const scopesText = e.currentTarget.value;
+                  const scopesArray = scopesText.split('\n').filter(s => s.trim() !== '');
+                  form.setFieldValue('scopes', scopesArray);
+                }}
+              />
               
               <Alert 
                 icon={<IconAlertCircle size={16} />} 
@@ -333,8 +376,76 @@ const CloudProviderEdit: React.FC = () => {
                 color="blue" 
                 mb="md"
               >
-                Credentials are securely stored and encrypted. Leave password fields blank to keep existing values.
+                Credentials are securely stored and encrypted. Leave the client secret field blank to keep the existing value.
               </Alert>
+            </Tabs.Panel>
+            
+            <Tabs.Panel value="metadata">
+              <Title order={3} mb="md">Provider Metadata</Title>
+              
+              <Alert 
+                icon={<IconAlertCircle size={16} />} 
+                title="Metadata" 
+                color="blue" 
+                mb="md"
+              >
+                Metadata contains additional configuration for the cloud provider. This is stored as a JSON object.
+              </Alert>
+              
+              {schemaError && (
+                <Alert 
+                  icon={<IconAlertCircle size={16} />} 
+                  title="Metadata Error" 
+                  color="red" 
+                  mb="md"
+                >
+                  {schemaError}
+                </Alert>
+              )}
+              
+              <TextInput
+                label="API Base URL"
+                placeholder="Enter API base URL for this provider"
+                mb="md"
+                value={form.values.metadata?.apiBaseUrl as string || ''}
+                onChange={(e) => {
+                  const metadata = { ...form.values.metadata, apiBaseUrl: e.currentTarget.value };
+                  form.setFieldValue('metadata', metadata);
+                }}
+              />
+              
+              <TextInput
+                label="Documentation URL"
+                placeholder="Enter documentation URL for this provider"
+                mb="md"
+                value={form.values.metadata?.documentationUrl as string || ''}
+                onChange={(e) => {
+                  const metadata = { ...form.values.metadata, documentationUrl: e.currentTarget.value };
+                  form.setFieldValue('metadata', metadata);
+                }}
+              />
+              
+              <Textarea
+                label="Additional Metadata (JSON)"
+                placeholder="Enter additional metadata as JSON"
+                minRows={5}
+                mb="md"
+                value={JSON.stringify(form.values.metadata || {}, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const metadata = JSON.parse(e.currentTarget.value);
+                    form.setFieldValue('metadata', metadata);
+                    setSchemaError(null);
+                  } catch (error) {
+                    if (error instanceof Error) {
+                      setSchemaError(error.message);
+                    } else {
+                      setSchemaError('Invalid JSON');
+                    }
+                  }
+                }}
+                styles={{ input: { fontFamily: 'monospace' } }}
+              />
             </Tabs.Panel>
 
             <Tabs.Panel value="schema">

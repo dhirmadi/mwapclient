@@ -44,13 +44,20 @@ const CloudProviderCreate: React.FC = () => {
       slug: selectedProviderType,
       scopes: ['read', 'write'],
       authUrl: '',
-      tokenUrl: ''
+      tokenUrl: '',
+      clientId: '',
+      clientSecret: '',
+      grantType: 'authorization_code',
+      tokenMethod: 'POST',
+      metadata: {}
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Name must be at least 3 characters' : null),
       slug: (value) => (!value ? 'Slug is required' : null),
       authUrl: (value) => (!value ? 'Auth URL is required' : null),
       tokenUrl: (value) => (!value ? 'Token URL is required' : null),
+      clientId: (value) => (!value ? 'Client ID is required' : null),
+      clientSecret: (value) => (!value ? 'Client Secret is required' : null),
     },
   });
 
@@ -67,6 +74,26 @@ const CloudProviderCreate: React.FC = () => {
       form.setFieldValue('authUrl', oauthDefaults.authUrl);
       form.setFieldValue('tokenUrl', oauthDefaults.tokenUrl);
       form.setFieldValue('scopes', oauthDefaults.scopes);
+      
+      // Set default OAuth values
+      form.setFieldValue('grantType', 'authorization_code');
+      form.setFieldValue('tokenMethod', 'POST');
+      
+      // Set metadata based on provider type
+      const metadata: Record<string, unknown> = {
+        providerType: selectedProviderType
+      };
+      
+      // Add provider-specific metadata
+      if (selectedProviderType === 'google_drive') {
+        metadata.apiBaseUrl = 'https://www.googleapis.com/drive/v3';
+      } else if (selectedProviderType === 'dropbox') {
+        metadata.apiBaseUrl = 'https://api.dropboxapi.com/2';
+      } else if (selectedProviderType === 'onedrive') {
+        metadata.apiBaseUrl = 'https://graph.microsoft.com/v1.0/me/drive';
+      }
+      
+      form.setFieldValue('metadata', metadata);
       
       // Clear any previous errors
       setFormError(null);
@@ -172,7 +199,23 @@ const CloudProviderCreate: React.FC = () => {
             {...form.getInputProps('slug')}
           />
           
-          <Divider my="lg" label="Authentication Configuration" labelPosition="center" />
+          <Divider my="lg" label="OAuth Configuration" labelPosition="center" />
+          
+          <TextInput
+            label="Client ID"
+            placeholder="Enter OAuth client ID"
+            required
+            mb="md"
+            {...form.getInputProps('clientId')}
+          />
+          
+          <TextInput
+            label="Client Secret"
+            placeholder="Enter OAuth client secret"
+            required
+            mb="md"
+            {...form.getInputProps('clientSecret')}
+          />
           
           <TextInput
             label="Auth URL"
@@ -188,6 +231,30 @@ const CloudProviderCreate: React.FC = () => {
             required
             mb="md"
             {...form.getInputProps('tokenUrl')}
+          />
+          
+          <Select
+            label="Grant Type"
+            placeholder="Select OAuth grant type"
+            data={[
+              { value: 'authorization_code', label: 'Authorization Code' },
+              { value: 'client_credentials', label: 'Client Credentials' },
+              { value: 'password', label: 'Password' },
+              { value: 'implicit', label: 'Implicit' }
+            ]}
+            mb="md"
+            {...form.getInputProps('grantType')}
+          />
+          
+          <Select
+            label="Token Method"
+            placeholder="Select token request method"
+            data={[
+              { value: 'POST', label: 'POST' },
+              { value: 'GET', label: 'GET' }
+            ]}
+            mb="md"
+            {...form.getInputProps('tokenMethod')}
           />
           
           <Textarea
@@ -210,7 +277,7 @@ const CloudProviderCreate: React.FC = () => {
             color="blue" 
             mb="md"
           >
-            These settings define how the OAuth flow will work. Client ID and Client Secret will be provided by tenant owners when they integrate with this provider.
+            These settings define how the OAuth flow will work. The client ID and client secret will be used by the system to authenticate with the provider.
           </Alert>
           
           <Group justify="flex-end" mt="xl">
