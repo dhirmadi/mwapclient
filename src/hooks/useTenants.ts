@@ -11,6 +11,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   const { roles } = useAuth();
   const permissions = usePermissions(roles);
   const isSuperAdmin = permissions.isSuperAdmin();
+  const isTenantOwner = permissions.isTenantOwner();
   const canManageTenants = permissions.can(Permission.MANAGE_TENANTS);
 
   // Fetch active tenants (SuperAdmin or users with MANAGE_TENANTS permission)
@@ -172,6 +173,102 @@ export const useTenants = (includeArchived: boolean = false) => {
     });
   };
 
+  // Mutation for creating a tenant
+  const createTenantMutation = useMutation({
+    mutationFn: async (data: TenantCreate) => {
+      try {
+        const response = await api.createTenant(data);
+        return extractData<Tenant>(response);
+      } catch (error) {
+        throw createApiError(error, 'Failed to create tenant');
+      }
+    },
+    onSuccess: (newTenant) => {
+      // Update the tenants cache
+      queryClient.setQueryData(['tenants', 'active'], (oldData: Tenant[] = []) => {
+        return [...oldData, newTenant];
+      });
+      
+      // If this is the user's tenant, update the current tenant cache
+      if (newTenant.ownerId === roles?.userId) {
+        queryClient.setQueryData(['tenant-current'], newTenant);
+      }
+    },
+  });
+
+  // Mutation for updating a tenant
+  const updateTenantMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: TenantUpdate }) => {
+      try {
+        const response = await api.updateTenant(id, data);
+        return extractData<Tenant>(response);
+      } catch (error) {
+        throw createApiError(error, `Failed to update tenant with ID ${id}`);
+      }
+    },
+    onSuccess: (updatedTenant) => {
+      // Update the tenants cache
+      queryClient.setQueryData(['tenants', 'active'], (oldData: Tenant[] = []) => {
+        const index = oldData.findIndex(t => t.id === updatedTenant.id || t._id === updatedTenant._id);
+        if (index >= 0) {
+          return [
+            ...oldData.slice(0, index),
+            updatedTenant,
+            ...oldData.slice(index + 1)
+          ];
+        }
+        return oldData;
+      });
+      
+      // If this is the current tenant, update the current tenant cache
+      if (updatedTenant.id === roles?.tenantId || updatedTenant._id === roles?.tenantId) {
+        queryClient.setQueryData(['tenant-current'], updatedTenant);
+      }
+      
+      // Update the specific tenant cache
+      queryClient.setQueryData(['tenant', updatedTenant.id || updatedTenant._id], updatedTenant);
+    },
+  });
+
+  // Mutation for deleting a tenant
+  const deleteTenantMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await api.deleteTenant(id);
+        return id;
+      } catch (error) {
+        throw createApiError(error, `Failed to delete tenant with ID ${id}`);
+      }
+    },
+    onSuccess: (deletedId) => {
+      // Update the tenants cache
+      queryClient.setQueryData(['tenants', 'active'], (oldData: Tenant[] = []) => {
+        return oldData.filter(t => t.id !== deletedId && t._id !== deletedId);
+      });
+      
+      // If this was the current tenant, clear the current tenant cache
+      if (deletedId === roles?.tenantId) {
+        queryClient.setQueryData(['tenant-current'], null);
+      }
+      
+      // Remove the specific tenant cache
+      queryClient.removeQueries({ queryKey: ['tenant', deletedId] });
+    },
+  });
+
+  // Wrapper functions for mutations
+  const createTenant = async (data: TenantCreate): Promise<Tenant> => {
+    return createTenantMutation.mutateAsync(data);
+  };
+
+  const updateTenant = async (id: string, data: TenantUpdate): Promise<Tenant> => {
+    return updateTenantMutation.mutateAsync({ id, data });
+  };
+
+  const deleteTenant = async (id: string): Promise<void> => {
+    await deleteTenantMutation.mutateAsync(id);
+  };
+
   return {
     // Tenants
     tenants,
@@ -187,9 +284,9 @@ export const useTenants = (includeArchived: boolean = false) => {
     refetchArchived,
     refetchCurrentTenant,
     useTenant,
-    createTenant: createTenantMutation.mutate,
-    updateTenant: updateTenantMutation.mutate,
-    deleteTenant: deleteTenantMutation.mutate,
+    createTenant,
+    updateTenant,
+    deleteTenant,
     isCreating: createTenantMutation.isPending,
     isUpdating: updateTenantMutation.isPending,
     isDeleting: deleteTenantMutation.isPending,
