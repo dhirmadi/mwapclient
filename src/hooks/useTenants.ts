@@ -14,6 +14,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   const canManageTenants = permissions.can(Permission.MANAGE_TENANTS);
 
   // Fetch active tenants (SuperAdmin or users with MANAGE_TENANTS permission)
+  // Only fetch when explicitly needed, not on application load
   const { 
     data: tenants, 
     isLoading, 
@@ -29,7 +30,7 @@ export const useTenants = (includeArchived: boolean = false) => {
         throw createApiError(error, 'Failed to fetch tenants');
       }
     },
-    enabled: isSuperAdmin || canManageTenants,
+    enabled: false, // Don't fetch on mount, only when explicitly requested
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
   });
@@ -50,12 +51,12 @@ export const useTenants = (includeArchived: boolean = false) => {
         throw createApiError(error, 'Failed to fetch archived tenants');
       }
     },
-    enabled: isSuperAdmin || canManageTenants,
+    enabled: false, // Don't fetch on mount, only when explicitly requested
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
   });
 
-  // Fetch current tenant (for all users)
+  // Use the tenant ID from roles directly instead of making an API call
   const { 
     data: currentTenant, 
     isLoading: isLoadingCurrentTenant,
@@ -64,6 +65,20 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenant-current'],
     queryFn: async () => {
+      // If we already have the tenant ID from roles, create a minimal tenant object
+      if (roles?.tenantId) {
+        // If we need more tenant details, we can fetch them on demand
+        // For now, return a minimal tenant object with the ID
+        return {
+          id: roles.tenantId,
+          _id: roles.tenantId,
+          name: roles.tenantName || 'My Tenant',
+          ownerId: '',
+          createdAt: new Date().toISOString(),
+          settings: {}
+        } as Tenant;
+      }
+      
       try {
         const response = await api.fetchTenant();
         return extractData<Tenant>(response);
@@ -81,7 +96,7 @@ export const useTenants = (includeArchived: boolean = false) => {
         throw createApiError(error, 'Failed to fetch current tenant');
       }
     },
-    // Enable for all users
+    enabled: !!roles?.tenantId && isTenantOwner, // Only fetch if user has a tenant and is a tenant owner
     retry: (failureCount, error: any) => {
       // Don't retry for 404 errors
       if (error.response?.status === 404 || 
@@ -102,123 +117,39 @@ export const useTenants = (includeArchived: boolean = false) => {
   // Fetch a single tenant by ID
   const useTenant = (id?: string) => {
     return useQuery({
-      queryKey: ['tenant', id],
+      queryKey: ["tenant", id],
       queryFn: async () => {
-        if (!id) throw new Error('Tenant ID is required');
-        
+        if (!id) throw new Error("Tenant ID is required");
+
+        // If this is the current user"s tenant and we already have it, use that
+        if (roles?.tenantId === id && currentTenant) {
+          return currentTenant;
+        }
+
         try {
           const response = await api.fetchTenantById(id);
           const tenant = extractData<Tenant>(response);
-          
+
           // Validate the result
           if (!tenant) {
-            throw new Error('No tenant data returned from API');
+            throw new Error("No tenant data returned from API");
           }
-          
+
           return tenant;
         } catch (error) {
           throw createApiError(error, `Failed to fetch tenant with ID ${id}`);
         }
       },
-      enabled: !!id, // Allow fetching tenant details regardless of user role
+      enabled: false, // Don"t fetch on mount, only when explicitly requested
       retry: 3,      // Retry failed requests up to 3 times
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
       staleTime: 5 * 60 * 1000,  // Consider data stale after 5 minutes
-      refetchOnWindowFocus: true, // Refetch when window regains focus
-      refetchOnMount: true,      // Refetch when component mounts
-      refetchOnReconnect: true,  // Refetch when reconnecting
+      refetchOnWindowFocus: false, // Don"t refetch when window regains focus
+      refetchOnMount: false,      // Don"t refetch when component mounts
+      refetchOnReconnect: false,  // Don"t refetch when reconnecting
       gcTime: 10 * 60 * 1000,    // Garbage collect after 10 minutes
     });
   };
-
-  // Create a new tenant
-  const createTenantMutation = useMutation({
-    mutationFn: async (data: TenantCreate) => {
-      try {
-        const response = await api.createTenant(data);
-        return extractData<Tenant>(response);
-      } catch (error) {
-        throw createApiError(error, 'Failed to create tenant');
-      }
-    },
-    onSuccess: (newTenant) => {
-      // Update queries
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
-      
-      // Add the new tenant to the cache
-      queryClient.setQueryData<Tenant[]>(['tenants', 'active'], (oldTenants = []) => {
-        return [...oldTenants, newTenant];
-      });
-      
-      // Set the current tenant if the user doesn't have one
-      if (!currentTenant) {
-        queryClient.setQueryData(['tenant-current'], newTenant);
-      }
-    },
-    onError: (error) => {
-      console.error('Error creating tenant:', error);
-    }
-  });
-
-  // Update a tenant
-  const updateTenantMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: TenantUpdate }) => {
-      try {
-        const response = await api.updateTenant(id, data);
-        return extractData<Tenant>(response);
-      } catch (error) {
-        throw createApiError(error, `Failed to update tenant with ID ${id}`);
-      }
-    },
-    onSuccess: (updatedTenant, variables) => {
-      const { id } = variables;
-      
-      // Update queries
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      
-      // Update the individual tenant cache
-      queryClient.setQueryData(['tenant', id], updatedTenant);
-      
-      // Update current tenant if it's the same ID
-      if (currentTenant && (currentTenant._id === id || currentTenant.id === id)) {
-        queryClient.setQueryData(['tenant-current'], updatedTenant);
-      }
-    },
-    onError: (error, variables) => {
-      console.error(`Error updating tenant with ID ${variables.id}:`, error);
-    }
-  });
-
-  // Delete a tenant
-  const deleteTenantMutation = useMutation({
-    mutationFn: async (id: string) => {
-      try {
-        await api.deleteTenant(id);
-        return id; // Return the ID for use in onSuccess
-      } catch (error) {
-        throw createApiError(error, `Failed to delete tenant with ID ${id}`);
-      }
-    },
-    onSuccess: (deletedId) => {
-      // Update the tenants list
-      queryClient.setQueryData<Tenant[]>(['tenants', 'active'], (oldTenants = []) => {
-        return oldTenants.filter(t => t._id !== deletedId && t.id !== deletedId);
-      });
-      
-      // Remove from individual tenant cache
-      queryClient.removeQueries({ queryKey: ['tenant', deletedId] });
-      
-      // Invalidate other related queries
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
-    },
-    onError: (error, id) => {
-      console.error(`Error deleting tenant with ID ${id}:`, error);
-    }
-  });
-
-  // Tenant integrations
   const useTenantIntegrations = (tenantId?: string) => {
     return useQuery({
       queryKey: ['tenant-integrations', tenantId],
@@ -234,7 +165,7 @@ export const useTenants = (includeArchived: boolean = false) => {
           throw createApiError(error, `Failed to fetch integrations for tenant with ID ${tenantId}`);
         }
       },
-      enabled: !!tenantId,
+      enabled: false, // Don't fetch on mount, only when explicitly requested
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
       staleTime: 5 * 60 * 1000, // 5 minutes

@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/OptimizedAuthContext';
 import { LoadingSpinner } from '../common';
 
 /**
- * AuthRedirect component
+ * OptimizedAuthRedirect component
  * 
- * This component handles authentication redirects:
+ * This component handles authentication redirects with improved loading states:
  * - If user is authenticated, redirects to the home page or the requested page
  * - If user is not authenticated, shows the login page
- * - Handles loading states during authentication
+ * - Prevents UI flashing during authentication
  */
-const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const OptimizedAuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,4 +41,4 @@ const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return <>{children}</>;
 };
 
-export default AuthRedirect;
+export default OptimizedAuthRedirect;

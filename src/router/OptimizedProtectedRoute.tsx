@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, Outlet, useParams, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/OptimizedAuthContext';
 import { LoadingSpinner } from '../components/common';
 import { Permission, usePermissions } from '../utils/permissions';
 import { ProjectRole } from '../types/auth';
@@ -13,7 +13,16 @@ interface ProtectedRouteProps {
   projectRole?: ProjectRole;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+/**
+ * ProtectedRoute component that handles authentication and authorization
+ * 
+ * This component:
+ * 1. Shows a loading spinner while authentication is in progress
+ * 2. Redirects to login if not authenticated
+ * 3. Checks for required roles and permissions
+ * 4. Handles project-specific permissions
+ */
+const OptimizedProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles,
   requiredPermissions,
   projectIdParam = 'id',
@@ -24,6 +33,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const params = useParams();
   const location = useLocation();
   const projectId = params[projectIdParam];
+
+  // Log authentication state for debugging
+  useEffect(() => {
+    console.log('Protected Route - Auth State:', { 
+      isAuthenticated, 
+      isLoading, 
+      requiredPermissions,
+      projectId
+    });
+  }, [isAuthenticated, isLoading, requiredPermissions, projectId]);
 
   // Show loading spinner while authentication is in progress
   // This prevents the login button from flashing before the dashboard loads
@@ -161,4 +180,4 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default OptimizedProtectedRoute;

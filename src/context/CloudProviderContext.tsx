@@ -65,7 +65,7 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loadingProviders, setLoadingProviders] = useState<Record<string, boolean>>({});
   const [providerErrors, setProviderErrors] = useState<Record<string, Error | null>>({});
   
-  // Fetch all cloud providers with optimized error handling
+  // Fetch all cloud providers with optimized error handling and lazy loading
   const { 
     data: cloudProviders = [], 
     isLoading: isLoadingProviders, 
@@ -82,13 +82,14 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
         throw createApiError(error, 'Failed to fetch cloud providers');
       }
     },
+    enabled: isSuperAdmin, // Only fetch if user is a SuperAdmin
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
   
-  // Fetch tenant integrations if user has a tenant
+  // Fetch tenant integrations if user has a tenant and is a tenant owner
   const {
     data: tenantIntegrations = [],
     isLoading: isLoadingIntegrations,
@@ -108,7 +109,7 @@ export const CloudProviderProvider: React.FC<{ children: React.ReactNode }> = ({
         throw createApiError(error, `Failed to fetch integrations for tenant ${tenantId}`);
       }
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId && isTenantOwner, // Only fetch if user has a tenant and is a tenant owner
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 3,
