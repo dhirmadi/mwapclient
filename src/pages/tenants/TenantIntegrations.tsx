@@ -83,6 +83,9 @@ const TenantIntegrations: React.FC = () => {
     initialValues: {
       providerId: '',
       status: 'active' as const,
+      accessToken: '',
+      refreshToken: '',
+      tokenExpiresAt: '',
       scopesGranted: [] as string[],
       metadata: {} as Record<string, unknown>,
     },
@@ -133,10 +136,18 @@ const TenantIntegrations: React.FC = () => {
       form.setFieldValue('providerId', selectedProvider._id);
       form.setFieldValue('scopesGranted', selectedProvider.scopes || []);
       
+      // Set up token expiration (1 hour from now)
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 3600 * 1000); // 1 hour from now
+      form.setFieldValue('tokenExpiresAt', expiresAt.toISOString());
+      
       // Set up metadata based on provider type
       const metadata: Record<string, unknown> = {
         providerName: selectedProvider.name,
-        providerSlug: selectedProvider.slug
+        providerSlug: selectedProvider.slug,
+        providerType: selectedProvider.slug,
+        clientId: selectedProvider.clientId,
+        grantType: selectedProvider.grantType || 'authorization_code'
       };
       
       form.setFieldValue('metadata', metadata);
@@ -201,6 +212,9 @@ const TenantIntegrations: React.FC = () => {
           data: {
             providerId: form.values.providerId,
             status: form.values.status,
+            accessToken: form.values.accessToken,
+            refreshToken: form.values.refreshToken,
+            tokenExpiresAt: form.values.tokenExpiresAt,
             scopesGranted: form.values.scopesGranted,
             metadata: form.values.metadata
           }
@@ -273,9 +287,15 @@ const TenantIntegrations: React.FC = () => {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 3600 * 1000); // 1 hour from now
         
+        // Generate a mock refresh token
+        const refreshToken = `refresh_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        const accessToken = `access_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        
         await api.updateTenantIntegration(roles.tenantId, integrationId, {
           tokenExpiresAt: expiresAt.toISOString(),
-          status: 'active'
+          status: 'active',
+          accessToken,
+          refreshToken
         });
         
         // Refresh the integrations list
@@ -544,10 +564,43 @@ const TenantIntegrations: React.FC = () => {
               />
               
               <TextInput
+                label="Client Secret"
+                placeholder="OAuth client secret"
+                readOnly
+                value="••••••••••••••••" // Masked for security
+              />
+              
+              <TextInput
                 label="Authorization URL"
                 placeholder="OAuth authorization URL"
                 readOnly
                 value={selectedProvider.authUrl}
+              />
+              
+              <TextInput
+                label="Token URL"
+                placeholder="OAuth token URL"
+                readOnly
+                value={selectedProvider.tokenUrl}
+              />
+              
+              <TextInput
+                label="Grant Type"
+                placeholder="OAuth grant type"
+                readOnly
+                value={selectedProvider.grantType || 'authorization_code'}
+              />
+              
+              <TextInput
+                label="Access Token"
+                placeholder="Enter access token"
+                {...form.getInputProps('accessToken')}
+              />
+              
+              <TextInput
+                label="Refresh Token"
+                placeholder="Enter refresh token"
+                {...form.getInputProps('refreshToken')}
               />
               
               {testResult === 'success' && (
