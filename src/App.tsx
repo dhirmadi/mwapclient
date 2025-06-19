@@ -5,6 +5,7 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import NotificationContainer from './components/notifications/NotificationContainer';
 import { useState } from 'react';
+import { CloudProviderProvider } from './context/CloudProviderContext';
 
 function App() {
   // Create a client with enhanced debugging capabilities
@@ -34,8 +35,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
-        <AppRouter />
-        <NotificationContainer />
+        {/* The CloudProviderProvider must be inside the QueryClientProvider but outside the AppRouter */}
+        {/* This ensures the context is available throughout the application */}
+        <CloudProviderProvider>
+          <AppRouter />
+          <NotificationContainer />
+        </CloudProviderProvider>
         {/* Enhanced React Query Devtools with better visibility */}
         <ReactQueryDevtools 
           initialIsOpen={false} 
