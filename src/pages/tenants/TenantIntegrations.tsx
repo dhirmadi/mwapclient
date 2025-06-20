@@ -206,17 +206,20 @@ const TenantIntegrations: React.FC = () => {
       setSaving(true);
       
       try {
-        // Create the integration using the new schema
+        // Create the integration using only the fields defined in CloudProviderIntegrationCreate
         await createIntegration({
           tenantId: roles.tenantId,
           data: {
             providerId: form.values.providerId,
             status: form.values.status,
-            accessToken: form.values.accessToken,
-            refreshToken: form.values.refreshToken,
-            tokenExpiresAt: form.values.tokenExpiresAt,
             scopesGranted: form.values.scopesGranted,
-            metadata: form.values.metadata
+            metadata: {
+              ...form.values.metadata,
+              // Store these values in metadata since they're not part of the interface
+              accessToken: form.values.accessToken,
+              refreshToken: form.values.refreshToken,
+              tokenExpiresAt: form.values.tokenExpiresAt
+            }
           }
         });
         
