@@ -2,6 +2,19 @@
 
 This guide explains how to set up OAuth for cloud provider integrations in the MWAP application.
 
+## Implementation Details
+
+The OAuth flow in MWAP works as follows:
+
+1. User initiates the OAuth flow by clicking on a cloud provider integration
+2. The application redirects to the OAuth provider's authorization page
+3. User grants permission to the application
+4. OAuth provider redirects back to our callback URL with an authorization code
+5. The application creates a new integration with the authorization code and other OAuth-related information stored in the metadata
+6. In a production environment, the backend would exchange the authorization code for access and refresh tokens
+
+**Note:** The current implementation simulates token exchange on the frontend. In a production environment, this should be done securely on the backend.
+
 ## Dropbox OAuth Configuration
 
 To configure Dropbox OAuth integration:

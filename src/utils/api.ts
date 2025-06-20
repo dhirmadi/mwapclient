@@ -374,14 +374,9 @@ const api = {
     return response.data;
   }),
   
-  exchangeOAuthCode: debugApiCall('exchangeOAuthCode', async (data: { tenantId: string; providerId: string; code: string; redirectUri: string }): Promise<CloudProviderIntegration> => {
-    const response = await apiClient.post(`/tenants/${data.tenantId}/integrations/oauth/callback`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
-    }
-    return response.data;
-  }),
+  // Note: We're not using a dedicated OAuth callback endpoint
+  // Instead, we're using the createTenantIntegration endpoint to create the integration
+  // with the authorization code and other OAuth-related information stored in metadata
   
   updateTenantIntegration: debugApiCall('updateTenantIntegration', async (tenantId: string, integrationId: string, data: Partial<CloudProviderIntegration>): Promise<CloudProviderIntegration> => {
     const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
