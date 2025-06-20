@@ -46,6 +46,7 @@ import {
 } from '../../types/cloud-provider';
 import { LoadingSpinner, ErrorDisplay } from '../../components/common';
 import api from '../../utils/api';
+import { getOAuthRedirectUri, createOAuthState } from '../../utils/oauth';
 
 const TenantIntegrations: React.FC = () => {
   const { roles } = useAuth();
@@ -180,10 +181,7 @@ const TenantIntegrations: React.FC = () => {
     
     try {
       // Create state parameter with tenant and provider info
-      const state = btoa(JSON.stringify({
-        tenantId: roles.tenantId,
-        providerId: provider._id
-      }));
+      const state = createOAuthState(roles.tenantId, provider._id);
       
       // Build OAuth URL
       const authUrl = new URL(provider.authUrl);
@@ -191,7 +189,10 @@ const TenantIntegrations: React.FC = () => {
       // Add required OAuth parameters
       authUrl.searchParams.append('client_id', provider.clientId);
       authUrl.searchParams.append('response_type', 'code');
-      authUrl.searchParams.append('redirect_uri', `${window.location.origin}/oauth/callback`);
+      
+      // Use the configured redirect URI that matches what's configured in the Dropbox app
+      const redirectUri = getOAuthRedirectUri();
+      authUrl.searchParams.append('redirect_uri', redirectUri);
       authUrl.searchParams.append('state', state);
       
       // Add scopes if available

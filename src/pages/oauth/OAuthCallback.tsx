@@ -5,6 +5,7 @@ import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { getOAuthRedirectUri, parseOAuthState } from '../../utils/oauth';
 
 /**
  * OAuthCallback component handles the OAuth callback from cloud providers
@@ -43,10 +44,9 @@ const OAuthCallback: React.FC = () => {
         }
 
         // Parse state parameter (contains tenantId and providerId)
-        let stateData;
-        try {
-          stateData = JSON.parse(atob(state));
-        } catch (e) {
+        const stateData = parseOAuthState(state);
+        
+        if (!stateData) {
           setError('Invalid state parameter');
           setLoading(false);
           return;
@@ -65,7 +65,7 @@ const OAuthCallback: React.FC = () => {
           tenantId,
           providerId,
           code,
-          redirectUri: `${window.location.origin}/oauth/callback`
+          redirectUri: getOAuthRedirectUri()
         });
 
         // Handle success
