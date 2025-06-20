@@ -268,9 +268,12 @@ const TenantIntegrations: React.FC = () => {
             metadata: {
               ...form.values.metadata,
               // Store these values in metadata since they're not part of the interface
-              accessToken: form.values.accessToken,
-              refreshToken: form.values.refreshToken,
-              tokenExpiresAt: form.values.tokenExpiresAt
+              // Use the same structure as in the OAuth callback
+              oauth: {
+                accessToken: form.values.accessToken,
+                refreshToken: form.values.refreshToken,
+                tokenExpiresAt: form.values.tokenExpiresAt
+              }
             }
           }
         });
@@ -347,10 +350,14 @@ const TenantIntegrations: React.FC = () => {
         const accessToken = `access_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         
         await api.updateTenantIntegration(roles.tenantId, integrationId, {
-          tokenExpiresAt: expiresAt.toISOString(),
           status: 'active',
-          accessToken,
-          refreshToken
+          metadata: {
+            oauth: {
+              accessToken,
+              refreshToken,
+              tokenExpiresAt: expiresAt.toISOString()
+            }
+          }
         });
         
         // Refresh the integrations list

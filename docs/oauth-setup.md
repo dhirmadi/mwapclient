@@ -13,6 +13,30 @@ The OAuth flow in MWAP works as follows:
 5. The application creates a new integration with the authorization code and other OAuth-related information stored in the metadata
 6. In a production environment, the backend would exchange the authorization code for access and refresh tokens
 
+### Data Structure
+
+When creating a cloud provider integration, the OAuth-related information is stored in the metadata object with the following structure:
+
+```typescript
+{
+  providerId: string,     // Required: ID of the cloud provider
+  status: 'active' | 'expired' | 'revoked' | 'error', // Default: 'active'
+  scopesGranted: string[], // Optional: Granted OAuth scopes
+  metadata: {
+    oauth: {
+      accessToken: string,
+      refreshToken: string,
+      tokenExpiresAt: string, // ISO date string
+      authorizationCode: string,
+      redirectUri: string
+    }
+    // Other metadata fields
+  }
+}
+```
+
+This structure ensures that sensitive information is properly stored and can be extracted by the backend as needed.
+
 **Note:** The current implementation simulates token exchange on the frontend. In a production environment, this should be done securely on the backend.
 
 ## Dropbox OAuth Configuration

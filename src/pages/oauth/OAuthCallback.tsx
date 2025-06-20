@@ -71,17 +71,21 @@ const OAuthCallback: React.FC = () => {
         const refreshToken = `refresh_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         
         // Create the integration using the existing endpoint
+        // Make sure we follow the CloudProviderIntegrationCreate interface
         const response = await api.createTenantIntegration(tenantId, {
           providerId,
           status: 'active',
           scopesGranted: ['files.content.read', 'files.content.write', 'files.metadata.read'],
           metadata: {
             // Store OAuth-related information in metadata
-            accessToken,
-            refreshToken,
-            tokenExpiresAt: expiresAt.toISOString(),
-            authorizationCode: code,
-            redirectUri: getOAuthRedirectUri()
+            // The backend will extract these values and store them properly
+            oauth: {
+              accessToken,
+              refreshToken,
+              tokenExpiresAt: expiresAt.toISOString(),
+              authorizationCode: code,
+              redirectUri: getOAuthRedirectUri()
+            }
           }
         });
 
