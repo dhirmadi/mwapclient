@@ -79,6 +79,8 @@ The application communicates with a RESTful API. The API documentation can be fo
 - `/docs/api/v3-openAPI-schema.md`: OpenAPI schema documentation
 - `/docs/api/v3-openAPI.yaml`: OpenAPI specification file
 - `/docs/api/cloud-providers.md`: Cloud provider API documentation
+- `/docs/v3-api.md`: Primary API documentation
+
 
 ### Key API Endpoints
 
