@@ -156,9 +156,60 @@ const TenantIntegrations: React.FC = () => {
   
   // Handle opening the add integration modal
   const handleAddIntegration = (provider: CloudProvider) => {
-    setSelectedProvider(provider);
-    setModalOpen(true);
-    setTestResult(null);
+    if (provider.authUrl && provider.tokenUrl) {
+      // For OAuth providers, initiate OAuth flow
+      initiateOAuthFlow(provider);
+    } else {
+      // For non-OAuth providers, open the modal
+      setSelectedProvider(provider);
+      setModalOpen(true);
+      setTestResult(null);
+    }
+  };
+  
+  // Initiate OAuth flow
+  const initiateOAuthFlow = (provider: CloudProvider) => {
+    if (!roles?.tenantId) {
+      notifications.show({
+        title: 'Error',
+        message: 'Tenant ID is required to initiate OAuth flow',
+        color: 'red',
+      });
+      return;
+    }
+    
+    try {
+      // Create state parameter with tenant and provider info
+      const state = btoa(JSON.stringify({
+        tenantId: roles.tenantId,
+        providerId: provider._id
+      }));
+      
+      // Build OAuth URL
+      const authUrl = new URL(provider.authUrl);
+      
+      // Add required OAuth parameters
+      authUrl.searchParams.append('client_id', provider.clientId);
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('redirect_uri', `${window.location.origin}/oauth/callback`);
+      authUrl.searchParams.append('state', state);
+      
+      // Add scopes if available
+      if (provider.scopes && provider.scopes.length > 0) {
+        authUrl.searchParams.append('scope', provider.scopes.join(' '));
+      }
+      
+      // Redirect to OAuth provider
+      window.location.href = authUrl.toString();
+    } catch (error) {
+      console.error('Failed to initiate OAuth flow:', error);
+      
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to initiate OAuth authentication. Please try again.',
+        color: 'red',
+      });
+    }
   };
   
   // Test the integration connection
@@ -332,7 +383,14 @@ const TenantIntegrations: React.FC = () => {
       );
       
       if (availableProviders.length > 0) {
-        handleAddIntegration(availableProviders[0]);
+        // If there's only one available provider, use it directly
+        if (availableProviders.length === 1) {
+          handleAddIntegration(availableProviders[0]);
+        } else {
+          // If there are multiple providers, open a selection modal
+          setModalOpen(true);
+          // Don't set a selected provider yet - user will choose
+        }
       } else {
         notifications.show({
           title: 'No Available Providers',
@@ -535,13 +593,57 @@ const TenantIntegrations: React.FC = () => {
       <Modal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={`Add ${selectedProvider?.name || 'Cloud'} Integration`}
+        title={selectedProvider ? `Add ${selectedProvider.name} Integration` : 'Select Cloud Provider'}
         size="lg"
       >
         <LoadingOverlay visible={saving} />
         
-        <form onSubmit={form.onSubmit(handleSaveIntegration)}>
-          {selectedProvider && (
+        {!selectedProvider ? (
+          // Provider selection UI
+          <Stack spacing="md">
+            <Text>
+              Select a cloud provider to integrate with your tenant:
+            </Text>
+            
+            <SimpleGrid cols={2} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+              {Array.isArray(cloudProviders) && cloudProviders
+                .filter(provider => !usedProviderIds.includes(provider._id))
+                .map(provider => (
+                  <Card 
+                    key={provider._id} 
+                    shadow="sm" 
+                    p="md" 
+                    radius="md" 
+                    withBorder
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleAddIntegration(provider)}
+                  >
+                    <Group justify="space-between" mb="xs">
+                      <Text weight={500}>{provider.name}</Text>
+                      <Badge color="blue">{provider.slug}</Badge>
+                    </Group>
+                    
+                    <Text size="sm" color="dimmed" mb="md">
+                      {provider.authUrl && provider.tokenUrl 
+                        ? 'OAuth Authentication' 
+                        : 'Manual Authentication'}
+                    </Text>
+                    
+                    <Button 
+                      fullWidth 
+                      variant="light"
+                      leftSection={<IconPlus size={16} />}
+                    >
+                      Select Provider
+                    </Button>
+                  </Card>
+                ))
+              }
+            </SimpleGrid>
+          </Stack>
+        ) : (
+          // Integration form
+          <form onSubmit={form.onSubmit(handleSaveIntegration)}>
             <Stack spacing="md">
               <Text>
                 You are about to create an integration with <strong>{selectedProvider.name}</strong>.
@@ -638,8 +740,8 @@ const TenantIntegrations: React.FC = () => {
                 </Group>
               </Group>
             </Stack>
-          )}
-        </form>
+          </form>
+        )}
       </Modal>
     </div>
   );

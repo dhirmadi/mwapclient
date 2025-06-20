@@ -39,6 +39,9 @@ import ProjectEdit from '../pages/projects/ProjectEdit';
 import ProjectMembers from '../pages/projects/ProjectMembers';
 import ProjectFiles from '../pages/projects/ProjectFiles';
 
+// OAuth Callback
+import OAuthCallback from '../pages/oauth/OAuthCallback';
+
 // Note: QueryClient is now created in App.tsx to avoid duplication
 // This ensures React Query Devtools work correctly
 
@@ -60,6 +63,7 @@ const AppRouter: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/oauth/callback" element={<OAuthCallback />} />
 
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>

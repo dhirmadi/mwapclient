@@ -374,6 +374,15 @@ const api = {
     return response.data;
   }),
   
+  exchangeOAuthCode: debugApiCall('exchangeOAuthCode', async (data: { tenantId: string; providerId: string; code: string; redirectUri: string }): Promise<CloudProviderIntegration> => {
+    const response = await apiClient.post(`/tenants/${data.tenantId}/integrations/oauth/callback`, data);
+    // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  }),
+  
   updateTenantIntegration: debugApiCall('updateTenantIntegration', async (tenantId: string, integrationId: string, data: Partial<CloudProviderIntegration>): Promise<CloudProviderIntegration> => {
     const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
     // Handle both response formats
