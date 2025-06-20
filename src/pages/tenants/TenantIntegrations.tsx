@@ -174,6 +174,7 @@ const TenantIntegrations: React.FC = () => {
         title: 'Error',
         message: 'Tenant ID is required to initiate OAuth flow',
         color: 'red',
+        autoClose: 5000
       });
       return;
     }
@@ -208,6 +209,7 @@ const TenantIntegrations: React.FC = () => {
         title: 'Error',
         message: 'Failed to initiate OAuth authentication. Please try again.',
         color: 'red',
+        autoClose: 5000
       });
     }
   };
@@ -235,8 +237,8 @@ const TenantIntegrations: React.FC = () => {
         notifications.show({
           title: 'Validation Successful',
           color: 'green',
-
           message: 'The integration information is valid',
+          autoClose: 3000
         });
         } else {
           setTestResult('error');
@@ -245,6 +247,7 @@ const TenantIntegrations: React.FC = () => {
             title: 'Validation Failed',
             message: 'Please provide a name and description for the integration',
             color: 'red',
+            autoClose: 5000
           });
         }
       } catch (error) {
@@ -255,6 +258,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Connection Test Failed',
           message: 'The integration credentials are invalid or the service is unavailable',
           color: 'red',
+          autoClose: 5000
         });
       } finally {
         setTestingConnection(false);
@@ -297,6 +301,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Integration Added',
           message: 'The cloud integration has been successfully added',
           color: 'green',
+          autoClose: 3000
         });
       } catch (error) {
         console.error('Failed to save integration:', error);
@@ -305,6 +310,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Error',
           message: 'Failed to add the integration. Please try again.',
           color: 'red',
+          autoClose: 5000
         });
       } finally {
         setSaving(false);
@@ -328,6 +334,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Integration Removed',
           message: 'The cloud integration has been successfully removed',
           color: 'green',
+          autoClose: 3000
         });
       } catch (error) {
         console.error('Failed to delete integration:', error);
@@ -336,6 +343,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Error',
           message: 'Failed to remove the integration. Please try again.',
           color: 'red',
+          autoClose: 5000
         });
       }
     }
@@ -374,6 +382,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Token Refreshed',
           message: 'The integration token has been successfully refreshed',
           color: 'green',
+          autoClose: 3000
         });
       } catch (error) {
         console.error('Failed to refresh token:', error);
@@ -382,6 +391,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'Error',
           message: 'Failed to refresh the integration token. Please try again.',
           color: 'red',
+          autoClose: 5000
         });
       } finally {
         setRefreshingToken(null);
@@ -411,6 +421,7 @@ const TenantIntegrations: React.FC = () => {
           title: 'No Available Providers',
           message: 'All cloud providers are already integrated with this tenant.',
           color: 'yellow',
+          autoClose: 5000
         });
       }
     }
