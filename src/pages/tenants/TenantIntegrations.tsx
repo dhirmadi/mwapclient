@@ -84,14 +84,15 @@ const TenantIntegrations: React.FC = () => {
     initialValues: {
       providerId: '',
       status: 'active' as const,
-      accessToken: '',
-      refreshToken: '',
-      tokenExpiresAt: '',
+      name: '',
+      description: '',
       scopesGranted: [] as string[],
       metadata: {} as Record<string, unknown>,
     },
     validate: {
       providerId: (value) => (!value ? 'Please select a cloud provider' : null),
+      name: (value) => (!value ? 'Please provide a name for this integration' : null),
+      description: (value) => (!value ? 'Please provide a description for this integration' : null),
     },
   });
 
@@ -136,11 +137,9 @@ const TenantIntegrations: React.FC = () => {
     if (selectedProvider) {
       form.setFieldValue('providerId', selectedProvider._id);
       form.setFieldValue('scopesGranted', selectedProvider.scopes || []);
+      form.setFieldValue('name', `${selectedProvider.name} Integration`);
+      form.setFieldValue('description', `Integration with ${selectedProvider.name} for cloud storage access.`);
       
-      // Set up token expiration (1 hour from now)
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + 3600 * 1000); // 1 hour from now
-      form.setFieldValue('tokenExpiresAt', expiresAt.toISOString());
       
       // Set up metadata based on provider type
       const metadata: Record<string, unknown> = {
@@ -229,14 +228,25 @@ const TenantIntegrations: React.FC = () => {
         //   credentials: form.values.credentials
         // });
         
-        // For now, we'll simulate success
+        // For now, we'll simulate success based on having valid name and description
+        if (form.values.name && form.values.description) {
         setTestResult('success');
         
         notifications.show({
-          title: 'Connection Test Successful',
-          message: 'The integration credentials are valid',
+          title: 'Validation Successful',
           color: 'green',
+
+          message: 'The integration information is valid',
         });
+        } else {
+          setTestResult('error');
+          
+          notifications.show({
+            title: 'Validation Failed',
+            message: 'Please provide a name and description for the integration',
+            color: 'red',
+          });
+        }
       } catch (error) {
         console.error('Connection test failed:', error);
         setTestResult('error');
@@ -267,13 +277,10 @@ const TenantIntegrations: React.FC = () => {
             scopesGranted: form.values.scopesGranted,
             metadata: {
               ...form.values.metadata,
-              // Store these values in metadata since they're not part of the interface
-              // Use the same structure as in the OAuth callback
-              oauth: {
-                accessToken: form.values.accessToken,
-                refreshToken: form.values.refreshToken,
-                tokenExpiresAt: form.values.tokenExpiresAt
-              }
+              // According to the Cloud Provider Integration Payload Guide,
+              // we should not include OAuth tokens in the initial creation
+              displayName: form.values.name || `Integration (${new Date().toLocaleDateString()})`,
+              description: form.values.description || 'Manually created integration'
             }
           }
         });
@@ -349,14 +356,14 @@ const TenantIntegrations: React.FC = () => {
         const refreshToken = `refresh_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         const accessToken = `access_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         
+        // According to the Cloud Provider Integration Payload Guide,
+        // token refresh should be handled by the backend
+        // For now, we'll just update the status to active
         await api.updateTenantIntegration(roles.tenantId, integrationId, {
           status: 'active',
           metadata: {
-            oauth: {
-              accessToken,
-              refreshToken,
-              tokenExpiresAt: expiresAt.toISOString()
-            }
+            lastRefreshed: new Date().toISOString(),
+            refreshAttempt: 'success'
           }
         });
         
@@ -705,26 +712,28 @@ const TenantIntegrations: React.FC = () => {
               />
               
               <TextInput
-                label="Access Token"
-                placeholder="Enter access token"
-                {...form.getInputProps('accessToken')}
+                label="Integration Name"
+                placeholder="Enter a name for this integration"
+                required
+                {...form.getInputProps('name')}
               />
               
-              <TextInput
-                label="Refresh Token"
-                placeholder="Enter refresh token"
-                {...form.getInputProps('refreshToken')}
+              <Textarea
+                label="Description"
+                placeholder="Enter a description for this integration"
+                required
+                {...form.getInputProps('description')}
               />
               
               {testResult === 'success' && (
-                <Alert icon={<IconCheck size={16} />} title="Connection Successful" color="green">
-                  The credentials are valid and the connection was established successfully.
+                <Alert icon={<IconCheck size={16} />} title="Validation Successful" color="green">
+                  The integration information is valid. You can now save this integration.
                 </Alert>
               )}
               
               {testResult === 'error' && (
-                <Alert icon={<IconX size={16} />} title="Connection Failed" color="red">
-                  The connection test failed. Please check your credentials and try again.
+                <Alert icon={<IconX size={16} />} title="Validation Failed" color="red">
+                  Please provide a valid name and description for this integration.
                 </Alert>
               )}
               
@@ -735,7 +744,7 @@ const TenantIntegrations: React.FC = () => {
                   loading={testingConnection}
                   disabled={saving}
                 >
-                  Test Connection
+                  Validate Information
                 </Button>
                 
                 <Group spacing="xs">
