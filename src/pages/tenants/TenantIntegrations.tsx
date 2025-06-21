@@ -55,6 +55,7 @@ const TenantIntegrations: React.FC = () => {
     isLoading: loadingProviders,
     createIntegration,
     deleteIntegration,
+    checkIntegrationExists,
     isCreatingIntegration,
     isDeletingIntegration
   } = useCloudProviders();
@@ -186,7 +187,15 @@ const TenantIntegrations: React.FC = () => {
     
     try {
       // First, check if an integration already exists for this provider
-      const exists = await api.checkIntegrationExists(roles.tenantId, provider._id);
+      const exists = await new Promise<boolean>(resolve => {
+        checkIntegrationExists({ 
+          tenantId: roles.tenantId, 
+          providerId: provider._id 
+        }, {
+          onSuccess: (result) => resolve(result),
+          onError: () => resolve(false)
+        });
+      });
       if (exists) {
         setTimeout(() => {
           notifications.show({
@@ -313,7 +322,15 @@ const TenantIntegrations: React.FC = () => {
       
       try {
         // First check if an integration already exists for this provider
-        const exists = await api.checkIntegrationExists(roles.tenantId, form.values.providerId);
+        const exists = await new Promise<boolean>(resolve => {
+          checkIntegrationExists({ 
+            tenantId: roles.tenantId, 
+            providerId: form.values.providerId 
+          }, {
+            onSuccess: (result) => resolve(result),
+            onError: () => resolve(false)
+          });
+        });
         if (exists) {
           setTimeout(() => {
             notifications.show({
