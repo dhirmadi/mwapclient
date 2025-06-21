@@ -66,7 +66,9 @@ const OAuthCallback: React.FC = () => {
         }
 
         // Parse state parameter (contains tenantId and integrationId)
+        console.log('Raw state parameter:', state);
         const stateData = parseOAuthState(state);
+        console.log('Parsed state data:', stateData);
         
         if (!stateData) {
           setError('Invalid state parameter');
@@ -76,8 +78,13 @@ const OAuthCallback: React.FC = () => {
 
         // In the new approach, state contains tenantId and integrationId (not providerId)
         const { tenantId, integrationId, timestamp } = stateData;
+        console.log('Extracted tenantId:', tenantId);
+        console.log('Extracted integrationId:', integrationId);
+        console.log('Extracted timestamp:', timestamp);
 
         if (!tenantId || !integrationId) {
+          console.error('Missing tenant ID or integration ID in state parameter');
+          console.error('Full state data:', stateData);
           setError('Missing tenant ID or integration ID in state parameter');
           setLoading(false);
           return;
