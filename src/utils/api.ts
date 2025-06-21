@@ -367,16 +367,72 @@ const api = {
   
   createTenantIntegration: debugApiCall('createTenantIntegration', async (tenantId: string, data: CloudProviderIntegrationCreate): Promise<CloudProviderIntegration> => {
     const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
+    console.log('Raw API response from createTenantIntegration:', response);
+    
     // Handle both response formats
+    if (response.data && response.data.success && response.data.data) {
+      console.log('Using success.data format:', response.data.data);
+      return response.data.data;
+    }
+    
+    console.log('Using direct data format:', response.data);
+    return response.data;
+  }),
+  
+  /**
+   * Update OAuth tokens for an existing integration using the authorization code
+   * This is the recommended way to handle OAuth tokens after the OAuth flow completes
+   */
+  updateIntegrationTokens: debugApiCall('updateIntegrationTokens', async (
+    tenantId: string, 
+    integrationId: string, 
+    data: { authorizationCode: string; redirectUri: string }
+  ): Promise<CloudProviderIntegration> => {
+    const response = await apiClient.post(`/tenants/${tenantId}/integrations/${integrationId}/update-tokens`, data);
     if (response.data && response.data.success && response.data.data) {
       return response.data.data;
     }
     return response.data;
   }),
   
-  // Note: We're not using a dedicated OAuth callback endpoint
-  // Instead, we're using the createTenantIntegration endpoint to create the integration
-  // with the authorization code and other OAuth-related information stored in metadata
+  /**
+   * Refresh OAuth tokens for an existing integration
+   * This should be called when the access token expires
+   */
+  refreshIntegrationToken: debugApiCall('refreshIntegrationToken', async (
+    tenantId: string, 
+    integrationId: string
+  ): Promise<CloudProviderIntegration> => {
+    const response = await apiClient.post(`/tenants/${tenantId}/integrations/${integrationId}/refresh-token`);
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  }),
+  
+  /**
+   * Check if an integration already exists for a tenant and provider
+   * This helps prevent duplicate integrations
+   */
+  checkIntegrationExists: debugApiCall('checkIntegrationExists', async (
+    tenantId: string, 
+    providerId: string
+  ): Promise<boolean> => {
+    try {
+      const response = await apiClient.get(`/tenants/${tenantId}/integrations`, {
+        params: { providerId }
+      });
+      
+      const integrations = response.data && response.data.success && response.data.data 
+        ? response.data.data 
+        : response.data;
+      
+      return Array.isArray(integrations) && integrations.length > 0;
+    } catch (error) {
+      console.error('Error checking if integration exists:', error);
+      return false;
+    }
+  }),
   
   updateTenantIntegration: debugApiCall('updateTenantIntegration', async (tenantId: string, integrationId: string, data: Partial<CloudProviderIntegration>): Promise<CloudProviderIntegration> => {
     const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);

@@ -201,6 +201,14 @@ const TenantIntegrations: React.FC = () => {
       const integration = await api.createTenantIntegration(roles.tenantId, integrationData);
       console.log('Integration created:', integration);
       
+      // Check if the integration has an _id property
+      if (!integration._id) {
+        console.error('Integration response is missing _id property:', integration);
+        throw new Error('Integration response is missing _id property');
+      }
+      
+      console.log('Integration ID for OAuth state:', integration._id);
+      
       // Create state parameter with tenant and integration info
       const state = createOAuthState(roles.tenantId, integration._id);
       
