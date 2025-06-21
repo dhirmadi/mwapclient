@@ -6,6 +6,7 @@ import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { getOAuthRedirectUri, parseOAuthState } from '../../utils/oauth';
+import api from '../../utils/api';
 
 /**
  * OAuthCallback component handles the OAuth callback from cloud providers
@@ -101,23 +102,50 @@ const OAuthCallback: React.FC = () => {
         }
 
         // Update the integration tokens using the dedicated endpoint
-        await updateIntegrationTokens({
-          tenantId,
-          integrationId,
-          authorizationCode: code,
-          redirectUri: getOAuthRedirectUri()
-        });
+        try {
+          console.log('Calling updateIntegrationTokens with:', {
+            tenantId,
+            integrationId,
+            authorizationCode: code,
+            redirectUri: getOAuthRedirectUri()
+          });
+          
+          // Use the API client directly as a fallback
+          if (typeof updateIntegrationTokens !== 'function') {
+            console.log('updateIntegrationTokens is not a function, using API client directly');
+            await api.updateIntegrationTokens(
+              tenantId,
+              integrationId,
+              {
+                authorizationCode: code,
+                redirectUri: getOAuthRedirectUri()
+              }
+            );
+          } else {
+            await updateIntegrationTokens({
+              tenantId,
+              integrationId,
+              authorizationCode: code,
+              redirectUri: getOAuthRedirectUri()
+            });
+          }
+        } catch (tokenError) {
+          console.error('Error updating integration tokens:', tokenError);
+          throw tokenError;
+        }
 
         // Handle success
         setSuccess(true);
         setLoading(false);
 
-        notifications.show({
-          title: 'Integration Successful',
-          message: 'Cloud provider integration has been successfully set up',
-          color: 'green',
-          icon: <IconCheck size={16} />
-        });
+        setTimeout(() => {
+          notifications.show({
+            title: 'Integration Successful',
+            message: 'Cloud provider integration has been successfully set up',
+            color: 'green',
+            icon: <IconCheck size={16} />
+          });
+        }, 100);
 
         // Redirect after a short delay
         setTimeout(() => {
@@ -149,11 +177,13 @@ const OAuthCallback: React.FC = () => {
         
         setLoading(false);
         
-        notifications.show({
-          title: 'Authentication Failed',
-          message: error.message || 'Failed to complete OAuth authentication',
-          color: 'red'
-        });
+        setTimeout(() => {
+          notifications.show({
+            title: 'Authentication Failed',
+            message: error.message || 'Failed to complete OAuth authentication',
+            color: 'red'
+          });
+        }, 100);
       }
     };
 
