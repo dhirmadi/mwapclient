@@ -170,7 +170,7 @@ const TenantIntegrations: React.FC = () => {
     }
   };
   
-  // Initiate OAuth flow
+  // Initiate OAuth flow - simplified implementation
   const initiateOAuthFlow = async (provider: CloudProvider) => {
     if (!roles?.tenantId) {
       setTimeout(() => {
@@ -185,24 +185,10 @@ const TenantIntegrations: React.FC = () => {
     }
     
     try {
-      // First, check if an integration already exists for this provider
-      const exists = await api.checkIntegrationExists(roles.tenantId, provider._id);
-      if (exists) {
-        setTimeout(() => {
-          notifications.show({
-            title: 'Integration Exists',
-            message: 'An integration for this provider already exists.',
-            color: 'yellow',
-            autoClose: 5000
-          });
-        }, 100);
-        return;
-      }
-      
-      // Create the integration first
+      // Create the integration entry immediately
       const integration = await api.createTenantIntegration(roles.tenantId, {
         providerId: provider._id,
-        status: 'active',
+        status: 'pending', // Mark as pending until OAuth completes
         scopesGranted: provider.scopes,
         metadata: {
           providerName: provider.name,
@@ -222,7 +208,7 @@ const TenantIntegrations: React.FC = () => {
       authUrl.searchParams.append('client_id', provider.clientId);
       authUrl.searchParams.append('response_type', 'code');
       
-      // Use the configured redirect URI that matches what's configured in the OAuth provider
+      // Use the configured redirect URI
       const redirectUri = getOAuthRedirectUri();
       authUrl.searchParams.append('redirect_uri', redirectUri);
       authUrl.searchParams.append('state', state);

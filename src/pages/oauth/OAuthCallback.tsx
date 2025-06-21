@@ -4,17 +4,20 @@ import { Paper, Title, Text, Loader, Alert, Button, Group } from '@mantine/core'
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../utils/api';
+import { useCloudProviders } from '../../hooks/useCloudProviders';
 import { getOAuthRedirectUri, parseOAuthState } from '../../utils/oauth';
 
 /**
  * OAuthCallback component handles the OAuth callback from cloud providers
  * It extracts the authorization code from the URL and exchanges it for tokens
+ * using the dedicated token update endpoint
  */
 const OAuthCallback: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { roles } = useAuth();
+  const { updateIntegrationTokens, isUpdatingIntegrationTokens, deleteIntegration } = useCloudProviders();
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -31,7 +34,26 @@ const OAuthCallback: React.FC = () => {
 
         // Handle error from OAuth provider
         if (error) {
-          setError(`Authentication error: ${error}${errorDescription ? `: ${errorDescription}` : ''}`);
+          const errorMsg = `Authentication error: ${error}${errorDescription ? `: ${errorDescription}` : ''}`;
+          setError(errorMsg);
+          
+          // If we have state data, try to delete the pending integration
+          if (state) {
+            try {
+              const stateData = parseOAuthState(state);
+              if (stateData && stateData.tenantId && stateData.integrationId) {
+                // Delete the pending integration since OAuth failed
+                await deleteIntegration({
+                  tenantId: stateData.tenantId,
+                  integrationId: stateData.integrationId
+                });
+                console.log('Deleted pending integration after OAuth failure');
+              }
+            } catch (deleteError) {
+              console.error('Failed to delete pending integration:', deleteError);
+            }
+          }
+          
           setLoading(false);
           return;
         }
@@ -43,7 +65,7 @@ const OAuthCallback: React.FC = () => {
           return;
         }
 
-        // Parse state parameter (contains tenantId and providerId)
+        // Parse state parameter (contains tenantId and integrationId)
         const stateData = parseOAuthState(state);
         
         if (!stateData) {
@@ -52,41 +74,31 @@ const OAuthCallback: React.FC = () => {
           return;
         }
 
-        const { tenantId, providerId } = stateData;
+        // In the new approach, state contains tenantId and integrationId (not providerId)
+        const { tenantId, integrationId, timestamp } = stateData;
 
-        if (!tenantId || !providerId) {
-          setError('Missing tenant ID or provider ID in state parameter');
+        if (!tenantId || !integrationId) {
+          setError('Missing tenant ID or integration ID in state parameter');
           setLoading(false);
           return;
         }
 
-        // Since we don't have a dedicated OAuth callback endpoint on the backend,
-        // we'll create the integration directly using the authorization code
-        
-        // In a real implementation, we would exchange the code for tokens on the backend
-        // For now, we'll simulate this by creating a mock token
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + 3600 * 1000); // 1 hour from now
-        const accessToken = `access_${Date.now()}_${code.substring(0, 8)}`;
-        const refreshToken = `refresh_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-        
-        // Create the integration using the existing endpoint
-        // Make sure we follow the CloudProviderIntegrationCreate interface
-        const response = await api.createTenantIntegration(tenantId, {
-          providerId,
-          status: 'active',
-          scopesGranted: ['files.content.read', 'files.content.write', 'files.metadata.read'],
-          metadata: {
-            // Store OAuth-related information in metadata
-            // The backend will extract these values and store them properly
-            oauth: {
-              accessToken,
-              refreshToken,
-              tokenExpiresAt: expiresAt.toISOString(),
-              authorizationCode: code,
-              redirectUri: getOAuthRedirectUri()
-            }
+        // Check for state expiration (optional, 15 minutes)
+        if (timestamp) {
+          const stateAge = Date.now() - timestamp;
+          if (stateAge > 15 * 60 * 1000) {
+            setError('OAuth state has expired. Please try again.');
+            setLoading(false);
+            return;
           }
+        }
+
+        // Update the integration tokens using the dedicated endpoint
+        await updateIntegrationTokens({
+          tenantId,
+          integrationId,
+          authorizationCode: code,
+          redirectUri: getOAuthRedirectUri()
         });
 
         // Handle success
@@ -107,12 +119,39 @@ const OAuthCallback: React.FC = () => {
       } catch (error: any) {
         console.error('OAuth callback error:', error);
         setError(error.message || 'Failed to complete OAuth authentication');
+        
+        // Try to delete the pending integration if we have the state data
+        try {
+          const params = new URLSearchParams(location.search);
+          const state = params.get('state');
+          
+          if (state) {
+            const stateData = parseOAuthState(state);
+            if (stateData && stateData.tenantId && stateData.integrationId) {
+              // Delete the pending integration since OAuth failed
+              await deleteIntegration({
+                tenantId: stateData.tenantId,
+                integrationId: stateData.integrationId
+              });
+              console.log('Deleted pending integration after OAuth error');
+            }
+          }
+        } catch (deleteError) {
+          console.error('Failed to delete pending integration:', deleteError);
+        }
+        
         setLoading(false);
+        
+        notifications.show({
+          title: 'Authentication Failed',
+          message: error.message || 'Failed to complete OAuth authentication',
+          color: 'red'
+        });
       }
     };
 
     handleOAuthCallback();
-  }, [location, navigate, roles]);
+  }, [location, navigate, updateIntegrationTokens, deleteIntegration]);
 
   return (
     <div style={{ 
@@ -125,7 +164,7 @@ const OAuthCallback: React.FC = () => {
       <Paper shadow="md" p="xl" radius="md" style={{ maxWidth: '500px', width: '100%' }}>
         <Title order={2} mb="md">Cloud Provider Authentication</Title>
 
-        {loading && (
+        {(loading || isUpdatingIntegrationTokens) && (
           <div style={{ textAlign: 'center', padding: '30px' }}>
             <Loader size="lg" variant="dots" mb="md" />
             <Text>Processing authentication response...</Text>
