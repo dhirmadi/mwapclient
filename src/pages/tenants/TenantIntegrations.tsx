@@ -98,7 +98,10 @@ const TenantIntegrations: React.FC = () => {
 
   // Process and merge data when integrations or providers change
   useEffect(() => {
-    if (!tenantIntegrations || !cloudProviders) {
+    // Always set a default empty array if data is not available
+    if (!cloudProviders) {
+      setIntegrations([]);
+      setUsedProviderIds([]);
       return;
     }
     
@@ -168,20 +171,49 @@ const TenantIntegrations: React.FC = () => {
   };
   
   // Initiate OAuth flow
-  const initiateOAuthFlow = (provider: CloudProvider) => {
+  const initiateOAuthFlow = async (provider: CloudProvider) => {
     if (!roles?.tenantId) {
-      notifications.show({
-        title: 'Error',
-        message: 'Tenant ID is required to initiate OAuth flow',
-        color: 'red',
-        autoClose: 5000
-      });
+      setTimeout(() => {
+        notifications.show({
+          title: 'Error',
+          message: 'Tenant ID is required to initiate OAuth flow',
+          color: 'red',
+          autoClose: 5000
+        });
+      }, 100);
       return;
     }
     
     try {
-      // Create state parameter with tenant and provider info
-      const state = createOAuthState(roles.tenantId, provider._id);
+      // First, check if an integration already exists for this provider
+      const exists = await api.checkIntegrationExists(roles.tenantId, provider._id);
+      if (exists) {
+        setTimeout(() => {
+          notifications.show({
+            title: 'Integration Exists',
+            message: 'An integration for this provider already exists.',
+            color: 'yellow',
+            autoClose: 5000
+          });
+        }, 100);
+        return;
+      }
+      
+      // Create the integration first
+      const integration = await api.createTenantIntegration(roles.tenantId, {
+        providerId: provider._id,
+        status: 'active',
+        scopesGranted: provider.scopes,
+        metadata: {
+          providerName: provider.name,
+          providerSlug: provider.slug,
+          displayName: `${provider.name} Integration`,
+          description: `Integration with ${provider.name} for cloud storage access.`
+        }
+      });
+      
+      // Create state parameter with tenant and integration info
+      const state = createOAuthState(roles.tenantId, integration._id);
       
       // Build OAuth URL
       const authUrl = new URL(provider.authUrl);
@@ -190,7 +222,7 @@ const TenantIntegrations: React.FC = () => {
       authUrl.searchParams.append('client_id', provider.clientId);
       authUrl.searchParams.append('response_type', 'code');
       
-      // Use the configured redirect URI that matches what's configured in the Dropbox app
+      // Use the configured redirect URI that matches what's configured in the OAuth provider
       const redirectUri = getOAuthRedirectUri();
       authUrl.searchParams.append('redirect_uri', redirectUri);
       authUrl.searchParams.append('state', state);
@@ -202,15 +234,17 @@ const TenantIntegrations: React.FC = () => {
       
       // Redirect to OAuth provider
       window.location.href = authUrl.toString();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to initiate OAuth flow:', error);
       
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to initiate OAuth authentication. Please try again.',
-        color: 'red',
-        autoClose: 5000
-      });
+      setTimeout(() => {
+        notifications.show({
+          title: 'Error',
+          message: error.message || 'Failed to initiate OAuth authentication. Please try again.',
+          color: 'red',
+          autoClose: 5000
+        });
+      }, 100);
     }
   };
   
@@ -232,34 +266,40 @@ const TenantIntegrations: React.FC = () => {
         
         // For now, we'll simulate success based on having valid name and description
         if (form.values.name && form.values.description) {
-        setTestResult('success');
-        
-        notifications.show({
-          title: 'Validation Successful',
-          color: 'green',
-          message: 'The integration information is valid',
-          autoClose: 3000
-        });
+          setTestResult('success');
+          
+          setTimeout(() => {
+            notifications.show({
+              title: 'Validation Successful',
+              color: 'green',
+              message: 'The integration information is valid',
+              autoClose: 3000
+            });
+          }, 100);
         } else {
           setTestResult('error');
           
-          notifications.show({
-            title: 'Validation Failed',
-            message: 'Please provide a name and description for the integration',
-            color: 'red',
-            autoClose: 5000
-          });
+          setTimeout(() => {
+            notifications.show({
+              title: 'Validation Failed',
+              message: 'Please provide a name and description for the integration',
+              color: 'red',
+              autoClose: 5000
+            });
+          }, 100);
         }
       } catch (error) {
         console.error('Connection test failed:', error);
         setTestResult('error');
         
-        notifications.show({
-          title: 'Connection Test Failed',
-          message: 'The integration credentials are invalid or the service is unavailable',
-          color: 'red',
-          autoClose: 5000
-        });
+        setTimeout(() => {
+          notifications.show({
+            title: 'Connection Test Failed',
+            message: 'The integration credentials are invalid or the service is unavailable',
+            color: 'red',
+            autoClose: 5000
+          });
+        }, 100);
       } finally {
         setTestingConnection(false);
       }
@@ -272,6 +312,21 @@ const TenantIntegrations: React.FC = () => {
       setSaving(true);
       
       try {
+        // First check if an integration already exists for this provider
+        const exists = await api.checkIntegrationExists(roles.tenantId, form.values.providerId);
+        if (exists) {
+          setTimeout(() => {
+            notifications.show({
+              title: 'Integration Exists',
+              message: 'An integration for this provider already exists.',
+              color: 'yellow',
+              autoClose: 5000
+            });
+          }, 100);
+          setSaving(false);
+          return;
+        }
+        
         // Create the integration using only the fields defined in CloudProviderIntegrationCreate
         await createIntegration({
           tenantId: roles.tenantId,
@@ -295,23 +350,39 @@ const TenantIntegrations: React.FC = () => {
         setSelectedProvider(null);
         
         // Refresh the integrations list
-        refetchIntegrations();
+        await refetchIntegrations();
         
-        notifications.show({
-          title: 'Integration Added',
-          message: 'The cloud integration has been successfully added',
-          color: 'green',
-          autoClose: 3000
-        });
-      } catch (error) {
+        setTimeout(() => {
+          notifications.show({
+            title: 'Integration Added',
+            message: 'The cloud integration has been successfully added',
+            color: 'green',
+            autoClose: 3000
+          });
+        }, 100);
+      } catch (error: any) {
         console.error('Failed to save integration:', error);
         
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to add the integration. Please try again.',
-          color: 'red',
-          autoClose: 5000
-        });
+        // Handle specific error for duplicate integrations
+        if (error.message && error.message.includes('already exists')) {
+          setTimeout(() => {
+            notifications.show({
+              title: 'Duplicate Integration',
+              message: 'An integration for this provider already exists.',
+              color: 'yellow',
+              autoClose: 5000
+            });
+          }, 100);
+        } else {
+          setTimeout(() => {
+            notifications.show({
+              title: 'Error',
+              message: error.message || 'Failed to add the integration. Please try again.',
+              color: 'red',
+              autoClose: 5000
+            });
+          }, 100);
+        }
       } finally {
         setSaving(false);
       }
@@ -328,23 +399,29 @@ const TenantIntegrations: React.FC = () => {
         });
         
         // Refresh the integrations list
-        refetchIntegrations();
+        await refetchIntegrations();
         
-        notifications.show({
-          title: 'Integration Removed',
-          message: 'The cloud integration has been successfully removed',
-          color: 'green',
-          autoClose: 3000
-        });
+        // Use setTimeout to ensure the notification is shown after the state is updated
+        setTimeout(() => {
+          notifications.show({
+            title: 'Integration Removed',
+            message: 'The cloud integration has been successfully removed',
+            color: 'green',
+            autoClose: 3000
+          });
+        }, 100);
       } catch (error) {
         console.error('Failed to delete integration:', error);
         
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to remove the integration. Please try again.',
-          color: 'red',
-          autoClose: 5000
-        });
+        // Use setTimeout to ensure the notification is shown after the state is updated
+        setTimeout(() => {
+          notifications.show({
+            title: 'Error',
+            message: 'Failed to remove the integration. Please try again.',
+            color: 'red',
+            autoClose: 5000
+          });
+        }, 100);
       }
     }
   };
@@ -355,44 +432,33 @@ const TenantIntegrations: React.FC = () => {
       setRefreshingToken(integrationId);
       
       try {
-        // In a real implementation, you would call an API endpoint to refresh the token
-        // For now, we'll update the integration with a new expiration date
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + 3600 * 1000); // 1 hour from now
-        
-        // Generate a mock refresh token
-        const refreshToken = `refresh_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-        const accessToken = `access_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-        
-        // According to the Cloud Provider Integration Payload Guide,
-        // token refresh should be handled by the backend
-        // For now, we'll just update the status to active
-        await api.updateTenantIntegration(roles.tenantId, integrationId, {
-          status: 'active',
-          metadata: {
-            lastRefreshed: new Date().toISOString(),
-            refreshAttempt: 'success'
-          }
-        });
+        // Use the dedicated token refresh endpoint
+        await api.refreshIntegrationToken(roles.tenantId, integrationId);
         
         // Refresh the integrations list
-        refetchIntegrations();
+        await refetchIntegrations();
         
-        notifications.show({
-          title: 'Token Refreshed',
-          message: 'The integration token has been successfully refreshed',
-          color: 'green',
-          autoClose: 3000
-        });
-      } catch (error) {
+        // Use setTimeout to ensure the notification is shown after the state is updated
+        setTimeout(() => {
+          notifications.show({
+            title: 'Token Refreshed',
+            message: 'The integration token has been successfully refreshed',
+            color: 'green',
+            autoClose: 3000
+          });
+        }, 100);
+      } catch (error: any) {
         console.error('Failed to refresh token:', error);
         
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to refresh the integration token. Please try again.',
-          color: 'red',
-          autoClose: 5000
-        });
+        // Use setTimeout to ensure the notification is shown after the state is updated
+        setTimeout(() => {
+          notifications.show({
+            title: 'Error',
+            message: error.message || 'Failed to refresh the integration token. Please try again.',
+            color: 'red',
+            autoClose: 5000
+          });
+        }, 100);
       } finally {
         setRefreshingToken(null);
       }
@@ -417,12 +483,14 @@ const TenantIntegrations: React.FC = () => {
           // Don't set a selected provider yet - user will choose
         }
       } else {
-        notifications.show({
-          title: 'No Available Providers',
-          message: 'All cloud providers are already integrated with this tenant.',
-          color: 'yellow',
-          autoClose: 5000
-        });
+        setTimeout(() => {
+          notifications.show({
+            title: 'No Available Providers',
+            message: 'All cloud providers are already integrated with this tenant.',
+            color: 'yellow',
+            autoClose: 5000
+          });
+        }, 100);
       }
     }
   };
