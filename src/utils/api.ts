@@ -388,10 +388,16 @@ const api = {
     integrationId: string, 
     data: { authorizationCode: string; redirectUri: string }
   ): Promise<CloudProviderIntegration> => {
+    console.log('API updateIntegrationTokens called with:', { tenantId, integrationId, data });
     const response = await apiClient.post(`/tenants/${tenantId}/integrations/${integrationId}/update-tokens`, data);
+    console.log('Raw API response from updateIntegrationTokens:', response);
+    
     if (response.data && response.data.success && response.data.data) {
+      console.log('Using success.data format:', response.data.data);
       return response.data.data;
     }
+    
+    console.log('Using direct data format:', response.data);
     return response.data;
   }),
   
