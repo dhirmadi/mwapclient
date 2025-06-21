@@ -55,10 +55,62 @@ export const useCloudProviders = () => {
     },
   });
 
+  // Check if an integration already exists for a tenant and provider
+  const checkIntegrationExistsMutation = useMutation({
+    mutationFn: ({ tenantId, providerId }: { tenantId: string; providerId: string }) => 
+      api.checkIntegrationExists(tenantId, providerId)
+  });
+
   // Create a tenant integration
   const createIntegrationMutation = useMutation({
-    mutationFn: ({ tenantId, data }: { tenantId: string; data: CloudProviderIntegrationCreate }) => 
-      api.createTenantIntegration(tenantId, data),
+    mutationFn: async ({ tenantId, data }: { tenantId: string; data: CloudProviderIntegrationCreate }) => {
+      // First check if an integration already exists for this provider
+      const exists = await api.checkIntegrationExists(tenantId, data.providerId);
+      if (exists) {
+        throw new Error('Integration already exists for this provider');
+      }
+      return api.createTenantIntegration(tenantId, data);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+    },
+  });
+
+  // Update integration tokens using authorization code
+  const updateIntegrationTokensMutation = useMutation({
+    mutationFn: ({ 
+      tenantId, 
+      integrationId, 
+      authorizationCode, 
+      redirectUri 
+    }: { 
+      tenantId: string; 
+      integrationId: string; 
+      authorizationCode: string; 
+      redirectUri: string;
+    }) => {
+      console.log('updateIntegrationTokensMutation called with:', {
+        tenantId, integrationId, authorizationCode, redirectUri
+      });
+      return api.updateIntegrationTokens(tenantId, integrationId, { authorizationCode, redirectUri });
+    },
+    onSuccess: (_, variables) => {
+      console.log('updateIntegrationTokensMutation success, invalidating queries');
+      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+    },
+    onError: (error) => {
+      console.error('updateIntegrationTokensMutation error:', error);
+    }
+  });
+
+  // Refresh integration token
+  const refreshIntegrationTokenMutation = useMutation({
+    mutationFn: ({ tenantId, integrationId }: { tenantId: string; integrationId: string }) => 
+      api.refreshIntegrationToken(tenantId, integrationId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
       queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
@@ -107,11 +159,24 @@ export const useCloudProviders = () => {
     deleteError: deleteCloudProviderMutation.error,
     
     // Tenant Integrations
+    checkIntegrationExists: checkIntegrationExistsMutation.mutate,
+    isCheckingIntegration: checkIntegrationExistsMutation.isPending,
+    checkIntegrationError: checkIntegrationExistsMutation.error,
+    
     createIntegration: createIntegrationMutation.mutate,
-    deleteIntegration: deleteIntegrationMutation.mutate,
     isCreatingIntegration: createIntegrationMutation.isPending,
-    isDeletingIntegration: deleteIntegrationMutation.isPending,
     createIntegrationError: createIntegrationMutation.error,
+    
+    updateIntegrationTokens: updateIntegrationTokensMutation.mutate,
+    isUpdatingIntegrationTokens: updateIntegrationTokensMutation.isPending,
+    updateIntegrationTokensError: updateIntegrationTokensMutation.error,
+    
+    refreshIntegrationToken: refreshIntegrationTokenMutation.mutate,
+    isRefreshingIntegrationToken: refreshIntegrationTokenMutation.isPending,
+    refreshIntegrationTokenError: refreshIntegrationTokenMutation.error,
+    
+    deleteIntegration: deleteIntegrationMutation.mutate,
+    isDeletingIntegration: deleteIntegrationMutation.isPending,
     deleteIntegrationError: deleteIntegrationMutation.error,
   };
 };
