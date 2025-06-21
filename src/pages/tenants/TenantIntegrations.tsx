@@ -185,18 +185,21 @@ const TenantIntegrations: React.FC = () => {
     }
     
     try {
-      // Create the integration entry immediately
-      const integration = await api.createTenantIntegration(roles.tenantId, {
+      // Create the integration entry with minimal required fields
+      const integrationData: CloudProviderIntegrationCreate = {
         providerId: provider._id,
-        status: 'pending', // Mark as pending until OAuth completes
-        scopesGranted: provider.scopes,
+        // Use 'active' as the default status per API docs
         metadata: {
           providerName: provider.name,
           providerSlug: provider.slug,
           displayName: `${provider.name} Integration`,
           description: `Integration with ${provider.name} for cloud storage access.`
         }
-      });
+      };
+      
+      console.log('Creating integration with data:', integrationData);
+      const integration = await api.createTenantIntegration(roles.tenantId, integrationData);
+      console.log('Integration created:', integration);
       
       // Create state parameter with tenant and integration info
       const state = createOAuthState(roles.tenantId, integration._id);
@@ -313,17 +316,15 @@ const TenantIntegrations: React.FC = () => {
           return;
         }
         
-        // Create the integration using only the fields defined in CloudProviderIntegrationCreate
+        // Create the integration with minimal required fields
         await createIntegration({
           tenantId: roles.tenantId,
           data: {
             providerId: form.values.providerId,
-            status: form.values.status,
-            scopesGranted: form.values.scopesGranted,
             metadata: {
-              ...form.values.metadata,
-              // According to the Cloud Provider Integration Payload Guide,
-              // we should not include OAuth tokens in the initial creation
+              // Only include the required metadata fields
+              providerName: selectedProvider?.name || 'Custom Provider',
+              providerSlug: selectedProvider?.slug || 'custom',
               displayName: form.values.name || `Integration (${new Date().toLocaleDateString()})`,
               description: form.values.description || 'Manually created integration'
             }
