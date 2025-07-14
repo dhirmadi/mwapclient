@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../utils/api';
 import { 
-  CloudProvider, 
   CloudProviderCreate, 
   CloudProviderUpdate,
   CloudProviderIntegrationCreate
@@ -13,7 +12,6 @@ import { useAuth } from '../context/AuthContext';
  */
 export const useCloudProviders = () => {
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useAuth();
 
   // Fetch all cloud providers - available to both superadmins and tenant managers
   const { 
@@ -84,7 +82,7 @@ export const useCloudProviders = () => {
     return useQuery({
       queryKey: ['cloud-provider', id],
       queryFn: () => api.fetchCloudProviderById(id!),
-      enabled: !!id && isSuperAdmin,
+      enabled: !!id, // Removed isSuperAdmin - let server handle role-based access
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };

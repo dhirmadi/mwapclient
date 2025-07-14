@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import { UserRolesResponse } from '../types/auth';
 import { Project, ProjectCreate } from '../types/project';
 import { Tenant, TenantCreate } from '../types/tenant';
@@ -12,6 +12,7 @@ import {
 import { ProjectType } from '../types/project-type';
 import { ProjectMember } from '../types/project';
 import { File } from '../types/file';
+import { handleApiResponse, handleApiError } from './apiResponseHandler';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
@@ -102,12 +103,13 @@ const debugApiCall = <T>(functionName: string, fn: (...args: any[]) => Promise<T
 const api = {
   // Auth endpoints
   getUserRoles: debugApiCall('getUserRoles', async (): Promise<UserRolesResponse> => {
-    const response = await apiClient.get('/users/me/roles');
-    // Handle both response formats: { success: true, data: {...} } or directly the object
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.get('/users/me/roles');
+      return handleApiResponse<UserRolesResponse>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   // Fallback for development
@@ -126,49 +128,41 @@ const api = {
   
   // Tenant endpoints
   fetchTenants: debugApiCall('fetchTenants', async (includeArchived: boolean = false): Promise<Tenant[]> => {
-    // Add query parameter to include archived tenants if requested
-    const url = includeArchived ? '/tenants?includeArchived=true' : '/tenants';
-    const response = await apiClient.get(url);
-    console.log('Tenants API response:', response.data);
-    
-    // Handle the specific response format: { success: true, data: Array(1) }
-    if (response.data && response.data.success === true && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
-    } else {
-      console.warn('Unexpected tenants response format:', response.data);
+    try {
+      const url = includeArchived ? '/tenants?includeArchived=true' : '/tenants';
+      const response = await apiClient.get(url);
+      return handleApiResponse<Tenant[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      // For tenant fetching, return empty array on error to prevent UI breaks
+      console.warn(`Failed to fetch tenants: ${apiError.message}`);
       return [];
     }
   }),
   
   // Fetch archived tenants specifically
   fetchArchivedTenants: debugApiCall('fetchArchivedTenants', async (): Promise<Tenant[]> => {
-    const response = await apiClient.get('/tenants?includeArchived=true');
-    console.log('Archived Tenants API response:', response.data);
-    
-    // Handle the specific response format
-    if (response.data && response.data.success === true && Array.isArray(response.data.data)) {
+    try {
+      const response = await apiClient.get('/tenants?includeArchived=true');
+      const allTenants = handleApiResponse<Tenant[]>(response);
       // Filter to only include archived tenants
-      return response.data.data.filter((tenant: any) => tenant.archived === true);
-    } else if (Array.isArray(response.data)) {
-      // Filter to only include archived tenants
-      return response.data.filter((tenant: any) => tenant.archived === true);
-    } else {
-      console.warn('Unexpected archived tenants response format:', response.data);
+      return allTenants.filter((tenant: Tenant) => tenant.archived === true);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch archived tenants: ${apiError.message}`);
       return [];
     }
   }),
   
   fetchTenant: debugApiCall('fetchTenant', async (id?: string): Promise<Tenant> => {
-    const url = id ? `/tenants/${id}` : '/tenants/me';
-    const response = await apiClient.get(url);
-    
-    // Handle different response formats
-    if (response.data && response.data.success === true && response.data.data) {
-      return response.data.data;
+    try {
+      const url = id ? `/tenants/${id}` : '/tenants/me';
+      const response = await apiClient.get(url);
+      return handleApiResponse<Tenant>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   // Fetch a tenant by ID with enhanced error handling and data validation
@@ -177,131 +171,75 @@ const api = {
       throw new Error('Tenant ID is required');
     }
     
-    console.log(`Fetching tenant by ID: ${id}`);
-    
     try {
-      // Try the direct endpoint
+      // Try the direct endpoint first
       const response = await apiClient.get(`/tenants/${id}`);
-      console.log('Direct tenant response:', response.data);
+      const tenant = handleApiResponse<Tenant>(response);
       
-      // Handle different response formats
-      if (response.data && response.data.success === true && response.data.data) {
-        const tenantData = response.data.data;
-        console.log('Returning tenant from success.data format:', tenantData);
-        
-        // Validate the tenant data
-        if (!tenantData.name) {
-          console.warn('Tenant data is missing required fields:', tenantData);
-        }
-        
-        // Ensure the tenant has an ID (either id or _id)
-        if (!tenantData.id && !tenantData._id) {
-          tenantData.id = id; // Use the requested ID if none is present
-        }
-        
-        return tenantData;
-      } else if (response.data && typeof response.data === 'object' && (response.data.id || response.data._id)) {
-        const tenantData = response.data;
-        console.log('Returning tenant from direct object format:', tenantData);
-        
-        // Validate the tenant data
-        if (!tenantData.name) {
-          console.warn('Tenant data is missing required fields:', tenantData);
-        }
-        
-        return tenantData;
-      } else {
-        console.log('Unexpected response format, falling back to workaround');
-        throw new Error('Unexpected response format');
+      // Ensure the tenant has an ID (either id or _id)
+      if (!tenant.id && !tenant._id) {
+        tenant.id = id;
       }
-    } catch (error) {
-      console.log('Error fetching tenant by ID directly, falling back to workaround', error);
       
+      return tenant;
+    } catch (error) {
+      const apiError = handleApiError(error);
+      
+      // If direct fetch fails, try fallback: fetch all tenants and filter
       try {
-        // Fallback: Fetch all tenants and filter by ID
+        console.log('Direct fetch failed, trying fallback method');
         const allTenantsResponse = await apiClient.get('/tenants');
-        console.log('All tenants response:', allTenantsResponse.data);
+        const allTenants = handleApiResponse<Tenant[]>(allTenantsResponse);
         
-        let allTenants = [];
-        
-        // Handle different response formats
-        if (allTenantsResponse.data && allTenantsResponse.data.success === true && Array.isArray(allTenantsResponse.data.data)) {
-          allTenants = allTenantsResponse.data.data;
-        } else if (Array.isArray(allTenantsResponse.data)) {
-          allTenants = allTenantsResponse.data;
-        } else {
-          throw new Error('Unexpected response format when fetching all tenants');
-        }
-        
-        console.log('All tenants array:', allTenants);
-        
-        // Find the tenant with the matching ID
-        const tenant = allTenants.find((t: any) => (t.id === id || t._id === id));
-        console.log('Found tenant:', tenant);
+        const tenant = allTenants.find((t: Tenant) => (t.id === id || t._id === id));
         
         if (!tenant) {
           throw new Error(`Tenant with ID ${id} not found`);
         }
         
-        // Ensure the tenant has an ID (either id or _id)
+        // Ensure the tenant has an ID
         if (!tenant.id && !tenant._id) {
-          tenant.id = id; // Use the requested ID if none is present
+          tenant.id = id;
         }
         
         return tenant;
       } catch (fallbackError) {
         console.error('Both direct and fallback methods failed:', fallbackError);
-        
-        // Last resort: Create a minimal tenant object with the ID
-        // This is just to prevent UI errors, and should be replaced with real data ASAP
-        console.warn('Creating minimal tenant object as last resort');
-        return {
-          id: id,
-          _id: id,
-          name: 'Loading...',
-          ownerId: '',
-          createdAt: new Date().toISOString(),
-          settings: {}
-        };
+        throw new Error(`Failed to fetch tenant ${id}: ${apiError.message}`);
       }
     }
   }),
   
   createTenant: debugApiCall('createTenant', async (data: TenantCreate): Promise<Tenant> => {
-    const response = await apiClient.post('/tenants', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/tenants', data);
+      return handleApiResponse<Tenant>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   updateTenant: debugApiCall('updateTenant', async (id: string, data: Partial<Tenant>): Promise<Tenant> => {
     try {
       const response = await apiClient.patch(`/tenants/${id}`, data);
-      
-      // Handle different response formats
-      if (response.data && response.data.success === true && response.data.data) {
-        return response.data.data;
-      }
-      return response.data;
+      return handleApiResponse<Tenant>(response);
     } catch (error) {
-      console.error('Error updating tenant directly, attempting workaround', error);
+      const apiError = handleApiError(error);
       
-      // If the direct update fails, try to use the PUT method instead
+      // If PATCH fails, try PUT as fallback
       try {
+        console.log('PATCH failed, trying PUT method');
         // First get the current tenant data
         const currentTenant = await api.fetchTenantById(id);
-        
         // Merge the current data with the updates
         const updatedData = { ...currentTenant, ...data };
         
-        // Try PUT instead of PATCH
         const putResponse = await apiClient.put(`/tenants/${id}`, updatedData);
-        
-        if (putResponse.data && putResponse.data.success === true && putResponse.data.data) {
-          return putResponse.data.data;
-        }
-        return putResponse.data;
+        return handleApiResponse<Tenant>(putResponse);
       } catch (putError) {
-        console.error('Both PATCH and PUT methods failed for tenant update', putError);
-        throw putError;
+        const putApiError = handleApiError(putError);
+        throw new Error(`Failed to update tenant: ${putApiError.message}`);
       }
     }
   }),
@@ -312,41 +250,44 @@ const api = {
 
   // Cloud Provider endpoints
   fetchCloudProviders: debugApiCall('fetchCloudProviders', async (): Promise<CloudProvider[]> => {
-    const response = await apiClient.get('/cloud-providers');
-    // Handle both response formats: { success: true, data: [...] } or directly the array
-    if (response.data && response.data.success && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
+    try {
+      const response = await apiClient.get('/cloud-providers');
+      return handleApiResponse<CloudProvider[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch cloud providers: ${apiError.message}`);
+      return [];
     }
-    return [];
   }),
   
   fetchCloudProviderById: debugApiCall('fetchCloudProviderById', async (id: string): Promise<CloudProvider> => {
-    const response = await apiClient.get(`/cloud-providers/${id}`);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.get(`/cloud-providers/${id}`);
+      return handleApiResponse<CloudProvider>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   createCloudProvider: debugApiCall('createCloudProvider', async (data: CloudProviderCreate): Promise<CloudProvider> => {
-    const response = await apiClient.post('/cloud-providers', data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.post('/cloud-providers', data);
+      return handleApiResponse<CloudProvider>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   updateCloudProvider: debugApiCall('updateCloudProvider', async (id: string, data: CloudProviderUpdate): Promise<CloudProvider> => {
-    const response = await apiClient.patch(`/cloud-providers/${id}`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.patch(`/cloud-providers/${id}`, data);
+      return handleApiResponse<CloudProvider>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   deleteCloudProvider: debugApiCall('deleteCloudProvider', async (id: string): Promise<void> => {
@@ -355,32 +296,34 @@ const api = {
 
   // Tenant Integration endpoints
   fetchTenantIntegrations: debugApiCall('fetchTenantIntegrations', async (tenantId: string): Promise<CloudProviderIntegration[]> => {
-    const response = await apiClient.get(`/tenants/${tenantId}/integrations`);
-    // Handle both response formats: { success: true, data: [...] } or directly the array
-    if (response.data && response.data.success && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
+    try {
+      const response = await apiClient.get(`/tenants/${tenantId}/integrations`);
+      return handleApiResponse<CloudProviderIntegration[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch tenant integrations: ${apiError.message}`);
+      return [];
     }
-    return [];
   }),
   
   createTenantIntegration: debugApiCall('createTenantIntegration', async (tenantId: string, data: CloudProviderIntegrationCreate): Promise<CloudProviderIntegration> => {
-    const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.post(`/tenants/${tenantId}/integrations`, data);
+      return handleApiResponse<CloudProviderIntegration>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   updateTenantIntegration: debugApiCall('updateTenantIntegration', async (tenantId: string, integrationId: string, data: Partial<CloudProviderIntegration>): Promise<CloudProviderIntegration> => {
-    const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
+      return handleApiResponse<CloudProviderIntegration>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   deleteTenantIntegration: debugApiCall('deleteTenantIntegration', async (tenantId: string, integrationId: string): Promise<void> => {
@@ -389,41 +332,44 @@ const api = {
 
   // Project Type endpoints
   fetchProjectTypes: debugApiCall('fetchProjectTypes', async (): Promise<ProjectType[]> => {
-    const response = await apiClient.get('/project-types');
-    // Handle both response formats: { success: true, data: [...] } or directly the array
-    if (response.data && response.data.success && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (Array.isArray(response.data)) {
-      return response.data;
+    try {
+      const response = await apiClient.get('/project-types');
+      return handleApiResponse<ProjectType[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch project types: ${apiError.message}`);
+      return [];
     }
-    return [];
   }),
   
   fetchProjectTypeById: debugApiCall('fetchProjectTypeById', async (id: string): Promise<ProjectType> => {
-    const response = await apiClient.get(`/project-types/${id}`);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.get(`/project-types/${id}`);
+      return handleApiResponse<ProjectType>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   createProjectType: debugApiCall('createProjectType', async (data: Omit<ProjectType, '_id'>): Promise<ProjectType> => {
-    const response = await apiClient.post('/project-types', data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.post('/project-types', data);
+      return handleApiResponse<ProjectType>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   updateProjectType: debugApiCall('updateProjectType', async (id: string, data: Partial<ProjectType>): Promise<ProjectType> => {
-    const response = await apiClient.patch(`/project-types/${id}`, data);
-    // Handle both response formats
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response = await apiClient.patch(`/project-types/${id}`, data);
+      return handleApiResponse<ProjectType>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
     }
-    return response.data;
   }),
   
   deleteProjectType: debugApiCall('deleteProjectType', async (id: string): Promise<void> => {
@@ -432,23 +378,44 @@ const api = {
 
   // Project endpoints
   fetchProjects: debugApiCall('fetchProjects', async (): Promise<Project[]> => {
-    const response = await apiClient.get('/projects');
-    return response.data;
+    try {
+      const response = await apiClient.get('/projects');
+      return handleApiResponse<Project[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch projects: ${apiError.message}`);
+      return [];
+    }
   }),
   
   fetchProjectById: debugApiCall('fetchProjectById', async (id: string): Promise<Project> => {
-    const response = await apiClient.get(`/projects/${id}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/projects/${id}`);
+      return handleApiResponse<Project>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   createProject: debugApiCall('createProject', async (data: ProjectCreate): Promise<Project> => {
-    const response = await apiClient.post('/projects', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/projects', data);
+      return handleApiResponse<Project>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   updateProject: debugApiCall('updateProject', async (id: string, data: Partial<Project>): Promise<Project> => {
-    const response = await apiClient.patch(`/projects/${id}`, data);
-    return response.data;
+    try {
+      const response = await apiClient.patch(`/projects/${id}`, data);
+      return handleApiResponse<Project>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   deleteProject: debugApiCall('deleteProject', async (id: string): Promise<void> => {
@@ -457,18 +424,34 @@ const api = {
 
   // Project Members endpoints
   fetchProjectMembers: debugApiCall('fetchProjectMembers', async (projectId: string): Promise<ProjectMember[]> => {
-    const response = await apiClient.get(`/projects/${projectId}/members`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/projects/${projectId}/members`);
+      return handleApiResponse<ProjectMember[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch project members: ${apiError.message}`);
+      return [];
+    }
   }),
   
   addProjectMember: debugApiCall('addProjectMember', async (projectId: string, data: { email: string; role: string }): Promise<ProjectMember> => {
-    const response = await apiClient.post(`/projects/${projectId}/members`, data);
-    return response.data;
+    try {
+      const response = await apiClient.post(`/projects/${projectId}/members`, data);
+      return handleApiResponse<ProjectMember>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   updateProjectMember: debugApiCall('updateProjectMember', async (projectId: string, memberId: string, data: { role: string }): Promise<ProjectMember> => {
-    const response = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, data);
-    return response.data;
+    try {
+      const response = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, data);
+      return handleApiResponse<ProjectMember>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   removeProjectMember: debugApiCall('removeProjectMember', async (projectId: string, memberId: string): Promise<void> => {
@@ -477,17 +460,28 @@ const api = {
 
   // Project Files endpoints
   fetchProjectFiles: debugApiCall('fetchProjectFiles', async (projectId: string): Promise<File[]> => {
-    const response = await apiClient.get(`/projects/${projectId}/files`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/projects/${projectId}/files`);
+      return handleApiResponse<File[]>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      console.warn(`Failed to fetch project files: ${apiError.message}`);
+      return [];
+    }
   }),
   
   uploadProjectFile: debugApiCall('uploadProjectFile', async (projectId: string, formData: FormData): Promise<File> => {
-    const response = await apiClient.post(`/projects/${projectId}/files`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    try {
+      const response = await apiClient.post(`/projects/${projectId}/files`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return handleApiResponse<File>(response);
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
   
   deleteProjectFile: debugApiCall('deleteProjectFile', async (projectId: string, fileId: string): Promise<void> => {
@@ -495,8 +489,14 @@ const api = {
   }),
   
   getFileDownloadUrl: debugApiCall('getFileDownloadUrl', async (projectId: string, fileId: string): Promise<string> => {
-    const response = await apiClient.get(`/projects/${projectId}/files/${fileId}/download-url`);
-    return response.data.url;
+    try {
+      const response = await apiClient.get(`/projects/${projectId}/files/${fileId}/download-url`);
+      const data = handleApiResponse<{ url: string }>(response);
+      return data.url;
+    } catch (error) {
+      const apiError = handleApiError(error);
+      throw new Error(apiError.message);
+    }
   }),
 };
 
