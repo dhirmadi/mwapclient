@@ -168,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!projectRole) return false;
     
     // Role hierarchy: OWNER > DEPUTY > MEMBER
-    const roleHierarchy = { 'OWNER': 3, 'DEPUTY': 2, 'MEMBER': 1 };
+    const roleHierarchy: { [key: string]: number } = { 'OWNER': 3, 'DEPUTY': 2, 'MEMBER': 1 };
     const userRoleValue = roleHierarchy[projectRole.role] || 0;
     const requiredRoleValue = roleHierarchy[requiredRole] || 0;
     

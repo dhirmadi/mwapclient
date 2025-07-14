@@ -117,6 +117,7 @@ const api = {
     // For development, return default roles
     console.log('Using default roles for development');
     return {
+      userId: 'dev-user-id',
       isSuperAdmin: true,
       isTenantOwner: true,
       tenantId: 'dev-tenant-id',

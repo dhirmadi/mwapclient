@@ -1,7 +1,6 @@
 import React from 'react';
-import useAuth from '../hooks/useAuth';
-import { PageHeader } from '../components/layout';
-import { Card, Avatar, Text, Group, Badge, Button } from '@mantine/core';
+import { useAuth } from '../context/AuthContext';
+import { Card, Avatar, Text, Group, Badge, Button, Title } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
 
 const Profile: React.FC = () => {
@@ -42,7 +41,10 @@ const Profile: React.FC = () => {
 
   return (
     <div>
-      <PageHeader title="Profile" description="Manage your account settings" />
+      <Group justify="space-between" align="center" mb="md">
+        <Title order={1}>Profile</Title>
+        <Text c="dimmed">Manage your account settings</Text>
+      </Group>
 
       <Card shadow="sm" p="lg" radius="md" withBorder className="mt-6">
         <Group justify="apart" align="flex-start">
@@ -63,7 +65,7 @@ const Profile: React.FC = () => {
                 {user.email}
               </Text>
               <Group gap="xs" mt="md">
-                {user.roles.map((role) => (
+                {user.roles.map((role: string) => (
                   <Badge key={role} color={getRoleBadgeColor(role)}>
                     {role.replace('_', ' ')}
                   </Badge>
@@ -105,7 +107,7 @@ const Profile: React.FC = () => {
                 <dt className="text-sm font-medium text-gray-500">Roles</dt>
                 <dd className="text-sm text-gray-900 col-span-2">
                   <Group gap="xs">
-                    {user.roles.map((role) => (
+                    {user.roles.map((role: string) => (
                       <Badge key={role} color={getRoleBadgeColor(role)}>
                         {role.replace('_', ' ')}
                       </Badge>

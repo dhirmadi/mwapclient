@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '@mantine/core';
-import { LoadingSpinner } from '../components/common';
+import { Button, Text } from '@mantine/core';
 
 const Login: React.FC = () => {
   const { isAuthenticated, isLoading, login } = useAuth();
@@ -17,7 +16,7 @@ const Login: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <Text size="lg">Loading...</Text>
       </div>
     );
   }

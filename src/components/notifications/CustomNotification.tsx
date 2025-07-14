@@ -78,16 +78,16 @@ export const CustomNotification: React.FC<NotificationProps> = ({
       p="md"
       radius="md"
       withBorder
-      sx={{
+      style={{
         position: 'relative',
         overflow: 'hidden',
         borderLeft: `4px solid ${getColor()}`,
       }}
     >
-      <Group position="apart" noWrap>
-        <Group noWrap spacing="xs">
+      <Group justify="space-between" wrap="nowrap">
+        <Group wrap="nowrap" gap="xs">
           <Box
-            sx={{
+            style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -101,7 +101,7 @@ export const CustomNotification: React.FC<NotificationProps> = ({
           </Box>
           <div>
             {title && (
-              <Text weight={500} size="sm">
+              <Text fw={500} size="sm">
                 {title}
               </Text>
             )}

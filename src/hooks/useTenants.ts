@@ -73,7 +73,7 @@ export const useTenants = (includeArchived: boolean = false) => {
       refetchOnWindowFocus: true, // Refetch when window regains focus
       refetchOnMount: true,      // Refetch when component mounts
       refetchOnReconnect: true,  // Refetch when reconnecting
-      cacheTime: 1000 * 60 * 5,  // Cache for 5 minutes
+      gcTime: 1000 * 60 * 5,  // Cache for 5 minutes (renamed from cacheTime in v5)
     });
   };
 

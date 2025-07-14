@@ -1,23 +1,21 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { PageHeader } from '../components/layout';
-import { Card, SimpleGrid, Text, Title } from '@mantine/core';
+import { Card, SimpleGrid, Text, Title, Group } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { LoadingSpinner } from '../components/common';
 
 // SuperAdmin Dashboard Component
 const SuperAdminDashboard: React.FC = () => {
   return (
     <div>
-      <PageHeader
-        title="Super Admin Dashboard"
-        description="Manage the MWAP platform"
-      />
+      <Group justify="space-between" align="center" mb="md">
+        <Title order={1}>Super Admin Dashboard</Title>
+        <Text c="dimmed">Manage the MWAP platform</Text>
+      </Group>
 
       <div className="mt-6">
         <Title order={2} mb="md">Quick Actions</Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg" mb="xl">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg" mb="xl">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/tenants">
             <Title order={3} mb="md">Tenant Administration</Title>
             <Text c="dimmed">Manage all platform tenants</Text>
@@ -30,7 +28,7 @@ const SuperAdminDashboard: React.FC = () => {
         </SimpleGrid>
         
         <Title order={2} mb="md">Administration</Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/admin/cloud-providers">
             <Title order={3} mb="md">Cloud Providers</Title>
             <Text c="dimmed">Configure cloud provider integrations</Text>
@@ -57,14 +55,14 @@ const TenantOwnerDashboard: React.FC = () => {
   
   return (
     <div>
-      <PageHeader
-        title={`Tenant Dashboard: ${roles?.tenantName || roles?.tenantId || ''}`}
-        description="Manage your organization's settings and resources"
-      />
+      <Group justify="space-between" align="center" mb="md">
+        <Title order={1}>{`Tenant Dashboard: ${roles?.tenantId || ''}`}</Title>
+        <Text c="dimmed">Manage your organization's settings and resources</Text>
+      </Group>
 
       <div className="mt-6">
         <Title order={2} mb="md">Quick Actions</Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg" mb="xl">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg" mb="xl">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenant/management">
             <Title order={3} mb="md">Tenant Management</Title>
             <Text c="dimmed">Manage your tenant's projects and integrations</Text>
@@ -72,7 +70,7 @@ const TenantOwnerDashboard: React.FC = () => {
         </SimpleGrid>
         
         <Title order={2} mb="md">Settings</Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenant/settings">
             <Title order={3} mb="md">Tenant Settings</Title>
             <Text c="dimmed">Configure your organization settings</Text>
@@ -94,14 +92,14 @@ const ProjectMemberDashboard: React.FC = () => {
   
   return (
     <div>
-      <PageHeader
-        title={`Welcome, ${user?.name || 'User'}`}
-        description="Access your projects or create a new tenant"
-      />
+      <Group justify="space-between" align="center" mb="md">
+        <Title order={1}>{`Welcome, ${user?.name || 'User'}`}</Title>
+        <Text c="dimmed">Access your projects or create a new tenant</Text>
+      </Group>
 
       <div className="mt-6">
         <Title order={2} mb="md">Quick Actions</Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg" mb="xl">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg" mb="xl">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
             <Title order={3} mb="md">My Projects</Title>
             <Text c="dimmed">View and access your projects</Text>
@@ -114,7 +112,7 @@ const ProjectMemberDashboard: React.FC = () => {
         </SimpleGrid>
         
         <Title order={2} mb="md">Settings</Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} gap="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/profile">
             <Title order={3} mb="md">Profile</Title>
             <Text c="dimmed">Manage your account settings</Text>
@@ -143,7 +141,7 @@ const Dashboard: React.FC = () => {
   }, [isLoading, isSuperAdmin, isTenantOwner, navigate]);
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <Text>Loading...</Text>;
   }
 
   // Render appropriate dashboard based on role

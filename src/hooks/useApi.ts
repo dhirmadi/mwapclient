@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { ApiError, ApiResponse } from '../types/api';
-import api from '../utils/api';
+import axios from 'axios';
+
+// Create axios instance with default config
+const apiClient = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 interface UseApiState<T> {
   data: T | null;
@@ -33,25 +41,31 @@ export function useApi<T, P = any>(
     setState({ ...state, loading: true, error: null });
 
     try {
-      let response: ApiResponse<T>;
+      let axiosResponse;
 
       switch (method) {
         case 'GET':
-          response = await api.get<T>(url, params || defaultParams);
+          axiosResponse = await apiClient.get<T>(url, { params: params || defaultParams });
           break;
         case 'POST':
-          response = await api.post<T>(url, params || defaultParams);
+          axiosResponse = await apiClient.post<T>(url, params || defaultParams);
           break;
         case 'PUT':
-          response = await api.put<T>(url, params || defaultParams);
+          axiosResponse = await apiClient.put<T>(url, params || defaultParams);
           break;
         case 'PATCH':
-          response = await api.patch<T>(url, params || defaultParams);
+          axiosResponse = await apiClient.patch<T>(url, params || defaultParams);
           break;
         case 'DELETE':
-          response = await api.delete<T>(url);
+          axiosResponse = await apiClient.delete<T>(url);
           break;
       }
+
+      // Transform AxiosResponse to ApiResponse
+      const response: ApiResponse<T> = {
+        success: axiosResponse.status >= 200 && axiosResponse.status < 300,
+        data: axiosResponse.data,
+      };
 
       if (response.success && response.data) {
         setState({

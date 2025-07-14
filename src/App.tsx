@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { AppRouter } from './router';
+import { AppRouter } from './core/router/AppRouter';
 import '@mantine/core/styles.css';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -15,18 +15,6 @@ function App() {
         refetchOnWindowFocus: true,
         staleTime: 1000 * 60, // 1 minute
         gcTime: 1000 * 60 * 5, // 5 minutes
-      },
-    },
-    // Add query logger for debugging
-    logger: {
-      log: (message) => {
-        console.log('React Query:', message);
-      },
-      warn: (message) => {
-        console.warn('React Query Warning:', message);
-      },
-      error: (message) => {
-        console.error('React Query Error:', message);
       },
     },
   }));
