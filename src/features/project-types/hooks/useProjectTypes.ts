@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
 import { ProjectType, ProjectTypeCreate, ProjectTypeUpdate } from '../types';
-import { useAuth } from '../../auth/hooks/useAuth';
+import { useAuth } from '../../../core/context/AuthContext';
 
 export const useProjectTypes = () => {
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useAuth();
+  const { isReady } = useAuth();
 
-  // Fetch all project types
+  // Fetch all project types - wait for auth to be ready
   const { 
     data: projectTypes, 
     isLoading, 
@@ -25,6 +25,7 @@ export const useProjectTypes = () => {
         throw error;
       }
     },
+    enabled: isReady, // Wait for authentication to be complete
     retry: 1,
   });
 
@@ -41,7 +42,7 @@ export const useProjectTypes = () => {
           throw error;
         }
       },
-      enabled: !!id,
+      enabled: !!id && isReady, // Wait for auth and require ID
       retry: 1,
     });
   };

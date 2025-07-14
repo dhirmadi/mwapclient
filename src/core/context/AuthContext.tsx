@@ -6,6 +6,7 @@ import { UserRolesResponse } from '../../shared/types/auth';
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  isReady: boolean; // New: indicates auth is complete and ready for API calls
   user: any;
   login: () => void;
   logout: () => void;
@@ -20,6 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
+  isReady: false,
   user: null,
   login: () => {},
   logout: () => {},
@@ -198,12 +200,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isAuthenticated]); // Include isAuthenticated to avoid stale closure
   
+  // Calculate if auth is ready for API calls
+  const isReady = isAuthenticated && !auth0Loading && !rolesLoading && roles !== null;
+  
   // Provide auth context to children
   return (
     <AuthContext.Provider
       value={{
         isAuthenticated,
         isLoading: auth0Loading || rolesLoading,
+        isReady,
         user,
         login,
         logout,

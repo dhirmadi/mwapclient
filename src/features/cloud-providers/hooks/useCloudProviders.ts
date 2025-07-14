@@ -5,15 +5,16 @@ import {
   CloudProviderUpdate,
   CloudProviderIntegrationCreate
 } from '../types';
-import { useAuth } from '../../auth/hooks/useAuth';
+import { useAuth } from '../../../core/context/AuthContext';
 
 /**
  * Hook for managing cloud providers
  */
 export const useCloudProviders = () => {
   const queryClient = useQueryClient();
+  const { isReady } = useAuth();
 
-  // Fetch all cloud providers - available to both superadmins and tenant managers
+  // Fetch all cloud providers - wait for auth to be ready
   const { 
     data: cloudProviders = [], 
     isLoading, 
@@ -25,7 +26,7 @@ export const useCloudProviders = () => {
       const response = await api.get('/cloud-providers');
       return response.data;
     },
-    // Enable for all users, not just superadmins
+    enabled: isReady, // Wait for authentication to be complete
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
@@ -100,7 +101,7 @@ export const useCloudProviders = () => {
         const response = await api.get(`/cloud-providers/${id!}`);
         return response.data;
       },
-      enabled: !!id, // Removed isSuperAdmin - let server handle role-based access
+      enabled: !!id && isReady, // Wait for auth and require ID
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };

@@ -12,14 +12,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles,
   projectIdParam = 'id',
 }) => {
-  const { isAuthenticated, isLoading, isSuperAdmin, isTenantOwner, hasProjectRole } = useAuth();
+  const { isAuthenticated, isLoading, isReady, isSuperAdmin, isTenantOwner, hasProjectRole } = useAuth();
   const params = useParams();
   const projectId = params[projectIdParam];
 
-  if (isLoading) {
+  // Show loading while authentication is in progress or not ready for API calls
+  if (isLoading || !isReady) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <LoadingSpinner size="lg" text="Authenticating..." />
       </div>
     );
   }

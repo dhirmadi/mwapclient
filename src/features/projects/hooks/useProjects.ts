@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
 import { Project, ProjectCreate, ProjectUpdate, ProjectMember } from '../types';
-import { useAuth } from '../../auth/hooks/useAuth';
+import { useAuth } from '../../../core/context/AuthContext';
 
 export const useProjects = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { isReady } = useAuth();
 
-  // Fetch all projects
+  // Fetch all projects - wait for auth to be ready
   const { 
     data: projects, 
     isLoading, 
@@ -16,6 +16,7 @@ export const useProjects = () => {
   } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.get("/projects").then(r => r.data),
+    enabled: isReady, // Wait for authentication to be complete
   });
 
   // Fetch a single project by ID
@@ -26,7 +27,7 @@ export const useProjects = () => {
         const response = await api.get(`/projects/${id!}`);
         return response.data;
       },
-      enabled: !!id,
+      enabled: !!id && isReady, // Wait for auth and require ID
     });
   };
 
@@ -72,7 +73,7 @@ export const useProjects = () => {
         const response = await api.get(`/projects/${projectId!}/members`);
         return response.data;
       },
-      enabled: !!projectId,
+      enabled: !!projectId && isReady, // Wait for auth and require projectId
     });
   };
 
