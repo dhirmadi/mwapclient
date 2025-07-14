@@ -44,7 +44,7 @@ export const useCloudProviders = () => {
   // Update a cloud provider
   const updateCloudProviderMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CloudProviderUpdate }) => {
-      const response = await api.put(`/cloud-providers/${id}`, data);
+      const response = await api.patch(`/cloud-providers/${id}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -67,7 +67,7 @@ export const useCloudProviders = () => {
   // Create a tenant integration
   const createIntegrationMutation = useMutation({
     mutationFn: async ({ tenantId, data }: { tenantId: string; data: CloudProviderIntegrationCreate }) => {
-      const response = await api.post("/tenant/integrations", data);
+      const response = await api.post(`/tenants/${tenantId}/integrations`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -80,7 +80,7 @@ export const useCloudProviders = () => {
   // Delete a tenant integration
   const deleteIntegrationMutation = useMutation({
     mutationFn: async ({ tenantId, integrationId }: { tenantId: string; integrationId: string }) => {
-      const response = await api.delete(`/tenant/integrations/${integrationId}`);
+      const response = await api.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
       return response.data;
     },
     onSuccess: (_, variables) => {

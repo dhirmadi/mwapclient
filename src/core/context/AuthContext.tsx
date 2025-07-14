@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('auth_token', token);
       
       // Fetch user roles from API
-      const response = await api.get('/user/roles');
+      const response = await api.get('/users/me/roles');
       const userRoles = response.data;
       
       // Check if request was aborted

@@ -44,7 +44,7 @@ export const useProjects = () => {
   // Update an existing project
   const updateProjectMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: ProjectUpdate }) => {
-      const response = await api.put(`/projects/${id}`, data);
+      const response = await api.patch(`/projects/${id}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -91,7 +91,7 @@ export const useProjects = () => {
   // Update project member
   const updateProjectMemberMutation = useMutation({
     mutationFn: async ({ projectId, userId, role }: { projectId: string; userId: string; role: string }) => {
-      const response = await api.put(`/projects/${projectId}/members/${userId}`, { role });
+      const response = await api.patch(`/projects/${projectId}/members/${userId}`, { role });
       return response.data;
     },
     onSuccess: (_, variables) => {

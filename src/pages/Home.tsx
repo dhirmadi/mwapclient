@@ -16,7 +16,7 @@ const Home: React.FC = () => {
   const { 
     data: tenantIntegrations, 
     isLoading: isLoadingIntegrations 
-  } = useTenants().useTenantIntegrations(roles?.tenantId || undefined);
+  } = useTenants().getTenantIntegrations(roles?.tenantId || undefined);
   
   // Get projects
   const { 

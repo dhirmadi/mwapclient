@@ -83,7 +83,7 @@ export const useProjectTypes = () => {
         if (data.isActive !== undefined) payload.isActive = data.isActive;
         if (data.configSchema !== undefined) payload.configSchema = data.configSchema;
         
-        const response = await api.put(`/project-types/${id}`, payload);
+        const response = await api.patch(`/project-types/${id}`, payload);
         return response.data;
       } catch (error) {
         console.error(`Error updating project type ${id}:`, error);

@@ -62,7 +62,7 @@ const CloudProviderListPage: React.FC = () => {
             </Table.Thead>
             <Table.Tbody>
               {cloudProviders.map((provider: CloudProvider) => (
-                <Table.Tr key={provider._id}>
+                <Table.Tr key={provider.id}>
                   <Table.Td>{provider.name}</Table.Td>
                   <Table.Td>{provider.slug}</Table.Td>
                   <Table.Td>
@@ -72,14 +72,14 @@ const CloudProviderListPage: React.FC = () => {
                     <Group gap="xs">
                       <ActionIcon 
                         variant="subtle" 
-                        onClick={() => handleEdit(provider._id)}
+                        onClick={() => handleEdit(provider.id)}
                       >
                         <IconEdit size={16} />
                       </ActionIcon>
                       <ActionIcon 
                         variant="subtle" 
                         color="red"
-                        onClick={() => handleDelete(provider._id)}
+                        onClick={() => handleDelete(provider.id)}
                       >
                         <IconTrash size={16} />
                       </ActionIcon>
