@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../utils/api';
-import { Tenant, TenantCreate, TenantUpdate } from '../types/tenant';
+import { TenantCreate, TenantUpdate } from '../types/tenant';
 import { useAuth } from '../context/AuthContext';
 
 export const useTenants = (includeArchived: boolean = false) => {
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useAuth();
 
-  // Fetch active tenants (SuperAdmin only)
+  // Fetch active tenants - let server handle access control
   const { 
     data: tenants, 
     isLoading, 
@@ -16,10 +15,10 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenants', 'active'],
     queryFn: () => api.fetchTenants(includeArchived),
-    enabled: isSuperAdmin,
+    // Removed enabled: isSuperAdmin - let server handle role-based access
   });
   
-  // Fetch archived tenants separately (SuperAdmin only)
+  // Fetch archived tenants separately - let server handle access control
   const {
     data: archivedTenants,
     isLoading: isLoadingArchived,
@@ -28,10 +27,10 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenants', 'archived'],
     queryFn: () => api.fetchArchivedTenants(),
-    enabled: isSuperAdmin,
+    // Removed enabled: isSuperAdmin - let server handle role-based access
   });
 
-  // Fetch current tenant (TenantOwner)
+  // Fetch current tenant - let server handle access control
   const { 
     data: currentTenant, 
     isLoading: isLoadingCurrentTenant,
@@ -40,7 +39,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenant-current'],
     queryFn: () => api.fetchTenant(),
-    enabled: !isSuperAdmin,
+    // Removed enabled: !isSuperAdmin - let server handle role-based access
   });
 
   // Fetch a single tenant by ID

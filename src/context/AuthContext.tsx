@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
 import { UserRolesResponse } from '../types/auth';
@@ -39,6 +39,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isTenantOwner, setIsTenantOwner] = useState(false);
   const [roles, setRoles] = useState<UserRolesResponse | null>(null);
   const [rolesLoading, setRolesLoading] = useState(false);
+  
+  // Use refs to track ongoing operations and prevent race conditions
+  const fetchingRoles = useRef(false);
+  const abortController = useRef<AbortController | null>(null);
 
   const {
     isAuthenticated,
@@ -49,60 +53,87 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getAccessTokenSilently,
   } = useAuth0();
 
-  // Fetch user roles when authenticated
-  useEffect(() => {
-    const fetchUserRoles = async () => {
-      if (isAuthenticated && user) {
-        try {
-          setRolesLoading(true);
-          // Get token and store it
-          const token = await getAccessTokenSilently();
-          localStorage.setItem('auth_token', token);
-          
-          try {
-            // Always use the real API endpoint
-            const userRoles = await api.getUserRoles();
-            console.log('User roles from API:', userRoles);
-            
-            setRoles(userRoles);
-            
-            // Set role flags
-            setIsSuperAdmin(userRoles.isSuperAdmin || false);
-            setIsTenantOwner(userRoles.isTenantOwner || false);
-          } catch (error) {
-            console.error('Failed to fetch user roles:', error);
-            
-            // Only use default roles if explicitly requested
-            const useDefaultRoles = false;
-            if (useDefaultRoles) {
-              console.log('Using default roles for development');
-              const defaultRoles: UserRolesResponse = {
-                isSuperAdmin: true,
-                isTenantOwner: true,
-                tenantId: 'dev-tenant-id',
-                projectRoles: [
-                  { projectId: 'dev-project-id', role: 'OWNER' }
-                ]
-              };
-              setRoles(defaultRoles);
-              setIsSuperAdmin(true);
-              setIsTenantOwner(true);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to get token:', error);
-        } finally {
-          setRolesLoading(false);
-        }
-      }
-    };
+  // Memoized function to fetch user roles
+  const fetchUserRoles = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (fetchingRoles.current || !isAuthenticated || !user) {
+      return;
+    }
 
-    if (isAuthenticated) {
-      fetchUserRoles();
-    } else {
+    // Cancel any ongoing request
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+    
+    // Create new abort controller for this request
+    abortController.current = new AbortController();
+    fetchingRoles.current = true;
+    
+    try {
+      setRolesLoading(true);
+      
+      // Get token and store it
+      const token = await getAccessTokenSilently();
+      localStorage.setItem('auth_token', token);
+      
+      // Fetch user roles from API
+      const userRoles = await api.getUserRoles();
+      
+      // Check if request was aborted
+      if (abortController.current?.signal.aborted) {
+        return;
+      }
+      
+      console.log('User roles from API:', userRoles);
+      
+      setRoles(userRoles);
+      setIsSuperAdmin(userRoles.isSuperAdmin || false);
+      setIsTenantOwner(userRoles.isTenantOwner || false);
+      
+    } catch (error) {
+      // Check if request was aborted
+      if (abortController.current?.signal.aborted) {
+        return;
+      }
+      
+      console.error('Failed to fetch user roles:', error);
+      
+      // Reset roles on error
+      setRoles(null);
+      setIsSuperAdmin(false);
+      setIsTenantOwner(false);
+    } finally {
+      fetchingRoles.current = false;
       setRolesLoading(false);
     }
   }, [isAuthenticated, user, getAccessTokenSilently]);
+
+  // Effect to fetch roles when authentication state changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchUserRoles();
+    } else {
+      // Reset state when not authenticated
+      setRoles(null);
+      setIsSuperAdmin(false);
+      setIsTenantOwner(false);
+      setRolesLoading(false);
+      fetchingRoles.current = false;
+      
+      // Cancel any ongoing request
+      if (abortController.current) {
+        abortController.current.abort();
+        abortController.current = null;
+      }
+    }
+    
+    // Cleanup function
+    return () => {
+      if (abortController.current) {
+        abortController.current.abort();
+      }
+    };
+  }, [isAuthenticated, user, fetchUserRoles]);
 
   // Login function
   const login = () => {
@@ -117,8 +148,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
-  // Get token function
-  const getToken = async (): Promise<string> => {
+  // Memoized get token function
+  const getToken = useCallback(async (): Promise<string> => {
     try {
       const token = await getAccessTokenSilently();
       localStorage.setItem('auth_token', token);
@@ -127,10 +158,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Failed to get token:', error);
       return '';
     }
-  };
+  }, [getAccessTokenSilently]);
 
-  // Check if user has a specific role in a project
-  const hasProjectRole = (projectId: string, requiredRole: string): boolean => {
+  // Memoized function to check if user has a specific role in a project
+  const hasProjectRole = useCallback((projectId: string, requiredRole: string): boolean => {
     if (!roles || !roles.projectRoles) return false;
     
     const projectRole = roles.projectRoles.find(pr => pr.projectId === projectId);
@@ -142,33 +173,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const requiredRoleValue = roleHierarchy[requiredRole] || 0;
     
     return userRoleValue >= requiredRoleValue;
-  };
+  }, [roles]);
 
-  // Use the actual authentication status, even in development mode
-  const isDevelopment = import.meta.env.DEV;
-  const effectiveIsAuthenticated = isAuthenticated;
-  const effectiveUser = user;
-  
-  // In development mode, we can use the Auth0 bearer token from environment variable
-  // but only for testing purposes. In production, the token comes from Auth0 authentication.
+  // Development token setup (runs only once)
   useEffect(() => {
+    const isDevelopment = import.meta.env.DEV;
     if (isDevelopment && !isAuthenticated) {
       // Only use the development token if we're not authenticated through Auth0
       const devToken = import.meta.env.VITE_AUTH0_BEARER_TOKEN;
-      if (devToken) {
+      if (devToken && !localStorage.getItem('auth_token')) {
         console.log('Using development Auth0 token for testing');
         localStorage.setItem('auth_token', devToken);
       }
     }
-  }, [isDevelopment, isAuthenticated]);
+  }, [isAuthenticated]); // Include isAuthenticated to avoid stale closure
   
   // Provide auth context to children
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated: effectiveIsAuthenticated,
+        isAuthenticated,
         isLoading: auth0Loading || rolesLoading,
-        user: effectiveUser,
+        user,
         login,
         logout,
         isSuperAdmin,
