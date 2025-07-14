@@ -14,7 +14,7 @@ The MWAP client has been successfully updated to work with the new v3 API. All b
 - **Impact:** All API calls now use the correct v3 endpoint structure
 
 ### 2. Authentication Endpoints
-**File:** `src/features/auth/context/AuthContext.tsx`
+**File:** `src/core/context/AuthContext.tsx`
 - **Change:** Updated user roles endpoint from `/user/roles` to `/users/me/roles`
 - **Impact:** User role fetching now uses the correct v3 endpoint
 

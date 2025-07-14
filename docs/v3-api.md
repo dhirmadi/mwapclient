@@ -100,12 +100,11 @@ interface TenantResponse {
 | `/api/v1/cloud-providers/:id`                     | PATCH  | SUPERADMIN | `UpdateCloudProviderSchema`                                | `CloudProviderResponseSchema`              |
 | `/api/v1/cloud-providers/:id`                     | DELETE | SUPERADMIN | —                                                    | `204`                              |
 | `/api/v1/tenants/:tenantId/integrations`          | GET    | `OWNER`    | —                                                    | `CloudProviderIntegrationResponseSchema[]` |
-| `/api/v1/tenants/:tenantId/cloud-integrations`    | GET    | `OWNER`    | —                                                    | `CloudProviderIntegrationResponseSchema[]` |
 | `/api/v1/tenants/:tenantId/integrations`          | POST   | `OWNER`    | `CreateCloudProviderIntegrationSchema` | `CloudProviderIntegrationResponseSchema`   |
 | `/api/v1/tenants/:tenantId/integrations/:integrationId` | PATCH  | `OWNER`    | `UpdateCloudProviderIntegrationSchema` | `CloudProviderIntegrationResponseSchema`   |
 | `/api/v1/tenants/:tenantId/integrations/:integrationId` | DELETE | `OWNER`    | —                                                    | `204`                              |
 
-**Note:** Both `/integrations` and `/cloud-integrations` paths are supported for backward compatibility.
+**Note:** The path `/api/v1/tenants/:tenantId/cloud-integrations` is an alias for `/api/v1/tenants/:tenantId/integrations` (GET only) for backward compatibility. New implementations should use `/integrations`.
 
 ### Cloud Provider Schemas
 
@@ -251,9 +250,10 @@ interface CloudProviderIntegrationResponse {
 | Endpoint                    | Method | Role       | Request Schema                          | Response Schema       |
 | --------------------------- | ------ | ---------- | --------------------------------------- | --------------------- |
 | `/api/v1/project-types`     | GET    | Authenticated | —                                       | `ProjectTypeSchema[]` |
+| `/api/v1/project-types/:id` | GET    | Authenticated | —                                       | `ProjectTypeSchema`   |
 | `/api/v1/project-types`     | POST   | SUPERADMIN | `ProjectTypeSchema.omit({ _id: true })` | `ProjectTypeSchema`   |
 | `/api/v1/project-types/:id` | PATCH  | SUPERADMIN | `ProjectTypeSchema`                     | `ProjectTypeSchema`   |
-| `/api/v1/project-types/:id` | DELETE | Authenticated | —                                       | `204`                 |
+| `/api/v1/project-types/:id` | DELETE | SUPERADMIN | —                                       | `204`                 |
 
 ### Project Type Schema
 ```typescript

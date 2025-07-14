@@ -43,7 +43,7 @@ export const useTenants = (includeArchived: boolean = false) => {
     error: currentTenantError,
     refetch: refetchCurrentTenant
   } = useQuery({
-    queryKey: ['tenant-current'],
+    queryKey: ['tenant-me'],
     queryFn: async () => {
       const response = await api.get('/tenants/me');
       return response.data;
@@ -193,7 +193,7 @@ export const useTenants = (includeArchived: boolean = false) => {
     deleteError: deleteTenantMutation.error,
     
     // Tenant integrations
-    useTenantIntegrations,
+    getTenantIntegrations: useTenantIntegrations,
     updateTenantIntegration: updateTenantIntegrationMutation.mutate,
     refreshIntegrationToken: refreshIntegrationTokenMutation.mutate,
     isUpdatingIntegration: updateTenantIntegrationMutation.isPending,
