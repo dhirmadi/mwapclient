@@ -30,7 +30,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenants', 'archived'],
     queryFn: async () => {
-      const response = await api.get('/tenants?archived=true');
+      const response = await api.get('/tenants?includeArchived=true');
       return response.data;
     },
     // Removed enabled: isSuperAdmin - let server handle role-based access

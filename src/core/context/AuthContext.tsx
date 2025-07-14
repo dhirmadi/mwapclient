@@ -97,7 +97,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      console.error('Failed to fetch user roles:', error);
+      // Enhanced error logging for development
+      if (import.meta.env.DEV) {
+        console.group('🚨 Auth Error: Failed to fetch user roles');
+        console.error('Error details:', error);
+        console.error('User:', user);
+        console.error('Is Authenticated:', isAuthenticated);
+        console.groupEnd();
+      } else {
+        console.error('Failed to fetch user roles:', error);
+      }
       
       // Reset roles on error
       setRoles(null);
