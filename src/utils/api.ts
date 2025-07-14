@@ -231,7 +231,8 @@ const api = {
       try {
         console.log('PATCH failed, trying PUT method');
         // First get the current tenant data
-        const currentTenant = await api.fetchTenantById(id);
+        const tenantResponse = await apiClient.get(`/tenants/${id}`);
+        const currentTenant = handleApiResponse<Tenant>(tenantResponse);
         // Merge the current data with the updates
         const updatedData = { ...currentTenant, ...data };
         
