@@ -95,7 +95,7 @@ const NotificationContainer: React.FC = () => {
 
   return (
     <Box
-      sx={{
+      style={{
         position: 'fixed',
         top: 20,
         right: 20,
@@ -103,7 +103,7 @@ const NotificationContainer: React.FC = () => {
         width: 320,
       }}
     >
-      <Stack spacing="md">
+      <Stack gap="md">
         {notifications.map(notification => (
           <CustomNotification
             key={notification.id}

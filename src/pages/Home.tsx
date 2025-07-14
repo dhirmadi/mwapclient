@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper, Menu, Avatar, ActionIcon, Tooltip, Loader } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../core/context/AuthContext';
 import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
-import { useTenants } from '../hooks/useTenants';
-import { useProjects } from '../hooks/useProjects';
+import { useTenants } from '../features/tenants/hooks/useTenants';
+import { useProjects } from '../features/projects/hooks/useProjects';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const Home: React.FC = () => {
   const { 
     data: tenantIntegrations, 
     isLoading: isLoadingIntegrations 
-  } = useTenants().useTenantIntegrations(roles?.tenantId);
+  } = useTenants().useTenantIntegrations(roles?.tenantId || undefined);
   
   // Get projects
   const { 
@@ -58,8 +58,8 @@ const Home: React.FC = () => {
   return (
     <Container size="lg" py="xl">
       <Paper shadow="md" p="xl" radius="md" withBorder mb="xl">
-        <Title order={1} mb="md" align="center" color="blue">Welcome to MWAP</Title>
-        <Text size="lg" mb="xl" align="center" color="dimmed">
+        <Title order={1} mb="md" ta="center" >Welcome to MWAP</Title>
+        <Text size="lg" mb="xl" ta="center" >
           Modular Web Application Platform
         </Text>
       </Paper>
@@ -67,9 +67,9 @@ const Home: React.FC = () => {
       {isAuthenticated ? (
         <>
           <Paper shadow="sm" p="md" radius="md" withBorder mb="xl">
-            <Group justify="space-between" align="center">
+            <Group justify="space-between" ta="center">
               <Box>
-                <Group align="center" gap="xs">
+                <Group ta="center" gap="lg">
                   <Title order={3} mb="xs" style={{ cursor: 'pointer' }} onClick={handleProfileClick}>
                     Hello, {user?.name}!
                   </Title>
@@ -85,7 +85,7 @@ const Home: React.FC = () => {
                 </Group>
                 <Text>
                   You are logged in as a 
-                  <Text component="span" weight={700} color={isSuperAdmin ? 'red' : isTenantOwner ? 'blue' : 'green'}>
+                  <Text component="span" fw={700} color={isSuperAdmin ? 'red' : isTenantOwner ? 'blue' : 'green'}>
                     {isSuperAdmin ? ' Super Admin' : isTenantOwner ? ' Tenant Owner' : ' Project Member'}
                   </Text>.
                 </Text>
@@ -93,7 +93,7 @@ const Home: React.FC = () => {
               <Group>
                 <Tooltip label="Logout">
                   <ActionIcon 
-                    color="gray" 
+                     
                     variant="subtle" 
                     onClick={handleLogout}
                     size="lg"
@@ -123,7 +123,7 @@ const Home: React.FC = () => {
                     <Menu.Item 
                       leftSection={<IconLogout size={14} />} 
                       onClick={handleLogout}
-                      color="red"
+                      
                     >
                       Logout
                     </Menu.Item>
@@ -135,19 +135,19 @@ const Home: React.FC = () => {
           
           <Title order={2} mb="md">Quick Actions</Title>
           
-          <SimpleGrid cols={3} spacing="md" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+          <SimpleGrid cols={3}>
             {hasNoTenant && !isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
                     <Title order={3} c="white">Create Tenant</Title>
-                    <ThemeIcon size="lg" radius="md" color="white" variant="outline">
+                    <ThemeIcon size="lg" radius="md"  variant="outline">
                       <IconPlus size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">You don't have a tenant yet. Create your own tenant to get started.</Text>
-                <Button component={Link} to="/tenants/create" variant="filled" color="teal" fullWidth>
+                <Button component={Link} to="/tenants/create" variant="filled"  fullWidth>
                   Create Tenant
                 </Button>
               </Card>
@@ -158,13 +158,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Tenants</Title>
-                    <ThemeIcon size="lg" radius="md" color="blue">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconBuildingSkyscraper size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">Manage organization tenants and their settings.</Text>
-                <Button component={Link} to="/admin/tenants" variant="filled" color="blue" fullWidth>
+                <Button component={Link} to="/admin/tenants" variant="filled"  fullWidth>
                   Manage Tenants
                 </Button>
               </Card>
@@ -189,13 +189,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Projects</Title>
-                    <ThemeIcon size="lg" radius="md" color="green">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconFolder size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">Manage your tenant's projects.</Text>
-                <Button component={Link} to="/projects" variant="filled" color="green" fullWidth>
+                <Button component={Link} to="/projects" variant="filled"  fullWidth>
                   Manage Projects
                 </Button>
               </Card>
@@ -207,13 +207,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
                     <Title order={3} c="white">Create Project</Title>
-                    <ThemeIcon size="lg" radius="md" color="white" variant="outline">
+                    <ThemeIcon size="lg" radius="md"  variant="outline">
                       <IconPlus size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">You have cloud integrations set up. Create your first project to get started.</Text>
-                <Button component={Link} to="/projects/create" variant="filled" color="teal" fullWidth>
+                <Button component={Link} to="/projects/create" variant="filled"  fullWidth>
                   Create Project
                 </Button>
               </Card>
@@ -224,13 +224,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Cloud Providers</Title>
-                    <ThemeIcon size="lg" radius="md" color="violet">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconCloud size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">Configure cloud storage providers for the platform.</Text>
-                <Button component={Link} to="/admin/cloud-providers" variant="filled" color="violet" fullWidth>
+                <Button component={Link} to="/admin/cloud-providers" variant="filled"  fullWidth>
                   Manage Providers
                 </Button>
               </Card>
@@ -241,13 +241,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Project Types</Title>
-                    <ThemeIcon size="lg" radius="md" color="orange">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconTemplate size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">Define and configure project templates and types.</Text>
-                <Button component={Link} to="/admin/project-types" variant="filled" color="orange" fullWidth>
+                <Button component={Link} to="/admin/project-types" variant="filled"  fullWidth>
                   Manage Types
                 </Button>
               </Card>
@@ -258,13 +258,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Project Administration</Title>
-                    <ThemeIcon size="lg" radius="md" color="grape">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconFolder size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">Administer all projects across tenants.</Text>
-                <Button component={Link} to="/admin/projects" variant="filled" color="grape" fullWidth>
+                <Button component={Link} to="/admin/projects" variant="filled"  fullWidth>
                   Administer Projects
                 </Button>
               </Card>
@@ -276,13 +276,13 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Tenant Settings</Title>
-                    <ThemeIcon size="lg" radius="md" color="cyan">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconBuildingSkyscraper size={20} />
                     </ThemeIcon>
                   </Group>
                 </Card.Section>
                 <Text mb="md">Configure your organization's settings and preferences.</Text>
-                <Button component={Link} to="/tenant/settings" variant="filled" color="cyan" fullWidth>
+                <Button component={Link} to="/tenant/settings" variant="filled"  fullWidth>
                   Tenant Settings
                 </Button>
               </Card>
@@ -294,7 +294,7 @@ const Home: React.FC = () => {
                 <Card.Section p="md">
                   <Group justify="space-between">
                     <Title order={3}>Cloud Integrations</Title>
-                    <ThemeIcon size="lg" radius="md" color="indigo">
+                    <ThemeIcon size="lg" radius="md" >
                       <IconCloud size={20} />
                     </ThemeIcon>
                   </Group>
@@ -319,13 +319,13 @@ const Home: React.FC = () => {
         </>
       ) : (
         <Card shadow="md" p="xl" radius="md" withBorder>
-          <Stack align="center" spacing="md">
+          <Stack ta="center" gap="lg">
             <Title order={2}>Get Started</Title>
-            <Text size="lg" align="center" mb="xl">
+            <Text size="lg" ta="center" mb="xl">
               Please log in to access the Modular Web Application Platform.
             </Text>
             
-            <Button component={Link} to="/login" variant="filled" color="blue" size="lg">
+            <Button component={Link} to="/login" variant="filled"  size="lg">
               Log In
             </Button>
           </Stack>
