@@ -17,6 +17,14 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // Enhanced request logging for development
+    if (import.meta.env.DEV) {
+      console.log(`🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        hasToken: !!token,
+        tokenLength: token?.length || 0
+      });
+    }
+    
     return config;
   },
   (error) => {
@@ -30,7 +38,18 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('API Error:', error);
+    // Enhanced error logging for development
+    if (import.meta.env.DEV) {
+      console.group('🚨 API Error Details');
+      console.error('Error:', error.message);
+      console.error('Status:', error.response?.status);
+      console.error('URL:', error.config?.url);
+      console.error('Method:', error.config?.method?.toUpperCase());
+      console.error('Full Error:', error);
+      console.groupEnd();
+    } else {
+      console.error('API Error:', error);
+    }
     return Promise.reject(error);
   }
 );
