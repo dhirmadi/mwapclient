@@ -14,7 +14,7 @@ import {
   LoadingOverlay
 } from '@mantine/core';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
-import { CloudProvider } from '../../../types/cloud-provider';
+import { CloudProvider } from '../types';
 
 const CloudProviderListPage: React.FC = () => {
   const navigate = useNavigate();

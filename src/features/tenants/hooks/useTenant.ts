@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import api from '../../../utils/api';
+import api from '../../../shared/utils/api';
 import { Tenant } from '../types';
 
 /**
@@ -12,7 +12,8 @@ const useTenant = (id?: string) => {
       if (!id) throw new Error('Tenant ID is required');
       
       try {
-        return await api.fetchTenantById(id);
+        const response = await api.get(`/tenants/${id}`);
+        return response.data;
       } catch (error) {
         console.error('Error in useTenant hook:', error);
         throw error;

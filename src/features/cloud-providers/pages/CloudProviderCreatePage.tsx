@@ -21,7 +21,7 @@ import {
   IconCloud,
 } from '@tabler/icons-react';
 import { useCloudProviders } from '../hooks/useCloudProviders';
-import { CloudProviderCreate as CloudProviderCreateType } from '../../../types/cloud-provider';
+import { CloudProviderCreate as CloudProviderCreateType } from '../types';
 
 /**
  * Cloud Provider Create Component

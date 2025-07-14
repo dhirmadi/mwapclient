@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Text, Code, Stack } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
-import { ApiError } from '../../types/api';
+import { ApiError } from '../types/api.types';
 
 interface ErrorDisplayProps {
   error: Error | ApiError | null;

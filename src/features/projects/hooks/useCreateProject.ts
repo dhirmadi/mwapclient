@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { Project, ProjectCreate } from '../../../types/project';
+import { Project, ProjectCreate } from '../types';
 
 /**
  * Hook for creating a new project

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../../utils/api';
+import api from '../../../shared/utils/api';
 import { Tenant } from '../types';
 
 /**
@@ -9,13 +9,18 @@ const useUpdateTenant = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Tenant> }) => 
-      api.updateTenant(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Tenant> }) => {
+      const response = await api.patch(`/tenants/${id}`, data);
+      return response.data;
+    },
     onSuccess: (data) => {
       // Invalidate tenants query to refetch the list
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
       // Update the tenant in the cache
-      queryClient.invalidateQueries({ queryKey: ['tenant', data._id] });
+      const tenantId = data._id || data.id;
+      if (tenantId) {
+        queryClient.invalidateQueries({ queryKey: ['tenant', tenantId] });
+      }
       // Update current tenant if it's the one being updated
       queryClient.invalidateQueries({ queryKey: ['tenant', 'current'] });
     },

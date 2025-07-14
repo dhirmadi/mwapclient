@@ -4,7 +4,7 @@ import {
   CloudProviderCreate, 
   CloudProviderUpdate,
   CloudProviderIntegrationCreate
-} from '../../../types/cloud-provider';
+} from '../types';
 import { useAuth } from '../../auth/hooks/useAuth';
 
 /**

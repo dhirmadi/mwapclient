@@ -25,7 +25,7 @@ import {
   IconInfoCircle
 } from '@tabler/icons-react';
 import { useProjectTypes } from '../hooks/useProjectTypes';
-import { ProjectTypeCreate as ProjectTypeCreateType } from '../../../types/project-type';
+import { ProjectTypeCreate as ProjectTypeCreateType } from '../types';
 
 const DEFAULT_CONFIG_SCHEMA = {
   inputFolder: "string",

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box, Stack, Paper, Menu, Avatar, ActionIcon, Tooltip, Loader } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../core/context/AuthContext';
 import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
-import { useTenants } from '../hooks/useTenants';
-import { useProjects } from '../hooks/useProjects';
+import { useTenants } from '../features/tenants/hooks/useTenants';
+import { useProjects } from '../features/projects/hooks/useProjects';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();

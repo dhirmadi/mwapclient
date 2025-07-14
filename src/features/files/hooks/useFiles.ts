@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { File, FileListParams } from '../../../types/file';
+import { File, FileListParams } from '../types';
 import axios from 'axios';
 
 // Private implementation functions

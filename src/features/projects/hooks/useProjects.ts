@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { Project, ProjectCreate, ProjectUpdate } from '../../../types/project';
-import { ProjectMember } from '../../../types/project';
+import { Project, ProjectCreate, ProjectUpdate, ProjectMember } from '../types';
 import { useAuth } from '../../auth/hooks/useAuth';
 
 export const useProjects = () => {

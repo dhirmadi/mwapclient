@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../../shared/utils/api';
-import { UserRolesResponse } from '../../types/auth';
+import { UserRolesResponse } from '../../shared/types/auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;

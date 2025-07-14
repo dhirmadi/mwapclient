@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../../utils/api';
+import api from '../../../shared/utils/api';
 import { Tenant, TenantCreate } from '../types';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../core/context/AuthContext';
 
 /**
  * Hook for creating a new tenant
@@ -11,7 +11,10 @@ const useCreateTenant = () => {
   const { isSuperAdmin } = useAuth();
 
   const mutation = useMutation({
-    mutationFn: (data: TenantCreate) => api.createTenant(data),
+    mutationFn: async (data: TenantCreate) => {
+      const response = await api.post('/tenants', data);
+      return response.data;
+    },
     onSuccess: () => {
       // Invalidate tenants query to refetch the list
       queryClient.invalidateQueries({ queryKey: ['tenants'] });

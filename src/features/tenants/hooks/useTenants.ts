@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
 import { TenantCreate, TenantUpdate } from '../types';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../core/context/AuthContext';
 
 export const useTenants = (includeArchived: boolean = false) => {
   const queryClient = useQueryClient();

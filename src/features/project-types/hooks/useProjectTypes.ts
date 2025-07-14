@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { ProjectType, ProjectTypeCreate, ProjectTypeUpdate } from '../../../types/project-type';
+import { ProjectType, ProjectTypeCreate, ProjectTypeUpdate } from '../types';
 import { useAuth } from '../../auth/hooks/useAuth';
 
 export const useProjectTypes = () => {

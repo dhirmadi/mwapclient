@@ -1,5 +1,5 @@
 import { Project } from '../types';
-import { ProjectRole } from '../../../types/auth';
+import { ProjectRole } from '../../../shared/types/auth';
 import { useAuth } from '../../auth/hooks/useAuth';
 
 /**
