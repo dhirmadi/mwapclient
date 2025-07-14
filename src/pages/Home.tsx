@@ -8,7 +8,7 @@ import { useProjects } from '../features/projects/hooks/useProjects';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, isSuperAdmin, isTenantOwner, logout, roles } = useAuth();
+  const { isAuthenticated, isReady, user, isSuperAdmin, isTenantOwner, logout, roles } = useAuth();
   const { currentTenant, isLoadingCurrentTenant } = useTenants();
   const [hasNoTenant, setHasNoTenant] = useState<boolean>(false);
   
@@ -54,6 +54,19 @@ const Home: React.FC = () => {
       setHasNoTenant(!currentTenant);
     }
   }, [isAuthenticated, isLoadingCurrentTenant, currentTenant, isSuperAdmin]);
+
+  // Debug logging for authentication state
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.group('🏠 Home Component Auth State');
+      console.log('isAuthenticated:', isAuthenticated);
+      console.log('isReady:', isReady);
+      console.log('isSuperAdmin:', isSuperAdmin);
+      console.log('isTenantOwner:', isTenantOwner);
+      console.log('roles:', roles);
+      console.groupEnd();
+    }
+  }, [isAuthenticated, isReady, isSuperAdmin, isTenantOwner, roles]);
 
   return (
     <Container size="lg" py="xl">
@@ -135,8 +148,21 @@ const Home: React.FC = () => {
           
           <Title order={2} mb="md">Quick Actions</Title>
           
+          {/* Show loading state while authentication is not ready */}
+          {isAuthenticated && !isReady && (
+            <Card shadow="sm" p="lg" radius="md" withBorder>
+              <Card.Section p="md">
+                <Group justify="space-between">
+                  <Title order={3}>Loading...</Title>
+                  <Loader size="sm" />
+                </Group>
+              </Card.Section>
+              <Text mb="md">Loading user permissions...</Text>
+            </Card>
+          )}
+          
           <SimpleGrid cols={3}>
-            {hasNoTenant && !isSuperAdmin && (
+            {isReady && hasNoTenant && !isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
@@ -153,7 +179,7 @@ const Home: React.FC = () => {
               </Card>
             )}
             
-            {isSuperAdmin && (
+            {isReady && isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -171,7 +197,7 @@ const Home: React.FC = () => {
             )}
             
             {/* Show loading state while fetching data */}
-            {isTenantOwner && (isLoadingIntegrations || isLoadingProjects) && (
+            {isReady && isTenantOwner && (isLoadingIntegrations || isLoadingProjects) && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -184,7 +210,7 @@ const Home: React.FC = () => {
             )}
             
             {/* Project Management - Show when tenant has integrations and projects */}
-            {isTenantOwner && hasIntegrations && hasProjects && !(isLoadingIntegrations || isLoadingProjects) && (
+            {isReady && isTenantOwner && hasIntegrations && hasProjects && !(isLoadingIntegrations || isLoadingProjects) && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -202,7 +228,7 @@ const Home: React.FC = () => {
             )}
             
             {/* Create Project - Show when tenant has integrations but no projects */}
-            {isTenantOwner && hasIntegrations && !hasProjects && !(isLoadingIntegrations || isLoadingProjects) && (
+            {isReady && isTenantOwner && hasIntegrations && !hasProjects && !(isLoadingIntegrations || isLoadingProjects) && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md" bg="teal.6">
                   <Group justify="space-between">
@@ -219,7 +245,7 @@ const Home: React.FC = () => {
               </Card>
             )}
             
-            {isSuperAdmin && (
+            {isReady && isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -236,7 +262,7 @@ const Home: React.FC = () => {
               </Card>
             )}
             
-            {isSuperAdmin && (
+            {isReady && isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -253,7 +279,7 @@ const Home: React.FC = () => {
               </Card>
             )}
             
-            {isSuperAdmin && (
+            {isReady && isSuperAdmin && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -271,7 +297,7 @@ const Home: React.FC = () => {
             )}
             
             {/* Tenant Settings - Always show for tenant owners */}
-            {isTenantOwner && (
+            {isReady && isTenantOwner && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
@@ -289,7 +315,7 @@ const Home: React.FC = () => {
             )}
             
             {/* Cloud Integrations - Always show for tenant owners */}
-            {isTenantOwner && (
+            {isReady && isTenantOwner && (
               <Card shadow="sm" p="lg" radius="md" withBorder>
                 <Card.Section p="md">
                   <Group justify="space-between">
