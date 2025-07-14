@@ -10,7 +10,7 @@ const useUpdateProject = () => {
 
   const mutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Project> }) => {
-      const response = await api.put(`/projects/${id}`, data);
+      const response = await api.patch(`/projects/${id}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {

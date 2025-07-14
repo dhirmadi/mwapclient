@@ -45,7 +45,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenant-current'],
     queryFn: async () => {
-      const response = await api.get('/tenant/current');
+      const response = await api.get('/tenants/me');
       return response.data;
     },
     // Removed enabled: !isSuperAdmin - let server handle role-based access
@@ -101,7 +101,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   // Update a tenant
   const updateTenantMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: TenantUpdate }) => {
-      const response = await api.put(`/tenants/${id}`, data);
+      const response = await api.patch(`/tenants/${id}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -134,6 +134,39 @@ export const useTenants = (includeArchived: boolean = false) => {
     });
   };
 
+  // Update tenant integration
+  const updateTenantIntegrationMutation = useMutation({
+    mutationFn: async ({ tenantId, integrationId, data }: { 
+      tenantId: string; 
+      integrationId: string; 
+      data: any 
+    }) => {
+      const response = await api.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+    },
+  });
+
+  // Refresh OAuth token for tenant integration
+  const refreshIntegrationTokenMutation = useMutation({
+    mutationFn: async ({ tenantId, integrationId }: { 
+      tenantId: string; 
+      integrationId: string; 
+    }) => {
+      const response = await api.post(`/oauth/tenants/${tenantId}/integrations/${integrationId}/refresh`);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+    },
+  });
+
   return {
     // Tenants
     tenants,
@@ -161,6 +194,12 @@ export const useTenants = (includeArchived: boolean = false) => {
     
     // Tenant integrations
     useTenantIntegrations,
+    updateTenantIntegration: updateTenantIntegrationMutation.mutate,
+    refreshIntegrationToken: refreshIntegrationTokenMutation.mutate,
+    isUpdatingIntegration: updateTenantIntegrationMutation.isPending,
+    isRefreshingToken: refreshIntegrationTokenMutation.isPending,
+    updateIntegrationError: updateTenantIntegrationMutation.error,
+    refreshTokenError: refreshIntegrationTokenMutation.error,
   };
 };
 
