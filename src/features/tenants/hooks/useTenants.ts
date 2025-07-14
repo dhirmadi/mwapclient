@@ -5,8 +5,9 @@ import { useAuth } from '../../../core/context/AuthContext';
 
 export const useTenants = (includeArchived: boolean = false) => {
   const queryClient = useQueryClient();
+  const { isReady } = useAuth();
 
-  // Fetch active tenants - let server handle access control
+  // Fetch active tenants - wait for auth to be ready
   const { 
     data: tenants, 
     isLoading, 
@@ -18,10 +19,10 @@ export const useTenants = (includeArchived: boolean = false) => {
       const response = await api.get(`/tenants${includeArchived ? '?includeArchived=true' : ''}`);
       return response.data;
     },
-    // Removed enabled: isSuperAdmin - let server handle role-based access
+    enabled: isReady, // Wait for authentication to be complete
   });
   
-  // Fetch archived tenants separately - let server handle access control
+  // Fetch archived tenants separately - wait for auth to be ready
   const {
     data: archivedTenants,
     isLoading: isLoadingArchived,
@@ -33,10 +34,10 @@ export const useTenants = (includeArchived: boolean = false) => {
       const response = await api.get('/tenants?includeArchived=true');
       return response.data;
     },
-    // Removed enabled: isSuperAdmin - let server handle role-based access
+    enabled: isReady, // Wait for authentication to be complete
   });
 
-  // Fetch current tenant - let server handle access control
+  // Fetch current tenant - wait for auth to be ready
   const { 
     data: currentTenant, 
     isLoading: isLoadingCurrentTenant,
@@ -48,7 +49,7 @@ export const useTenants = (includeArchived: boolean = false) => {
       const response = await api.get('/tenants/me');
       return response.data;
     },
-    // Removed enabled: !isSuperAdmin - let server handle role-based access
+    enabled: isReady, // Wait for authentication to be complete
   });
 
   // Fetch a single tenant by ID
@@ -76,7 +77,7 @@ export const useTenants = (includeArchived: boolean = false) => {
           throw error;
         }
       },
-      enabled: !!id, // Allow fetching tenant details regardless of user role
+      enabled: !!id && isReady, // Wait for auth and require ID
       retry: 3,      // Retry failed requests up to 3 times
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
       staleTime: 0,  // Consider data stale immediately (always refetch)
@@ -130,7 +131,7 @@ export const useTenants = (includeArchived: boolean = false) => {
         const response = await api.get(`/tenants/${tenantId!}/integrations`);
         return response.data;
       },
-      enabled: !!tenantId,
+      enabled: !!tenantId && isReady, // Wait for auth and require tenantId
     });
   };
 

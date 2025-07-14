@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../../shared/utils/api';
 import { UserRolesResponse } from '../../shared/types/auth';
@@ -6,6 +6,7 @@ import { UserRolesResponse } from '../../shared/types/auth';
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  isReady: boolean; // New: indicates auth is complete and ready for API calls
   user: any;
   login: () => void;
   logout: () => void;
@@ -20,6 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
+  isReady: false,
   user: null,
   login: () => {},
   logout: () => {},
@@ -198,22 +200,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isAuthenticated]); // Include isAuthenticated to avoid stale closure
   
+  // Calculate if auth is ready for API calls
+  const isReady = isAuthenticated && !auth0Loading && !rolesLoading && roles !== null;
+  
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    isAuthenticated,
+    isLoading: auth0Loading || rolesLoading,
+    isReady,
+    user,
+    login,
+    logout,
+    isSuperAdmin,
+    isTenantOwner,
+    roles,
+    hasProjectRole,
+    getToken,
+  }), [
+    isAuthenticated,
+    auth0Loading,
+    rolesLoading,
+    isReady,
+    user,
+    login,
+    logout,
+    isSuperAdmin,
+    isTenantOwner,
+    roles,
+    hasProjectRole,
+    getToken,
+  ]);
+  
   // Provide auth context to children
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        isLoading: auth0Loading || rolesLoading,
-        user,
-        login,
-        logout,
-        isSuperAdmin,
-        isTenantOwner,
-        roles,
-        hasProjectRole,
-        getToken,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
