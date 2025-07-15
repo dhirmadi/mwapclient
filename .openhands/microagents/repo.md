@@ -106,6 +106,8 @@ The application communicates with a RESTful API. The API documentation can be fo
 
 ### Key API Endpoints (v3)
 
+Note: due to the VITE proxy configuration, the APi base url for the code is /api
+
 - `/api/v1/tenants`: Tenant management
 - `/api/v1/projects`: Project management
 - `/api/v1/cloud-providers`: Cloud provider management

@@ -178,6 +178,51 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible = false }) => {
           >
             🧹 Clear Console
           </button>
+          
+          <button
+            onClick={() => {
+              const superAdminRoles = {
+                userId: 'dev-user',
+                isSuperAdmin: true,
+                isTenantOwner: false,
+                tenantId: null,
+                projectRoles: []
+              };
+              localStorage.setItem('dev_user_roles', JSON.stringify(superAdminRoles));
+              console.log('🔧 Set SuperAdmin role override');
+              window.location.reload();
+            }}
+            style={{
+              backgroundColor: '#d32f2f',
+              color: 'white',
+              border: '1px solid #f44336',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '11px'
+            }}
+          >
+            👑 Force SuperAdmin
+          </button>
+          
+          <button
+            onClick={() => {
+              localStorage.removeItem('dev_user_roles');
+              console.log('🔧 Removed role override');
+              window.location.reload();
+            }}
+            style={{
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '11px'
+            }}
+          >
+            🔄 Reset Roles
+          </button>
         </div>
       </div>
 

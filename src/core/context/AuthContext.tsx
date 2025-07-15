@@ -3,6 +3,73 @@ import { useAuth0 } from '@auth0/auth0-react';
 import api from '../../shared/utils/api';
 import { UserRolesResponse } from '../../shared/types/auth';
 
+// Helper function to validate and normalize roles response
+const validateAndNormalizeRoles = (data: any): UserRolesResponse => {
+  if (!data || typeof data !== 'object') {
+    console.warn('🚨 Invalid roles data received:', data);
+    return {
+      userId: '',
+      isSuperAdmin: false,
+      isTenantOwner: false,
+      tenantId: null,
+      projectRoles: []
+    };
+  }
+
+  // Handle different possible response structures
+  let normalizedData: UserRolesResponse;
+
+  if (data.isSuperAdmin !== undefined || data.isTenantOwner !== undefined) {
+    // Direct roles structure
+    normalizedData = {
+      userId: data.userId || data.id || '',
+      isSuperAdmin: Boolean(data.isSuperAdmin),
+      isTenantOwner: Boolean(data.isTenantOwner),
+      tenantId: data.tenantId || null,
+      projectRoles: Array.isArray(data.projectRoles) ? data.projectRoles : []
+    };
+  } else if (data.roles) {
+    // Nested roles structure
+    normalizedData = {
+      userId: data.userId || data.id || '',
+      isSuperAdmin: Boolean(data.roles.isSuperAdmin),
+      isTenantOwner: Boolean(data.roles.isTenantOwner),
+      tenantId: data.roles.tenantId || data.tenantId || null,
+      projectRoles: Array.isArray(data.roles.projectRoles) ? data.roles.projectRoles : []
+    };
+  } else if (data.user && data.user.roles) {
+    // User object with nested roles
+    normalizedData = {
+      userId: data.user.userId || data.user.id || '',
+      isSuperAdmin: Boolean(data.user.roles.isSuperAdmin),
+      isTenantOwner: Boolean(data.user.roles.isTenantOwner),
+      tenantId: data.user.roles.tenantId || data.user.tenantId || null,
+      projectRoles: Array.isArray(data.user.roles.projectRoles) ? data.user.roles.projectRoles : []
+    };
+  } else {
+    // Fallback - try to extract any role information
+    console.warn('🚨 Unexpected roles data structure, using fallback:', data);
+    normalizedData = {
+      userId: data.userId || data.id || '',
+      isSuperAdmin: Boolean(data.isSuperAdmin || data.superAdmin || data.isAdmin),
+      isTenantOwner: Boolean(data.isTenantOwner || data.tenantOwner || data.isOwner),
+      tenantId: data.tenantId || null,
+      projectRoles: Array.isArray(data.projectRoles) ? data.projectRoles : []
+    };
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('🔧 Role validation result:', {
+      original: data,
+      normalized: normalizedData,
+      detectedSuperAdmin: normalizedData.isSuperAdmin,
+      detectedTenantOwner: normalizedData.isTenantOwner
+    });
+  }
+
+  return normalizedData;
+};
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -114,9 +181,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🚀 Making API call to /users/me/roles...');
       }
       
-      // Fetch user roles from API
-      const response = await api.get('/users/me/roles');
-      const userRoles = response.data;
+      // Fetch user roles from API - try multiple possible endpoints
+      let response;
+      let userRoles;
+      
+      // Try the most likely v3 API endpoints in order of preference
+      const possibleEndpoints = [
+        '/auth/me/roles',     // Most likely v3 endpoint
+        '/me/roles',          // Alternative v3 endpoint
+        '/users/me/roles',    // Original endpoint (fallback)
+        '/auth/me',           // Auth info endpoint
+        '/me'                 // User info endpoint
+      ];
+      
+      let lastError;
+      for (const endpoint of possibleEndpoints) {
+        try {
+          if (import.meta.env.DEV) {
+            console.log(`🔍 Trying endpoint: ${endpoint}`);
+          }
+          
+          response = await api.get(endpoint);
+          userRoles = response.data;
+          
+          if (import.meta.env.DEV) {
+            console.log(`✅ Success with endpoint: ${endpoint}`, userRoles);
+          }
+          
+          // Validate that we got role information
+          if (userRoles && (
+            userRoles.hasOwnProperty('isSuperAdmin') || 
+            userRoles.hasOwnProperty('isTenantOwner') ||
+            userRoles.hasOwnProperty('roles')
+          )) {
+            break; // Found valid roles data
+          } else {
+            if (import.meta.env.DEV) {
+              console.log(`⚠️ Endpoint ${endpoint} returned data but no role info:`, userRoles);
+            }
+          }
+        } catch (error) {
+          lastError = error;
+          if (import.meta.env.DEV) {
+            console.log(`❌ Failed endpoint: ${endpoint}`, error.response?.status, error.message);
+          }
+          continue; // Try next endpoint
+        }
+      }
+      
+      // If no endpoint worked, throw the last error
+      if (!response || !userRoles) {
+        throw lastError || new Error('No valid roles endpoint found');
+      }
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
@@ -126,6 +242,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return;
       }
+      
+      // Validate and normalize the response data
+      const normalizedRoles = validateAndNormalizeRoles(userRoles);
       
       if (import.meta.env.DEV) {
         console.log('✅ User roles received from API:', userRoles);
@@ -141,28 +260,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tenantIdValue: userRoles?.tenantId,
           userIdValue: userRoles?.userId
         });
+        console.log('🔧 Normalized roles:', normalizedRoles);
       }
       
-      setRoles(userRoles);
-      setIsSuperAdmin(userRoles.isSuperAdmin || false);
-      setIsTenantOwner(userRoles.isTenantOwner || false);
+      // Set roles with normalized data
+      setRoles(normalizedRoles);
+      setIsSuperAdmin(normalizedRoles.isSuperAdmin);
+      setIsTenantOwner(normalizedRoles.isTenantOwner);
       
       if (import.meta.env.DEV) {
-        console.log('📝 Roles set in state:', {
-          originalData: userRoles,
-          isSuperAdmin: userRoles.isSuperAdmin || false,
-          isTenantOwner: userRoles.isTenantOwner || false,
-          projectRoles: userRoles.projectRoles?.length || 0,
-          tenantId: userRoles.tenantId
+        console.log('📝 Roles being set in state:', {
+          normalizedData: normalizedRoles,
+          willSetSuperAdmin: normalizedRoles.isSuperAdmin,
+          willSetTenantOwner: normalizedRoles.isTenantOwner,
+          projectRoles: normalizedRoles.projectRoles?.length || 0,
+          tenantId: normalizedRoles.tenantId
         });
         
-        // Additional verification
-        console.log('🔬 State verification after setting:');
+        // Async state verification - check state after React updates
+        console.log('🔬 Scheduling state verification...');
         setTimeout(() => {
-          console.log('  - Current isSuperAdmin state:', isSuperAdmin);
-          console.log('  - Current isTenantOwner state:', isTenantOwner);
-          console.log('  - Current roles state:', roles);
-        }, 100);
+          console.group('🔍 STATE VERIFICATION RESULTS');
+          console.log('Expected vs Actual State:');
+          console.log('  - Expected isSuperAdmin:', normalizedRoles.isSuperAdmin);
+          console.log('  - Actual isSuperAdmin state:', isSuperAdmin);
+          console.log('  - Expected isTenantOwner:', normalizedRoles.isTenantOwner);
+          console.log('  - Actual isTenantOwner state:', isTenantOwner);
+          console.log('  - Roles state:', roles);
+          
+          // Check for state update issues
+          if (normalizedRoles.isSuperAdmin !== isSuperAdmin) {
+            console.warn('⚠️ SuperAdmin state mismatch detected!');
+          }
+          if (normalizedRoles.isTenantOwner !== isTenantOwner) {
+            console.warn('⚠️ TenantOwner state mismatch detected!');
+          }
+          
+          console.log('✅ State verification complete');
+          console.groupEnd();
+        }, 200); // Increased timeout to ensure state updates
         
         console.groupEnd();
       }
@@ -177,19 +313,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Enhanced error logging for development
+      // Enhanced error logging and handling for development
       if (import.meta.env.DEV) {
-        console.group('🚨 Auth Error: Failed to fetch user roles');
-        console.error('❌ Error details:', error);
+        console.group('🚨 Auth Error: Failed to fetch user roles from all endpoints');
+        console.error('❌ Final error details:', error);
         console.error('👤 User:', user);
         console.error('🔐 Is Authenticated:', isAuthenticated);
         console.error('🌐 Network error?', !error.response);
         console.error('📊 Status:', error.response?.status);
         console.error('📦 Response data:', error.response?.data);
+        
+        // Provide specific guidance based on error type
+        if (error.response?.status === 404) {
+          console.error('🔍 DIAGNOSIS: All role endpoints returned 404. Check backend API routes.');
+          console.error('💡 SUGGESTION: Verify the correct roles endpoint exists in the backend.');
+        } else if (error.response?.status === 401) {
+          console.error('🔍 DIAGNOSIS: Authentication failed. Token may be invalid.');
+          console.error('💡 SUGGESTION: Check Auth0 token validity and backend authentication.');
+        } else if (error.response?.status === 403) {
+          console.error('🔍 DIAGNOSIS: Access forbidden. User may not have permission.');
+          console.error('💡 SUGGESTION: Check user permissions in backend.');
+        } else if (!error.response) {
+          console.error('🔍 DIAGNOSIS: Network error. Backend may be unreachable.');
+          console.error('💡 SUGGESTION: Check backend server status and network connectivity.');
+        }
+        
         console.groupEnd();
         console.groupEnd(); // Close the main group
       } else {
-        console.error('Failed to fetch user roles:', error);
+        console.error('Failed to fetch user roles from all endpoints:', error.message);
+      }
+      
+      // Reset roles on error, but provide fallback for development
+      if (import.meta.env.DEV) {
+        // In development, check if we have a development override
+        const devOverride = localStorage.getItem('dev_user_roles');
+        if (devOverride) {
+          try {
+            const devRoles = JSON.parse(devOverride);
+            console.warn('🔧 Using development role override:', devRoles);
+            const normalizedDevRoles = validateAndNormalizeRoles(devRoles);
+            setRoles(normalizedDevRoles);
+            setIsSuperAdmin(normalizedDevRoles.isSuperAdmin);
+            setIsTenantOwner(normalizedDevRoles.isTenantOwner);
+            return;
+          } catch (parseError) {
+            console.error('Failed to parse development role override:', parseError);
+          }
+        }
       }
       
       // Reset roles on error
