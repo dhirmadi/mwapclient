@@ -169,22 +169,24 @@ src/
 
 ## 📚 Documentation
 
-Additional documentation is available in the `docs/` directory:
+Comprehensive documentation is available in the `docs/` directory, organized for developers, architects, and testers:
 
-### Core Documentation
-- **API Configuration**: `docs/API_CONFIGURATION.md` - API setup and proxy configuration
-- **Architecture**: `docs/architecture.md` - Overall system architecture
-- **User Flows**: `docs/UserFlowSpecification.md` - Detailed user flow specifications
-- **RBAC**: `docs/rbac.md` - Role-based access control implementation
+### 🎯 Core Documentation
+- **[Architecture & Solution Design](./docs/architecture/README.md)** - System architecture, design patterns, and technical decisions
+- **[Developer Guidelines](./docs/development/README.md)** - Coding standards, conventions, and best practices
+- **[API Integration](./docs/api/README.md)** - Complete API documentation including critical Vite configuration
+- **[Security & Authentication](./docs/security/README.md)** - Authentication flows, security measures, and RBAC
+- **[Features](./docs/features/README.md)** - Detailed description of each application feature
+- **[Components & UI Patterns](./docs/components/README.md)** - Component structure, UI patterns, and file organization
+- **[Changelog & Status](./docs/changelog/README.md)** - Feature status, migration history, and release notes
 
-### Development & Fixes
-- **ID Transformation Fix**: `docs/ID_TRANSFORMATION_FIX.md` - Solution for MongoDB _id to id mapping
-- **Code Review Improvements**: `docs/CODE_REVIEW_IMPROVEMENTS.md` - Enhancements based on GitHub Copilot review
-- **Cloud Provider Integration**: `docs/CLOUD_PROVIDER_INTEGRATION_IMPLEMENTATION.md` - OAuth integration implementation
+### 🚀 Quick Reference
+- **[Getting Started](./docs/getting-started.md)** - Setup and initial development guide
+- **[Troubleshooting](./docs/troubleshooting.md)** - Common issues and solutions
+- **[Contributing](./docs/contributing.md)** - Guidelines for contributing to the project
 
-### API Documentation
-- **v3 API**: `docs/v3-api.md` - Complete v3 API documentation
-- **API Specifications**: `docs/api/` - OpenAPI schemas and endpoint documentation
+### 📋 Complete Documentation Index
+See **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** for a complete overview of the consolidated documentation structure.
 
 ## 📄 License
 
