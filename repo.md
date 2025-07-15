@@ -170,6 +170,10 @@ When working with this codebase, follow these principles:
 6. **Comprehensive Error Handling**: Use consistent error handling patterns
 7. **Type Safety**: Leverage TypeScript for type safety throughout the codebase
 
+## Testing Guidelines
+
+**IMPORTANT**: Do not use browser automation tools for testing during development. The application should be tested manually using a local browser. Browser automation should only be used for automated testing suites, not for development debugging or verification.
+
 ## Getting Started
 
 1. Clone the repository

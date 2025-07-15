@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCloudProviders } from '../hooks/useCloudProviders';
 import { 
@@ -11,21 +11,60 @@ import {
   Paper, 
   Title,
   Container,
-  LoadingOverlay
+  LoadingOverlay,
+  Modal,
+  Alert,
+  Stack,
+  Tooltip
 } from '@mantine/core';
-import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
+import { 
+  IconEdit, 
+  IconTrash, 
+  IconPlus, 
+  IconAlertCircle,
+  IconEye,
+  IconCloud
+} from '@tabler/icons-react';
 import { CloudProvider } from '../types';
 
 const CloudProviderListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { cloudProviders, isLoading } = useCloudProviders();
+  const { 
+    cloudProviders, 
+    isLoading, 
+    deleteCloudProvider, 
+    isDeleting,
+    deleteError 
+  } = useCloudProviders();
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [providerToDelete, setProviderToDelete] = useState<CloudProvider | null>(null);
 
   const handleEdit = (id: string) => {
     navigate(`/admin/cloud-providers/${id}/edit`);
   };
 
-  const handleDelete = (id: string) => {
-    console.log('Delete cloud provider:', id);
+  const handleView = (id: string) => {
+    navigate(`/admin/cloud-providers/${id}/edit`);
+  };
+
+  const handleDeleteClick = (provider: CloudProvider) => {
+    setProviderToDelete(provider);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!providerToDelete) return;
+
+    try {
+      await deleteCloudProvider(providerToDelete.id);
+      console.log('Cloud provider deleted successfully');
+      setDeleteModalOpen(false);
+      setProviderToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete cloud provider:', error);
+      // Error is handled by the hook and displayed in the modal
+    }
   };
 
   const handleCreate = () => {
@@ -70,19 +109,24 @@ const CloudProviderListPage: React.FC = () => {
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs">
-                      <ActionIcon 
-                        variant="subtle" 
-                        onClick={() => handleEdit(provider.id)}
-                      >
-                        <IconEdit size={16} />
-                      </ActionIcon>
-                      <ActionIcon 
-                        variant="subtle" 
-                        color="red"
-                        onClick={() => handleDelete(provider.id)}
-                      >
-                        <IconTrash size={16} />
-                      </ActionIcon>
+                      <Tooltip label="View/Edit Provider">
+                        <ActionIcon 
+                          variant="subtle" 
+                          color="blue"
+                          onClick={() => handleEdit(provider.id)}
+                        >
+                          <IconEdit size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Delete Provider">
+                        <ActionIcon 
+                          variant="subtle" 
+                          color="red"
+                          onClick={() => handleDeleteClick(provider)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -102,6 +146,54 @@ const CloudProviderListPage: React.FC = () => {
           </div>
         )}
       </Paper>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        opened={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Cloud Provider"
+        centered
+      >
+        <Stack gap="md">
+          <Alert icon={<IconAlertCircle size={16} />} color="red">
+            <Text fw={500}>This action cannot be undone!</Text>
+            <Text size="sm">
+              Deleting this cloud provider will remove it permanently and may affect 
+              existing tenant integrations.
+            </Text>
+          </Alert>
+          
+          {deleteError && (
+            <Alert icon={<IconAlertCircle size={16} />} color="red">
+              {deleteError instanceof Error ? deleteError.message : 'Failed to delete cloud provider'}
+            </Alert>
+          )}
+          
+          <Text>
+            Are you sure you want to delete the cloud provider "{providerToDelete?.name}"?
+          </Text>
+          
+          <Group justify="flex-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setProviderToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              color="red" 
+              leftSection={<IconTrash size={16} />}
+              onClick={handleDeleteConfirm}
+              loading={isDeleting}
+            >
+              Delete Provider
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Container>
   );
 };

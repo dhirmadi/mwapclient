@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { 
   CloudProviderCreate, 
   CloudProviderUpdate,
@@ -24,7 +25,11 @@ export const useCloudProviders = () => {
     queryKey: ['cloud-providers'],
     queryFn: async () => {
       const response = await api.get('/cloud-providers');
-      return response.data;
+      console.log('useCloudProviders - fetchCloudProviders response:', response.data);
+      
+      const transformedData = handleApiResponse(response, true);
+      console.log('Transformed cloud providers data:', transformedData);
+      return transformedData;
     },
     enabled: isReady, // Wait for authentication to be complete
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -35,7 +40,11 @@ export const useCloudProviders = () => {
   const createCloudProviderMutation = useMutation({
     mutationFn: async (data: CloudProviderCreate) => {
       const response = await api.post("/cloud-providers", data);
-      return response.data;
+      console.log('createCloudProvider response:', response.data);
+      
+      const transformedData = handleApiResponse(response, false);
+      console.log('Transformed created cloud provider data:', transformedData);
+      return transformedData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
@@ -46,7 +55,11 @@ export const useCloudProviders = () => {
   const updateCloudProviderMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CloudProviderUpdate }) => {
       const response = await api.patch(`/cloud-providers/${id}`, data);
-      return response.data;
+      console.log(`updateCloudProvider ${id} response:`, response.data);
+      
+      const transformedData = handleApiResponse(response, false);
+      console.log('Transformed updated cloud provider data:', transformedData);
+      return transformedData;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
@@ -58,7 +71,9 @@ export const useCloudProviders = () => {
   const deleteCloudProviderMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await api.delete(`/cloud-providers/${id}`);
-      return response.data;
+      console.log(`deleteCloudProvider ${id} response:`, response.data);
+      
+      return handleDeleteResponse(response);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
@@ -99,7 +114,11 @@ export const useCloudProviders = () => {
       queryKey: ['cloud-provider', id],
       queryFn: async () => {
         const response = await api.get(`/cloud-providers/${id!}`);
-        return response.data;
+        console.log(`useCloudProvider - fetchCloudProvider ${id} response:`, response.data);
+        
+        const transformedData = handleApiResponse(response, false);
+        console.log('Transformed cloud provider data:', transformedData);
+        return transformedData;
       },
       enabled: !!id && isReady, // Wait for auth and require ID
       staleTime: 5 * 60 * 1000, // 5 minutes

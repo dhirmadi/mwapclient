@@ -59,31 +59,86 @@ const CloudProviderCreate: React.FC = () => {
 
   // No need for notification check anymore
   
+  // Provider templates with pre-configured values
+  const getProviderTemplate = (providerType: string) => {
+    const templates = {
+      'dropbox': {
+        name: 'Dropbox',
+        slug: 'dropbox',
+        scopes: ['files.content.read', 'files.content.write', 'files.metadata.read'],
+        authUrl: 'https://www.dropbox.com/oauth2/authorize',
+        tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
+        grantType: 'authorization_code',
+        tokenMethod: 'POST',
+        metadata: {
+          providerType: 'dropbox',
+          apiBaseUrl: 'https://api.dropboxapi.com/2',
+          supportedFeatures: ['read', 'write', 'metadata']
+        }
+      },
+      'google-drive': {
+        name: 'Google Drive',
+        slug: 'google-drive',
+        scopes: ['https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/drive.file'],
+        authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        grantType: 'authorization_code',
+        tokenMethod: 'POST',
+        metadata: {
+          providerType: 'google-drive',
+          apiBaseUrl: 'https://www.googleapis.com/drive/v3',
+          supportedFeatures: ['read', 'write', 'metadata']
+        }
+      },
+      'onedrive': {
+        name: 'OneDrive',
+        slug: 'onedrive',
+        scopes: ['Files.Read', 'Files.ReadWrite', 'Files.Read.All'],
+        authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        grantType: 'authorization_code',
+        tokenMethod: 'POST',
+        metadata: {
+          providerType: 'onedrive',
+          apiBaseUrl: 'https://graph.microsoft.com/v1.0/me/drive',
+          supportedFeatures: ['read', 'write', 'metadata']
+        }
+      },
+      'custom': {
+        name: '',
+        slug: 'custom',
+        scopes: ['read', 'write'],
+        authUrl: '',
+        tokenUrl: '',
+        grantType: 'authorization_code',
+        tokenMethod: 'POST',
+        metadata: {
+          providerType: 'custom'
+        }
+      }
+    };
+
+    return templates[providerType as keyof typeof templates] || templates.custom;
+  };
+
   // Update form values when provider type changes
   useEffect(() => {
     if (selectedProviderType) {
-      // Set slug based on provider type
-      form.setFieldValue('slug', selectedProviderType);
+      const template = getProviderTemplate(selectedProviderType);
       
-      // Set default OAuth values
-      form.setFieldValue('grantType', 'authorization_code');
-      form.setFieldValue('tokenMethod', 'POST');
-      
-      // Set metadata based on provider type
-      const metadata: Record<string, unknown> = {
-        providerType: selectedProviderType
-      };
-      
-      // Add provider-specific metadata
-      if (selectedProviderType === 'google_drive') {
-        metadata.apiBaseUrl = 'https://www.googleapis.com/drive/v3';
-      } else if (selectedProviderType === 'dropbox') {
-        metadata.apiBaseUrl = 'https://api.dropboxapi.com/2';
-      } else if (selectedProviderType === 'onedrive') {
-        metadata.apiBaseUrl = 'https://graph.microsoft.com/v1.0/me/drive';
-      }
-      
-      form.setFieldValue('metadata', metadata);
+      // Update form with template values
+      form.setValues({
+        name: template.name,
+        slug: template.slug,
+        scopes: template.scopes,
+        authUrl: template.authUrl,
+        tokenUrl: template.tokenUrl,
+        clientId: form.values.clientId, // Keep existing client credentials
+        clientSecret: form.values.clientSecret,
+        grantType: template.grantType,
+        tokenMethod: template.tokenMethod,
+        metadata: template.metadata
+      });
       
       // Clear any previous errors
       setFormError(null);
@@ -268,7 +323,15 @@ const CloudProviderCreate: React.FC = () => {
             color="blue" 
             mb="md"
           >
-            These settings define how the OAuth flow will work. The client ID and client secret will be used by the system to authenticate with the provider.
+            <Text size="sm" mb="xs">
+              These settings define how the OAuth flow will work. The client ID and client secret will be used by the system to authenticate with the provider.
+            </Text>
+            {selectedProviderType !== 'custom' && (
+              <Text size="xs" c="dimmed">
+                Pre-configured values have been loaded for {selectedProviderType}. 
+                You only need to provide your client ID and client secret.
+              </Text>
+            )}
           </Alert>
           
           <Group justify="flex-end" mt="xl">

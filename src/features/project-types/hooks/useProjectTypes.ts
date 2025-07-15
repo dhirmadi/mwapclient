@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { ProjectType, ProjectTypeCreate, ProjectTypeUpdate } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -17,9 +18,12 @@ export const useProjectTypes = () => {
     queryKey: ['project-types'],
     queryFn: async () => {
       try {
-        const data = await api.get("/project-types").then(r => r.data);
-        console.log('useProjectTypes - fetchProjectTypes response:', data);
-        return Array.isArray(data) ? data : [];
+        const response = await api.get("/project-types");
+        console.log('useProjectTypes - fetchProjectTypes response:', response.data);
+        
+        const transformedData = handleApiResponse(response, true);
+        console.log('Transformed project types data:', transformedData);
+        return transformedData;
       } catch (error) {
         console.error('Error fetching project types:', error);
         throw error;
@@ -36,7 +40,11 @@ export const useProjectTypes = () => {
       queryFn: async () => {
         try {
           const response = await api.get(`/project-types/${id!}`);
-          return response.data;
+          console.log(`useProjectType - fetchProjectType ${id} response:`, response.data);
+          
+          const transformedData = handleApiResponse(response, false);
+          console.log('Transformed project type data:', transformedData);
+          return transformedData;
         } catch (error) {
           console.error(`Error fetching project type ${id}:`, error);
           throw error;
@@ -61,7 +69,12 @@ export const useProjectTypes = () => {
             outputFolder: "string"
           }
         };
-        return await api.post("/project-types", payload);
+        const response = await api.post("/project-types", payload);
+        console.log('createProjectType response:', response.data);
+        
+        const transformedData = handleApiResponse(response, false);
+        console.log('Transformed created project type data:', transformedData);
+        return transformedData;
       } catch (error) {
         console.error('Error creating project type:', error);
         throw error;
@@ -85,7 +98,11 @@ export const useProjectTypes = () => {
         if (data.configSchema !== undefined) payload.configSchema = data.configSchema;
         
         const response = await api.patch(`/project-types/${id}`, payload);
-        return response.data;
+        console.log(`updateProjectType ${id} response:`, response.data);
+        
+        const transformedData = handleApiResponse(response, false);
+        console.log('Transformed updated project type data:', transformedData);
+        return transformedData;
       } catch (error) {
         console.error(`Error updating project type ${id}:`, error);
         throw error;
@@ -102,7 +119,9 @@ export const useProjectTypes = () => {
     mutationFn: async (id: string) => {
       try {
         const response = await api.delete(`/project-types/${id}`);
-        return response.data;
+        console.log(`deleteProjectType ${id} response:`, response.data);
+        
+        return handleDeleteResponse(response);
       } catch (error) {
         console.error(`Error deleting project type ${id}:`, error);
         throw error;
