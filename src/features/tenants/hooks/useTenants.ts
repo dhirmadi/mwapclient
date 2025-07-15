@@ -16,8 +16,31 @@ export const useTenants = (includeArchived: boolean = false) => {
   } = useQuery({
     queryKey: ['tenants', 'active'],
     queryFn: async () => {
-      const response = await api.get(`/tenants${includeArchived ? '?includeArchived=true' : ''}`);
-      return response.data;
+      if (import.meta.env.DEV) {
+        console.group('🏢 TENANTS QUERY: Fetching active tenants');
+        console.log('📊 Query State:', {
+          includeArchived,
+          isReady,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      try {
+        const response = await api.get(`/tenants${includeArchived ? '?includeArchived=true' : ''}`);
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ Tenants fetched successfully:', response.data);
+          console.groupEnd();
+        }
+        
+        return response.data;
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('❌ Failed to fetch tenants:', error);
+          console.groupEnd();
+        }
+        throw error;
+      }
     },
     enabled: isReady, // Wait for authentication to be complete
   });

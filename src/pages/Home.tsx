@@ -58,15 +58,31 @@ const Home: React.FC = () => {
   // Debug logging for authentication state
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.group('🏠 Home Component Auth State');
-      console.log('isAuthenticated:', isAuthenticated);
-      console.log('isReady:', isReady);
-      console.log('isSuperAdmin:', isSuperAdmin);
-      console.log('isTenantOwner:', isTenantOwner);
-      console.log('roles:', roles);
+      console.group('🏠 HOME COMPONENT: Auth State Changed');
+      console.log('📊 Authentication Status:', {
+        isAuthenticated,
+        isReady,
+        hasUser: !!user,
+        userId: user?.sub,
+        userName: user?.name,
+        userEmail: user?.email
+      });
+      console.log('🔐 Role Status:', {
+        isSuperAdmin,
+        isTenantOwner,
+        roles,
+        rolesType: typeof roles,
+        rolesKeys: roles ? Object.keys(roles) : []
+      });
+      console.log('🎭 Display Logic:', {
+        shouldShowSuperAdminCards: isReady && isSuperAdmin,
+        shouldShowTenantOwnerCards: isReady && isTenantOwner,
+        shouldShowProjectMemberCards: isReady && !isSuperAdmin && !isTenantOwner,
+        displayText: isSuperAdmin ? 'Super Admin' : isTenantOwner ? 'Tenant Owner' : 'Project Member'
+      });
       console.groupEnd();
     }
-  }, [isAuthenticated, isReady, isSuperAdmin, isTenantOwner, roles]);
+  }, [isAuthenticated, isReady, isSuperAdmin, isTenantOwner, roles, user]);
 
   return (
     <Container size="lg" py="xl">
