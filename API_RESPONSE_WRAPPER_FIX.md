@@ -91,9 +91,18 @@ console.log('🔧 Role validation result:', {
 ### Primary API Call
 - **Endpoint:** `/users/me/roles`
 - **Method:** GET
-- **Full URL:** `/api/users/me/roles` (via Vite proxy)
+- **Client Base URL:** `/api` (configured in `src/shared/utils/api.ts:20`)
+- **Full Request URL:** `/api/users/me/roles`
+- **Vite Proxy Target:** `https://mwapss.shibari.photo/api/v1` (configured in `vite.config.ts:25`)
+- **Final Backend URL:** `https://mwapss.shibari.photo/api/v1/users/me/roles`
 - **Authentication:** Bearer token via request interceptor
 - **Response Format:** Wrapped with `{success: true, data: {...}}`
+
+### ⚠️ Critical Configuration Notes
+- **API Base URL:** Must remain `/api` - this is the correct configuration
+- **Vite Proxy:** Current proxy configuration in `vite.config.ts` is correct and should NOT be changed
+- **URL Rewriting:** Vite proxy rewrites `/api/*` to `/*` on the target server
+- **Backend Integration:** The `/api` prefix is essential for proper proxy routing
 
 ### Processing Flow
 1. **API Call:** `api.get('/users/me/roles')` in `AuthContext.tsx:185`

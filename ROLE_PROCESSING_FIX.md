@@ -32,6 +32,11 @@ Users were showing as "Project Member" instead of "Super Admin" despite the back
 ### 1. Enhanced Response Processing
 The original `/users/me/roles` endpoint was kept as it was working correctly. The focus was on improving how the response is processed.
 
+**⚠️ CRITICAL API Configuration:**
+- **API Base URL:** `/api` (configured in `src/shared/utils/api.ts:20`) - DO NOT CHANGE
+- **Vite Proxy:** Current configuration in `vite.config.ts` is correct - DO NOT MODIFY
+- **Request Flow:** `/api/users/me/roles` → Vite proxy → `https://mwapss.shibari.photo/api/v1/users/me/roles`
+
 ### 2. Response Validation and Normalization
 ```typescript
 const validateAndNormalizeRoles = (data: any): UserRolesResponse => {

@@ -94,6 +94,16 @@ cp .env.example .env
 
 4. Update the `.env` file with your Auth0 credentials and API URL.
 
+### ⚠️ Critical API Configuration
+
+**DO NOT MODIFY** the following configurations - they are correctly set up:
+
+- **API Base URL:** `/api` (in `src/shared/utils/api.ts`)
+- **Vite Proxy:** Current setup in `vite.config.ts` is correct
+- **Backend Target:** `https://mwapss.shibari.photo/api/v1`
+
+The Vite proxy automatically handles routing from `/api/*` to the backend server. See `docs/API_CONFIGURATION.md` for detailed information.
+
 ### Development
 
 Start the development server:

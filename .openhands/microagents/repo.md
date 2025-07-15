@@ -106,7 +106,16 @@ The application communicates with a RESTful API. The API documentation can be fo
 
 ### Key API Endpoints (v3)
 
-Note: due to the VITE proxy configuration, the APi base url for the code is /api
+**⚠️ CRITICAL: API Configuration Requirements**
+- **API Base URL:** `/api` (configured in `src/shared/utils/api.ts`)
+- **Vite Proxy Configuration:** Current setup in `vite.config.ts` is correct and must NOT be changed
+- **Proxy Target:** `https://mwapss.shibari.photo/api/v1`
+- **URL Rewriting:** Vite automatically rewrites `/api/*` requests to `/*` on the target server
+
+**Example API Call Flow:**
+1. Frontend makes request to: `/api/users/me/roles`
+2. Vite proxy forwards to: `https://mwapss.shibari.photo/api/v1/users/me/roles`
+3. Backend processes and returns wrapped response: `{success: true, data: {...}}`
 
 - `/api/v1/tenants`: Tenant management
 - `/api/v1/projects`: Project management
