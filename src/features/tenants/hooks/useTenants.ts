@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { TenantCreate, TenantUpdate } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -30,10 +31,16 @@ export const useTenants = (includeArchived: boolean = false) => {
         
         if (import.meta.env.DEV) {
           console.log('✅ Tenants fetched successfully:', response.data);
+        }
+        
+        const transformedData = handleApiResponse(response, true);
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ Transformed tenants data:', transformedData);
           console.groupEnd();
         }
         
-        return response.data;
+        return transformedData;
       } catch (error) {
         if (import.meta.env.DEV) {
           console.error('❌ Failed to fetch tenants:', error);
@@ -55,7 +62,7 @@ export const useTenants = (includeArchived: boolean = false) => {
     queryKey: ['tenants', 'archived'],
     queryFn: async () => {
       const response = await api.get('/tenants?includeArchived=true');
-      return response.data;
+      return handleApiResponse(response, true);
     },
     enabled: isReady, // Wait for authentication to be complete
   });
@@ -70,7 +77,7 @@ export const useTenants = (includeArchived: boolean = false) => {
     queryKey: ['tenant-me'],
     queryFn: async () => {
       const response = await api.get('/tenants/me');
-      return response.data;
+      return handleApiResponse(response, false);
     },
     enabled: isReady, // Wait for authentication to be complete
   });
@@ -85,8 +92,10 @@ export const useTenants = (includeArchived: boolean = false) => {
         console.log('useTenant hook - Fetching tenant with ID:', id);
         try {
           const response = await api.get(`/tenants/${id}`);
-          const result = response.data;
-          console.log('useTenant hook - Fetch result:', result);
+          console.log('useTenant hook - Raw response:', response.data);
+          
+          const result = handleApiResponse(response, false);
+          console.log('useTenant hook - Transformed result:', result);
           
           // Validate the result
           if (!result) {
@@ -115,7 +124,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   const createTenantMutation = useMutation({
     mutationFn: async (data: TenantCreate) => {
       const response = await api.post("/tenants", data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
@@ -126,7 +135,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   const updateTenantMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: TenantUpdate }) => {
       const response = await api.patch(`/tenants/${id}`, data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
@@ -139,7 +148,7 @@ export const useTenants = (includeArchived: boolean = false) => {
   const deleteTenantMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await api.delete(`/tenants/${id}`);
-      return response.data;
+      return handleDeleteResponse(response);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
@@ -152,7 +161,7 @@ export const useTenants = (includeArchived: boolean = false) => {
       queryKey: ['tenant-integrations', tenantId],
       queryFn: async () => {
         const response = await api.get(`/tenants/${tenantId!}/integrations`);
-        return response.data;
+        return handleApiResponse(response, true);
       },
       enabled: !!tenantId && isReady, // Wait for auth and require tenantId
     });
@@ -166,7 +175,7 @@ export const useTenants = (includeArchived: boolean = false) => {
       data: any 
     }) => {
       const response = await api.patch(`/tenants/${tenantId}/integrations/${integrationId}`, data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
@@ -182,7 +191,7 @@ export const useTenants = (includeArchived: boolean = false) => {
       integrationId: string; 
     }) => {
       const response = await api.post(`/oauth/tenants/${tenantId}/integrations/${integrationId}/refresh`);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse } from '../../../shared/utils/dataTransform';
 import { Tenant } from '../types';
 
 /**
@@ -11,7 +12,7 @@ const useUpdateTenant = () => {
   const mutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Tenant> }) => {
       const response = await api.patch(`/tenants/${id}`, data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (data) => {
       // Invalidate tenants query to refetch the list

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../../shared/utils/api';
+import { handleApiResponse } from '../../shared/utils/dataTransform';
 import { UserRolesResponse } from '../../shared/types/auth';
 
 // Helper function to validate and normalize roles response
@@ -194,15 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Fetch user roles from API
       const response = await api.get('/users/me/roles');
-      let userRoles = response.data;
-      
-      // Handle wrapped API response format {success: true, data: {...}}
-      if (userRoles && userRoles.success && userRoles.data) {
-        if (import.meta.env.DEV) {
-          console.log('🔧 Detected wrapped API response, extracting data...');
-        }
-        userRoles = userRoles.data;
-      }
+      const userRoles = handleApiResponse(response, false);
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
