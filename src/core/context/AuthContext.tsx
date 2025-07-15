@@ -181,58 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🚀 Making API call to /users/me/roles...');
       }
       
-      // Fetch user roles from API - try multiple possible endpoints
-      let response;
-      let userRoles;
-      
-      // Try the most likely v3 API endpoints in order of preference
-      const possibleEndpoints = [
-        '/auth/me/roles',     // Most likely v3 endpoint
-        '/me/roles',          // Alternative v3 endpoint
-        '/users/me/roles',    // Original endpoint (fallback)
-        '/auth/me',           // Auth info endpoint
-        '/me'                 // User info endpoint
-      ];
-      
-      let lastError;
-      for (const endpoint of possibleEndpoints) {
-        try {
-          if (import.meta.env.DEV) {
-            console.log(`🔍 Trying endpoint: ${endpoint}`);
-          }
-          
-          response = await api.get(endpoint);
-          userRoles = response.data;
-          
-          if (import.meta.env.DEV) {
-            console.log(`✅ Success with endpoint: ${endpoint}`, userRoles);
-          }
-          
-          // Validate that we got role information
-          if (userRoles && (
-            userRoles.hasOwnProperty('isSuperAdmin') || 
-            userRoles.hasOwnProperty('isTenantOwner') ||
-            userRoles.hasOwnProperty('roles')
-          )) {
-            break; // Found valid roles data
-          } else {
-            if (import.meta.env.DEV) {
-              console.log(`⚠️ Endpoint ${endpoint} returned data but no role info:`, userRoles);
-            }
-          }
-        } catch (error) {
-          lastError = error;
-          if (import.meta.env.DEV) {
-            console.log(`❌ Failed endpoint: ${endpoint}`, error.response?.status, error.message);
-          }
-          continue; // Try next endpoint
-        }
-      }
-      
-      // If no endpoint worked, throw the last error
-      if (!response || !userRoles) {
-        throw lastError || new Error('No valid roles endpoint found');
-      }
+      // Fetch user roles from API
+      const response = await api.get('/users/me/roles');
+      const userRoles = response.data;
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
@@ -313,10 +264,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Enhanced error logging and handling for development
+      // Enhanced error logging for development
       if (import.meta.env.DEV) {
-        console.group('🚨 Auth Error: Failed to fetch user roles from all endpoints');
-        console.error('❌ Final error details:', error);
+        console.group('🚨 Auth Error: Failed to fetch user roles');
+        console.error('❌ Error details:', error);
         console.error('👤 User:', user);
         console.error('🔐 Is Authenticated:', isAuthenticated);
         console.error('🌐 Network error?', !error.response);
@@ -325,8 +276,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Provide specific guidance based on error type
         if (error.response?.status === 404) {
-          console.error('🔍 DIAGNOSIS: All role endpoints returned 404. Check backend API routes.');
-          console.error('💡 SUGGESTION: Verify the correct roles endpoint exists in the backend.');
+          console.error('🔍 DIAGNOSIS: /users/me/roles endpoint returned 404. Check backend API routes.');
+          console.error('💡 SUGGESTION: Verify the /users/me/roles endpoint exists in the backend.');
         } else if (error.response?.status === 401) {
           console.error('🔍 DIAGNOSIS: Authentication failed. Token may be invalid.');
           console.error('💡 SUGGESTION: Check Auth0 token validity and backend authentication.');
@@ -336,12 +287,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (!error.response) {
           console.error('🔍 DIAGNOSIS: Network error. Backend may be unreachable.');
           console.error('💡 SUGGESTION: Check backend server status and network connectivity.');
+        } else if (error.response?.status === 200 || error.response?.status === 201) {
+          console.error('🔍 DIAGNOSIS: API returned success but response processing failed.');
+          console.error('💡 SUGGESTION: Check response format and validation logic.');
         }
         
         console.groupEnd();
         console.groupEnd(); // Close the main group
       } else {
-        console.error('Failed to fetch user roles from all endpoints:', error.message);
+        console.error('Failed to fetch user roles:', error);
       }
       
       // Reset roles on error, but provide fallback for development

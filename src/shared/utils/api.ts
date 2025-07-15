@@ -122,11 +122,9 @@ apiClient.interceptors.response.use(
       console.log('🔍 Data Type:', typeof response.data);
       console.log('📏 Data Size:', JSON.stringify(response.data).length, 'characters');
       
-      // Special logging for user roles response (any roles-related endpoint)
-      if (response.config.url?.includes('/roles') || 
-          response.config.url?.includes('/auth/me') || 
-          response.config.url?.includes('/me')) {
-        console.log('👤 USER/ROLES RESPONSE ANALYSIS:');
+      // Special logging for user roles response
+      if (response.config.url?.includes('/users/me/roles')) {
+        console.log('👤 USER ROLES RESPONSE ANALYSIS:');
         console.log('  - Endpoint:', response.config.url);
         console.log('  - isSuperAdmin:', response.data?.isSuperAdmin);
         console.log('  - isTenantOwner:', response.data?.isTenantOwner);
@@ -135,6 +133,7 @@ apiClient.interceptors.response.use(
         console.log('  - userId:', response.data?.userId);
         console.log('  - roles (nested):', response.data?.roles);
         console.log('  - user (nested):', response.data?.user);
+        console.log('  - Full response structure:', response.data);
       }
       
       console.groupEnd();
