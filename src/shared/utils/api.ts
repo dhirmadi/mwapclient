@@ -1,5 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
+// Debug log to ensure API client is loaded
+if (import.meta.env.DEV) {
+  console.log('🔧 API CLIENT: Enhanced API client with debugging loaded');
+}
+
 // Extend AxiosRequestConfig to include our metadata
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -51,7 +56,7 @@ apiClient.interceptors.request.use(
     // Comprehensive request logging for development
     if (import.meta.env.DEV) {
       console.group(`🚀 API REQUEST [${requestId}] - ${timestamp}`);
-      console.log('📍 URL:', `${config.baseURL}${config.url}`);
+      console.log('📍 Full URL:', `${config.baseURL}${config.url}`);
       console.log('🔧 Method:', config.method?.toUpperCase());
       console.log('📋 Headers:', {
         ...config.headers,
@@ -79,6 +84,8 @@ apiClient.interceptors.request.use(
         tokenPreview: token ? `${token.substring(0, 10)}...${token.substring(token.length - 10)}` : 'None'
       });
       
+      console.log('🎯 Request ID for tracking:', requestId);
+      console.log('⏰ Request will timeout after:', config.timeout, 'ms');
       console.groupEnd();
     }
     
@@ -109,8 +116,22 @@ apiClient.interceptors.response.use(
       console.log('🔧 Method:', response.config.method?.toUpperCase());
       console.log('📊 Status:', `${response.status} ${response.statusText}`);
       console.log('📋 Response Headers:', response.headers);
-      console.log('📦 Response Data:', safeStringify(response.data));
+      console.log('📦 RAW Response Data:', response.data);
+      console.log('📝 Response Data (JSON):', safeStringify(response.data));
       console.log('⏱️ Duration:', `${duration}ms`);
+      console.log('🔍 Data Type:', typeof response.data);
+      console.log('📏 Data Size:', JSON.stringify(response.data).length, 'characters');
+      
+      // Special logging for user roles response
+      if (response.config.url?.includes('/users/me/roles')) {
+        console.log('👤 USER ROLES RESPONSE ANALYSIS:');
+        console.log('  - isSuperAdmin:', response.data?.isSuperAdmin);
+        console.log('  - isTenantOwner:', response.data?.isTenantOwner);
+        console.log('  - tenantId:', response.data?.tenantId);
+        console.log('  - projectRoles:', response.data?.projectRoles);
+        console.log('  - userId:', response.data?.userId);
+      }
+      
       console.groupEnd();
     }
     
@@ -169,6 +190,11 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Debug log to confirm interceptors are set up
+if (import.meta.env.DEV) {
+  console.log('🔧 API CLIENT: Request and response interceptors configured');
+}
+
 // Network connectivity test function
 export const testNetworkConnectivity = async () => {
   const timestamp = getTimestamp();
@@ -220,6 +246,7 @@ if (import.meta.env.DEV) {
   (window as any).testNetworkConnectivity = testNetworkConnectivity;
   (window as any).apiClient = apiClient;
   console.log('🛠️ Debug tools available: window.testNetworkConnectivity(), window.apiClient');
+  console.log('✅ API CLIENT: Ready for export with baseURL:', apiClient.defaults.baseURL);
 }
 
 export default apiClient;

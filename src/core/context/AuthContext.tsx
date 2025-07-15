@@ -128,7 +128,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (import.meta.env.DEV) {
-        console.log('✅ User roles received:', userRoles);
+        console.log('✅ User roles received from API:', userRoles);
+        console.log('🔍 Raw response object:', response);
+        console.log('📊 Response status:', response.status);
+        console.log('📦 Response data type:', typeof userRoles);
+        console.log('🧪 Response data analysis:', {
+          hasData: !!userRoles,
+          isObject: typeof userRoles === 'object',
+          keys: userRoles ? Object.keys(userRoles) : [],
+          isSuperAdminValue: userRoles?.isSuperAdmin,
+          isTenantOwnerValue: userRoles?.isTenantOwner,
+          tenantIdValue: userRoles?.tenantId,
+          userIdValue: userRoles?.userId
+        });
       }
       
       setRoles(userRoles);
@@ -136,11 +148,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsTenantOwner(userRoles.isTenantOwner || false);
       
       if (import.meta.env.DEV) {
-        console.log('📝 Roles set:', {
+        console.log('📝 Roles set in state:', {
+          originalData: userRoles,
           isSuperAdmin: userRoles.isSuperAdmin || false,
           isTenantOwner: userRoles.isTenantOwner || false,
-          projectRoles: userRoles.projectRoles?.length || 0
+          projectRoles: userRoles.projectRoles?.length || 0,
+          tenantId: userRoles.tenantId
         });
+        
+        // Additional verification
+        console.log('🔬 State verification after setting:');
+        setTimeout(() => {
+          console.log('  - Current isSuperAdmin state:', isSuperAdmin);
+          console.log('  - Current isTenantOwner state:', isTenantOwner);
+          console.log('  - Current roles state:', roles);
+        }, 100);
+        
         console.groupEnd();
       }
       
