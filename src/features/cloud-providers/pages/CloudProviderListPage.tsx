@@ -41,6 +41,10 @@ const CloudProviderListPage: React.FC = () => {
   const [providerToDelete, setProviderToDelete] = useState<CloudProvider | null>(null);
 
   const handleEdit = (id: string) => {
+    if (!id || id === 'undefined') {
+      console.error('CloudProviderListPage - Invalid ID for edit:', id);
+      return;
+    }
     navigate(`/admin/cloud-providers/${id}/edit`);
   };
 
@@ -55,10 +59,14 @@ const CloudProviderListPage: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!providerToDelete) return;
+    
+    if (!providerToDelete.id || providerToDelete.id === 'undefined') {
+      console.error('CloudProviderListPage - Invalid ID for delete:', providerToDelete.id);
+      return;
+    }
 
     try {
       await deleteCloudProvider(providerToDelete.id);
-      console.log('Cloud provider deleted successfully');
       setDeleteModalOpen(false);
       setProviderToDelete(null);
     } catch (error) {
@@ -70,6 +78,14 @@ const CloudProviderListPage: React.FC = () => {
   const handleCreate = () => {
     navigate('/admin/cloud-providers/create');
   };
+
+  // Validate cloud providers data
+  if (cloudProviders && cloudProviders.length > 0) {
+    const invalidProviders = cloudProviders.filter(provider => !provider.id);
+    if (invalidProviders.length > 0) {
+      console.error('CloudProviderListPage - Found providers without valid IDs:', invalidProviders);
+    }
+  }
 
   return (
     <Container size="xl">
@@ -100,37 +116,47 @@ const CloudProviderListPage: React.FC = () => {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {cloudProviders.map((provider: CloudProvider) => (
-                <Table.Tr key={provider.id}>
-                  <Table.Td>{provider.name}</Table.Td>
-                  <Table.Td>{provider.slug}</Table.Td>
-                  <Table.Td>
-                    <Badge color="green">Active</Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Tooltip label="View/Edit Provider">
-                        <ActionIcon 
-                          variant="subtle" 
-                          color="blue"
-                          onClick={() => handleEdit(provider.id)}
-                        >
-                          <IconEdit size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Delete Provider">
-                        <ActionIcon 
-                          variant="subtle" 
-                          color="red"
-                          onClick={() => handleDeleteClick(provider)}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
+              {cloudProviders.map((provider: CloudProvider) => {
+                // Ensure provider has a valid ID before rendering
+                if (!provider.id) {
+                  console.error('CloudProviderListPage - Provider missing ID:', provider);
+                  return null;
+                }
+                
+                return (
+                  <Table.Tr key={provider.id}>
+                    <Table.Td>{provider.name}</Table.Td>
+                    <Table.Td>{provider.slug}</Table.Td>
+                    <Table.Td>
+                      <Badge color="green">Active</Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Tooltip label="View/Edit Provider">
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="blue"
+                            onClick={() => handleEdit(provider.id)}
+                            disabled={!provider.id}
+                          >
+                            <IconEdit size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Delete Provider">
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="red"
+                            onClick={() => handleDeleteClick(provider)}
+                            disabled={!provider.id}
+                          >
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              }).filter(Boolean)}
             </Table.Tbody>
           </Table>
         ) : (

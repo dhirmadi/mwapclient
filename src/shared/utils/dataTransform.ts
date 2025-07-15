@@ -13,10 +13,30 @@ export const transformIdField = <T extends Record<string, any>>(data: T): T => {
     return data;
   }
 
-  return {
+  // Extract ID from _id or id field
+  let id = data._id || data.id;
+  
+  // Handle ObjectId objects (if they come from MongoDB)
+  if (id && typeof id === 'object' && id.toString) {
+    id = id.toString();
+  }
+  
+  const transformed = {
     ...data,
-    id: data._id || data.id, // Use _id if available, fallback to id
+    id: id, // Use extracted and normalized ID
   };
+  
+  // Only log if there's an issue with ID transformation
+  if (!transformed.id) {
+    console.warn('transformIdField - No valid ID found:', { 
+      original: data, 
+      originalId: data.id,
+      originalMongoId: data._id,
+      transformed 
+    });
+  }
+  
+  return transformed;
 };
 
 /**
