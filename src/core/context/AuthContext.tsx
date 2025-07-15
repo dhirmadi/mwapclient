@@ -57,8 +57,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Memoized function to fetch user roles
   const fetchUserRoles = useCallback(async () => {
+    const timestamp = new Date().toISOString();
+    
+    // Enhanced debugging for auth flow
+    if (import.meta.env.DEV) {
+      console.group(`🔐 AUTH: fetchUserRoles called - ${timestamp}`);
+      console.log('📊 Auth State:', {
+        isAuthenticated,
+        hasUser: !!user,
+        userId: user?.sub,
+        userEmail: user?.email,
+        fetchingRoles: fetchingRoles.current,
+        rolesLoading
+      });
+    }
+    
     // Prevent multiple simultaneous fetches
     if (fetchingRoles.current || !isAuthenticated || !user) {
+      if (import.meta.env.DEV) {
+        console.log('❌ Skipping role fetch:', {
+          fetchingRoles: fetchingRoles.current,
+          isAuthenticated,
+          hasUser: !!user
+        });
+        console.groupEnd();
+      }
       return;
     }
 
@@ -74,9 +97,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setRolesLoading(true);
       
+      if (import.meta.env.DEV) {
+        console.log('🎫 Getting Auth0 token...');
+      }
+      
       // Get token and store it
       const token = await getAccessTokenSilently();
       localStorage.setItem('auth_token', token);
+      
+      if (import.meta.env.DEV) {
+        console.log('✅ Token obtained:', {
+          tokenLength: token.length,
+          tokenPreview: `${token.substring(0, 20)}...${token.substring(token.length - 20)}`,
+          storedInLocalStorage: true
+        });
+        console.log('🚀 Making API call to /users/me/roles...');
+      }
       
       // Fetch user roles from API
       const response = await api.get('/users/me/roles');
@@ -84,28 +120,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
+        if (import.meta.env.DEV) {
+          console.log('⚠️ Request was aborted');
+          console.groupEnd();
+        }
         return;
       }
       
-      console.log('User roles from API:', userRoles);
+      if (import.meta.env.DEV) {
+        console.log('✅ User roles received:', userRoles);
+      }
       
       setRoles(userRoles);
       setIsSuperAdmin(userRoles.isSuperAdmin || false);
       setIsTenantOwner(userRoles.isTenantOwner || false);
       
+      if (import.meta.env.DEV) {
+        console.log('📝 Roles set:', {
+          isSuperAdmin: userRoles.isSuperAdmin || false,
+          isTenantOwner: userRoles.isTenantOwner || false,
+          projectRoles: userRoles.projectRoles?.length || 0
+        });
+        console.groupEnd();
+      }
+      
     } catch (error) {
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
+        if (import.meta.env.DEV) {
+          console.log('⚠️ Request was aborted during error handling');
+          console.groupEnd();
+        }
         return;
       }
       
       // Enhanced error logging for development
       if (import.meta.env.DEV) {
         console.group('🚨 Auth Error: Failed to fetch user roles');
-        console.error('Error details:', error);
-        console.error('User:', user);
-        console.error('Is Authenticated:', isAuthenticated);
+        console.error('❌ Error details:', error);
+        console.error('👤 User:', user);
+        console.error('🔐 Is Authenticated:', isAuthenticated);
+        console.error('🌐 Network error?', !error.response);
+        console.error('📊 Status:', error.response?.status);
+        console.error('📦 Response data:', error.response?.data);
         console.groupEnd();
+        console.groupEnd(); // Close the main group
       } else {
         console.error('Failed to fetch user roles:', error);
       }
@@ -122,9 +181,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Effect to fetch roles when authentication state changes
   useEffect(() => {
+    const timestamp = new Date().toISOString();
+    
+    if (import.meta.env.DEV) {
+      console.group(`🔄 AUTH EFFECT: Authentication state changed - ${timestamp}`);
+      console.log('📊 Current State:', {
+        isAuthenticated,
+        hasUser: !!user,
+        userId: user?.sub,
+        userEmail: user?.email,
+        auth0Loading,
+        rolesLoading,
+        currentRoles: roles
+      });
+    }
+    
     if (isAuthenticated && user) {
+      if (import.meta.env.DEV) {
+        console.log('✅ User is authenticated, fetching roles...');
+        console.groupEnd();
+      }
       fetchUserRoles();
     } else {
+      if (import.meta.env.DEV) {
+        console.log('❌ User not authenticated, resetting state...');
+        console.groupEnd();
+      }
+      
       // Reset state when not authenticated
       setRoles(null);
       setIsSuperAdmin(false);
