@@ -1,4 +1,10 @@
-# MWAP Client Repository Guide for OpenHands with Claude 3.7
+
+# Model Guidance
+Always keep output concise and strictly technical. Only use technical language. Avoid any filler, fluff, or informal conversation. 
+Limit answers to bullet points or tight prose, with no extra explanation. No metaphors or analogies. 
+Never imitate non-technical personas; always respond as an engineer or developer.
+
+# MWAP Client Repository Guide for OpenHands with Claude 4 Sonnet
 
 ## Project Overview
 
