@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { Project, ProjectCreate, ProjectUpdate, ProjectMember } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -15,7 +16,10 @@ export const useProjects = () => {
     refetch 
   } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => api.get("/projects").then(r => r.data),
+    queryFn: async () => {
+      const response = await api.get("/projects");
+      return handleApiResponse(response, true);
+    },
     enabled: isReady, // Wait for authentication to be complete
   });
 
@@ -25,7 +29,7 @@ export const useProjects = () => {
       queryKey: ['project', id],
       queryFn: async () => {
         const response = await api.get(`/projects/${id!}`);
-        return response.data;
+        return handleApiResponse(response, false);
       },
       enabled: !!id && isReady, // Wait for auth and require ID
     });
@@ -35,7 +39,7 @@ export const useProjects = () => {
   const createProjectMutation = useMutation({
     mutationFn: async (newProject: ProjectCreate) => {
       const response = await api.post('/projects', newProject);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -46,7 +50,7 @@ export const useProjects = () => {
   const updateProjectMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: ProjectUpdate }) => {
       const response = await api.patch(`/projects/${id}`, data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -58,7 +62,7 @@ export const useProjects = () => {
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await api.delete(`/projects/${id}`);
-      return response.data;
+      return handleDeleteResponse(response);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -71,7 +75,7 @@ export const useProjects = () => {
       queryKey: ['project-members', projectId],
       queryFn: async () => {
         const response = await api.get(`/projects/${projectId!}/members`);
-        return response.data;
+        return handleApiResponse(response, true);
       },
       enabled: !!projectId && isReady, // Wait for auth and require projectId
     });
@@ -81,7 +85,7 @@ export const useProjects = () => {
   const addProjectMemberMutation = useMutation({
     mutationFn: async ({ projectId, data }: { projectId: string; data: ProjectMember }) => {
       const response = await api.post(`/projects/${projectId}/members`, data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project-members', variables.projectId] });
@@ -93,7 +97,7 @@ export const useProjects = () => {
   const updateProjectMemberMutation = useMutation({
     mutationFn: async ({ projectId, userId, role }: { projectId: string; userId: string; role: string }) => {
       const response = await api.patch(`/projects/${projectId}/members/${userId}`, { role });
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project-members', variables.projectId] });
@@ -105,7 +109,7 @@ export const useProjects = () => {
   const removeProjectMemberMutation = useMutation({
     mutationFn: async ({ projectId, userId }: { projectId: string; userId: string }) => {
       const response = await api.delete(`/projects/${projectId}/members/${userId}`);
-      return response.data;
+      return handleDeleteResponse(response);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project-members', variables.projectId] });

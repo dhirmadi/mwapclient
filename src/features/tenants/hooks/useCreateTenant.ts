@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse } from '../../../shared/utils/dataTransform';
 import { Tenant, TenantCreate } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -13,7 +14,7 @@ const useCreateTenant = () => {
   const mutation = useMutation({
     mutationFn: async (data: TenantCreate) => {
       const response = await api.post('/tenants', data);
-      return response.data;
+      return handleApiResponse(response, false);
     },
     onSuccess: () => {
       // Invalidate tenants query to refetch the list
