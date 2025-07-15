@@ -17,9 +17,20 @@ export const useProjectTypes = () => {
     queryKey: ['project-types'],
     queryFn: async () => {
       try {
-        const data = await api.get("/project-types").then(r => r.data);
-        console.log('useProjectTypes - fetchProjectTypes response:', data);
-        return Array.isArray(data) ? data : [];
+        const response = await api.get("/project-types");
+        console.log('useProjectTypes - fetchProjectTypes response:', response.data);
+        
+        // Handle both response formats: { success: true, data: [...] } or directly the array
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+          console.log('Using wrapped response format, returning:', response.data.data);
+          return response.data.data;
+        } else if (Array.isArray(response.data)) {
+          console.log('Using direct array format, returning:', response.data);
+          return response.data;
+        }
+        
+        console.log('No valid data found, returning empty array');
+        return [];
       } catch (error) {
         console.error('Error fetching project types:', error);
         throw error;
@@ -36,7 +47,19 @@ export const useProjectTypes = () => {
       queryFn: async () => {
         try {
           const response = await api.get(`/project-types/${id!}`);
-          return response.data;
+          console.log(`useProjectType - fetchProjectType ${id} response:`, response.data);
+          
+          // Handle both response formats: { success: true, data: {...} } or directly the object
+          if (response.data && response.data.success && response.data.data) {
+            console.log('Using wrapped response format, returning:', response.data.data);
+            return response.data.data;
+          } else if (response.data && !response.data.success) {
+            console.log('Using direct object format, returning:', response.data);
+            return response.data;
+          }
+          
+          console.log('No valid data found for project type');
+          throw new Error('Project type not found');
         } catch (error) {
           console.error(`Error fetching project type ${id}:`, error);
           throw error;
@@ -61,7 +84,17 @@ export const useProjectTypes = () => {
             outputFolder: "string"
           }
         };
-        return await api.post("/project-types", payload);
+        const response = await api.post("/project-types", payload);
+        console.log('createProjectType response:', response.data);
+        
+        // Handle both response formats: { success: true, data: {...} } or directly the object
+        if (response.data && response.data.success && response.data.data) {
+          return response.data.data;
+        } else if (response.data && !response.data.success) {
+          return response.data;
+        }
+        
+        return response.data;
       } catch (error) {
         console.error('Error creating project type:', error);
         throw error;
@@ -85,6 +118,15 @@ export const useProjectTypes = () => {
         if (data.configSchema !== undefined) payload.configSchema = data.configSchema;
         
         const response = await api.patch(`/project-types/${id}`, payload);
+        console.log(`updateProjectType ${id} response:`, response.data);
+        
+        // Handle both response formats: { success: true, data: {...} } or directly the object
+        if (response.data && response.data.success && response.data.data) {
+          return response.data.data;
+        } else if (response.data && !response.data.success) {
+          return response.data;
+        }
+        
         return response.data;
       } catch (error) {
         console.error(`Error updating project type ${id}:`, error);
@@ -102,6 +144,15 @@ export const useProjectTypes = () => {
     mutationFn: async (id: string) => {
       try {
         const response = await api.delete(`/project-types/${id}`);
+        console.log(`deleteProjectType ${id} response:`, response.data);
+        
+        // Handle both response formats: { success: true, data: {...} } or directly the object
+        if (response.data && response.data.success && response.data.data) {
+          return response.data.data;
+        } else if (response.data && !response.data.success) {
+          return response.data;
+        }
+        
         return response.data;
       } catch (error) {
         console.error(`Error deleting project type ${id}:`, error);

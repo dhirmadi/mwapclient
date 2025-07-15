@@ -24,7 +24,19 @@ export const useCloudProviders = () => {
     queryKey: ['cloud-providers'],
     queryFn: async () => {
       const response = await api.get('/cloud-providers');
-      return response.data;
+      console.log('useCloudProviders - fetchCloudProviders response:', response.data);
+      
+      // Handle both response formats: { success: true, data: [...] } or directly the array
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        console.log('Using wrapped response format, returning:', response.data.data);
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        console.log('Using direct array format, returning:', response.data);
+        return response.data;
+      }
+      
+      console.log('No valid data found, returning empty array');
+      return [];
     },
     enabled: isReady, // Wait for authentication to be complete
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -35,6 +47,15 @@ export const useCloudProviders = () => {
   const createCloudProviderMutation = useMutation({
     mutationFn: async (data: CloudProviderCreate) => {
       const response = await api.post("/cloud-providers", data);
+      console.log('createCloudProvider response:', response.data);
+      
+      // Handle both response formats: { success: true, data: {...} } or directly the object
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      } else if (response.data && !response.data.success) {
+        return response.data;
+      }
+      
       return response.data;
     },
     onSuccess: () => {
@@ -46,6 +67,15 @@ export const useCloudProviders = () => {
   const updateCloudProviderMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CloudProviderUpdate }) => {
       const response = await api.patch(`/cloud-providers/${id}`, data);
+      console.log(`updateCloudProvider ${id} response:`, response.data);
+      
+      // Handle both response formats: { success: true, data: {...} } or directly the object
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      } else if (response.data && !response.data.success) {
+        return response.data;
+      }
+      
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -58,6 +88,15 @@ export const useCloudProviders = () => {
   const deleteCloudProviderMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await api.delete(`/cloud-providers/${id}`);
+      console.log(`deleteCloudProvider ${id} response:`, response.data);
+      
+      // Handle both response formats: { success: true, data: {...} } or directly the object
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data;
+      } else if (response.data && !response.data.success) {
+        return response.data;
+      }
+      
       return response.data;
     },
     onSuccess: () => {
@@ -99,7 +138,19 @@ export const useCloudProviders = () => {
       queryKey: ['cloud-provider', id],
       queryFn: async () => {
         const response = await api.get(`/cloud-providers/${id!}`);
-        return response.data;
+        console.log(`useCloudProvider - fetchCloudProvider ${id} response:`, response.data);
+        
+        // Handle both response formats: { success: true, data: {...} } or directly the object
+        if (response.data && response.data.success && response.data.data) {
+          console.log('Using wrapped response format, returning:', response.data.data);
+          return response.data.data;
+        } else if (response.data && !response.data.success) {
+          console.log('Using direct object format, returning:', response.data);
+          return response.data;
+        }
+        
+        console.log('No valid data found for cloud provider');
+        throw new Error('Cloud provider not found');
       },
       enabled: !!id && isReady, // Wait for auth and require ID
       staleTime: 5 * 60 * 1000, // 5 minutes

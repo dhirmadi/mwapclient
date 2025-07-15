@@ -102,7 +102,7 @@ const ProjectTypeList: React.FC = () => {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {projectTypes.map((projectType) => (
+              {projectTypes.map((projectType: ProjectType) => (
                 <Table.Tr key={projectType._id}>
                   <Table.Td>
                     <Text fw={500}>{projectType.name}</Text>
