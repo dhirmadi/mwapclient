@@ -43,16 +43,6 @@ export const useTenants = (includeArchived: boolean = false) => {
       }
     },
     enabled: isReady, // Wait for authentication to be complete
-    onError: (error) => {
-      if (import.meta.env.DEV) {
-        console.error('🚨 TENANTS QUERY ERROR:', error);
-      }
-    },
-    onSuccess: (data) => {
-      if (import.meta.env.DEV) {
-        console.log('🎉 TENANTS QUERY SUCCESS:', data);
-      }
-    }
   });
   
   // Fetch archived tenants separately - wait for auth to be ready

@@ -16,54 +16,65 @@ const validateAndNormalizeRoles = (data: any): UserRolesResponse => {
     };
   }
 
+  // Handle wrapped API response format first
+  let actualData = data;
+  if (data.success && data.data) {
+    actualData = data.data;
+    if (import.meta.env.DEV) {
+      console.log('🔧 Unwrapped API response structure');
+    }
+  }
+
   // Handle different possible response structures
   let normalizedData: UserRolesResponse;
 
-  if (data.isSuperAdmin !== undefined || data.isTenantOwner !== undefined) {
+  if (actualData.isSuperAdmin !== undefined || actualData.isTenantOwner !== undefined) {
     // Direct roles structure
     normalizedData = {
-      userId: data.userId || data.id || '',
-      isSuperAdmin: Boolean(data.isSuperAdmin),
-      isTenantOwner: Boolean(data.isTenantOwner),
-      tenantId: data.tenantId || null,
-      projectRoles: Array.isArray(data.projectRoles) ? data.projectRoles : []
+      userId: actualData.userId || actualData.id || '',
+      isSuperAdmin: Boolean(actualData.isSuperAdmin),
+      isTenantOwner: Boolean(actualData.isTenantOwner),
+      tenantId: actualData.tenantId || null,
+      projectRoles: Array.isArray(actualData.projectRoles) ? actualData.projectRoles : []
     };
-  } else if (data.roles) {
+  } else if (actualData.roles) {
     // Nested roles structure
     normalizedData = {
-      userId: data.userId || data.id || '',
-      isSuperAdmin: Boolean(data.roles.isSuperAdmin),
-      isTenantOwner: Boolean(data.roles.isTenantOwner),
-      tenantId: data.roles.tenantId || data.tenantId || null,
-      projectRoles: Array.isArray(data.roles.projectRoles) ? data.roles.projectRoles : []
+      userId: actualData.userId || actualData.id || '',
+      isSuperAdmin: Boolean(actualData.roles.isSuperAdmin),
+      isTenantOwner: Boolean(actualData.roles.isTenantOwner),
+      tenantId: actualData.roles.tenantId || actualData.tenantId || null,
+      projectRoles: Array.isArray(actualData.roles.projectRoles) ? actualData.roles.projectRoles : []
     };
-  } else if (data.user && data.user.roles) {
+  } else if (actualData.user && actualData.user.roles) {
     // User object with nested roles
     normalizedData = {
-      userId: data.user.userId || data.user.id || '',
-      isSuperAdmin: Boolean(data.user.roles.isSuperAdmin),
-      isTenantOwner: Boolean(data.user.roles.isTenantOwner),
-      tenantId: data.user.roles.tenantId || data.user.tenantId || null,
-      projectRoles: Array.isArray(data.user.roles.projectRoles) ? data.user.roles.projectRoles : []
+      userId: actualData.user.userId || actualData.user.id || '',
+      isSuperAdmin: Boolean(actualData.user.roles.isSuperAdmin),
+      isTenantOwner: Boolean(actualData.user.roles.isTenantOwner),
+      tenantId: actualData.user.roles.tenantId || actualData.user.tenantId || null,
+      projectRoles: Array.isArray(actualData.user.roles.projectRoles) ? actualData.user.roles.projectRoles : []
     };
   } else {
     // Fallback - try to extract any role information
-    console.warn('🚨 Unexpected roles data structure, using fallback:', data);
+    console.warn('🚨 Unexpected roles data structure, using fallback:', actualData);
     normalizedData = {
-      userId: data.userId || data.id || '',
-      isSuperAdmin: Boolean(data.isSuperAdmin || data.superAdmin || data.isAdmin),
-      isTenantOwner: Boolean(data.isTenantOwner || data.tenantOwner || data.isOwner),
-      tenantId: data.tenantId || null,
-      projectRoles: Array.isArray(data.projectRoles) ? data.projectRoles : []
+      userId: actualData.userId || actualData.id || '',
+      isSuperAdmin: Boolean(actualData.isSuperAdmin || actualData.superAdmin || actualData.isAdmin),
+      isTenantOwner: Boolean(actualData.isTenantOwner || actualData.tenantOwner || actualData.isOwner),
+      tenantId: actualData.tenantId || null,
+      projectRoles: Array.isArray(actualData.projectRoles) ? actualData.projectRoles : []
     };
   }
 
   if (import.meta.env.DEV) {
     console.log('🔧 Role validation result:', {
       original: data,
+      actualData: actualData,
       normalized: normalizedData,
       detectedSuperAdmin: normalizedData.isSuperAdmin,
-      detectedTenantOwner: normalizedData.isTenantOwner
+      detectedTenantOwner: normalizedData.isTenantOwner,
+      wasWrapped: data !== actualData
     });
   }
 
@@ -183,7 +194,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Fetch user roles from API
       const response = await api.get('/users/me/roles');
-      const userRoles = response.data;
+      let userRoles = response.data;
+      
+      // Handle wrapped API response format {success: true, data: {...}}
+      if (userRoles && userRoles.success && userRoles.data) {
+        if (import.meta.env.DEV) {
+          console.log('🔧 Detected wrapped API response, extracting data...');
+        }
+        userRoles = userRoles.data;
+      }
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
@@ -270,26 +289,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('❌ Error details:', error);
         console.error('👤 User:', user);
         console.error('🔐 Is Authenticated:', isAuthenticated);
-        console.error('🌐 Network error?', !error.response);
-        console.error('📊 Status:', error.response?.status);
-        console.error('📦 Response data:', error.response?.data);
         
-        // Provide specific guidance based on error type
-        if (error.response?.status === 404) {
-          console.error('🔍 DIAGNOSIS: /users/me/roles endpoint returned 404. Check backend API routes.');
-          console.error('💡 SUGGESTION: Verify the /users/me/roles endpoint exists in the backend.');
-        } else if (error.response?.status === 401) {
-          console.error('🔍 DIAGNOSIS: Authentication failed. Token may be invalid.');
-          console.error('💡 SUGGESTION: Check Auth0 token validity and backend authentication.');
-        } else if (error.response?.status === 403) {
-          console.error('🔍 DIAGNOSIS: Access forbidden. User may not have permission.');
-          console.error('💡 SUGGESTION: Check user permissions in backend.');
-        } else if (!error.response) {
-          console.error('🔍 DIAGNOSIS: Network error. Backend may be unreachable.');
-          console.error('💡 SUGGESTION: Check backend server status and network connectivity.');
-        } else if (error.response?.status === 200 || error.response?.status === 201) {
-          console.error('🔍 DIAGNOSIS: API returned success but response processing failed.');
-          console.error('💡 SUGGESTION: Check response format and validation logic.');
+        // Type guard for axios error
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as any;
+          console.error('🌐 Network error?', !axiosError.response);
+          console.error('📊 Status:', axiosError.response?.status);
+          console.error('📦 Response data:', axiosError.response?.data);
+          
+          // Provide specific guidance based on error type
+          if (axiosError.response?.status === 404) {
+            console.error('🔍 DIAGNOSIS: /users/me/roles endpoint returned 404. Check backend API routes.');
+            console.error('💡 SUGGESTION: Verify the /users/me/roles endpoint exists in the backend.');
+          } else if (axiosError.response?.status === 401) {
+            console.error('🔍 DIAGNOSIS: Authentication failed. Token may be invalid.');
+            console.error('💡 SUGGESTION: Check Auth0 token validity and backend authentication.');
+          } else if (axiosError.response?.status === 403) {
+            console.error('🔍 DIAGNOSIS: Access forbidden. User may not have permission.');
+            console.error('💡 SUGGESTION: Check user permissions in backend.');
+          } else if (!axiosError.response) {
+            console.error('🔍 DIAGNOSIS: Network error. Backend may be unreachable.');
+            console.error('💡 SUGGESTION: Check backend server status and network connectivity.');
+          } else if (axiosError.response?.status === 200 || axiosError.response?.status === 201) {
+            console.error('🔍 DIAGNOSIS: API returned success but response processing failed.');
+            console.error('💡 SUGGESTION: Check response format and validation logic.');
+          }
         }
         
         console.groupEnd();

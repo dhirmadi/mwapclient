@@ -16,35 +16,11 @@ function App() {
         refetchOnWindowFocus: true,
         staleTime: 1000 * 60, // 1 minute
         gcTime: 1000 * 60 * 5, // 5 minutes
-        onError: (error) => {
-          if (import.meta.env.DEV) {
-            console.error('🚨 REACT QUERY ERROR:', error);
-          }
-        },
-        onSuccess: (data) => {
-          if (import.meta.env.DEV) {
-            console.log('🎉 REACT QUERY SUCCESS:', data);
-          }
-        },
+
       },
-      mutations: {
-        onError: (error) => {
-          if (import.meta.env.DEV) {
-            console.error('🚨 REACT QUERY MUTATION ERROR:', error);
-          }
-        },
-        onSuccess: (data) => {
-          if (import.meta.env.DEV) {
-            console.log('🎉 REACT QUERY MUTATION SUCCESS:', data);
-          }
-        },
-      },
+
     },
-    logger: import.meta.env.DEV ? {
-      log: (...args) => console.log('📊 React Query Log:', ...args),
-      warn: (...args) => console.warn('⚠️ React Query Warning:', ...args),
-      error: (...args) => console.error('❌ React Query Error:', ...args),
-    } : undefined,
+
   }));
 
   return (
