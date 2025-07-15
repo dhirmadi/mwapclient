@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Title, 
   Text, 
@@ -28,10 +28,16 @@ import {
   IconCloud,
   IconKey,
   IconInfoCircle,
+  IconCheck,
+  IconX,
   IconExternalLink
 } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
+import { notifications } from '@mantine/notifications';
+import { useSearchParams } from 'react-router-dom';
 import { useTenants } from '../hooks/useTenants';
+import { CloudProviderIntegrationCreate } from '../../cloud-providers/types';
+import { buildOAuthUrl, getOAuthCallbackUri } from '../../../shared/utils/oauth';
 import { useCloudProviders } from '../../cloud-providers/hooks/useCloudProviders';
 
 interface CloudProviderIntegration {
@@ -53,6 +59,7 @@ interface CloudProviderIntegration {
 }
 
 const TenantIntegrationsPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [integrationToDelete, setIntegrationToDelete] = useState<CloudProviderIntegration | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   
@@ -60,11 +67,17 @@ const TenantIntegrationsPage: React.FC = () => {
     currentTenant, 
     isLoadingCurrentTenant,
     getTenantIntegrations,
+    createTenantIntegration,
     updateTenantIntegration,
+    deleteTenantIntegration,
     refreshIntegrationToken,
+    isCreatingIntegration,
     isUpdatingIntegration,
+    isDeletingIntegration,
     isRefreshingToken,
+    createIntegrationError,
     updateIntegrationError,
+    deleteIntegrationError,
     refreshTokenError
   } = useTenants();
 
@@ -77,18 +90,39 @@ const TenantIntegrationsPage: React.FC = () => {
     error: integrationsError 
   } = getTenantIntegrations(currentTenant?.id);
 
+  // Handle OAuth callback notifications
+  useEffect(() => {
+    const oauthStatus = searchParams.get('oauth');
+    const error = searchParams.get('error');
+    
+    if (oauthStatus === 'success') {
+      notifications.show({
+        title: 'Integration Successful',
+        message: 'Your cloud provider has been connected successfully!',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+    } else if (oauthStatus === 'error') {
+      notifications.show({
+        title: 'Integration Failed',
+        message: error || 'Failed to connect cloud provider',
+        color: 'red',
+        icon: <IconX size={16} />,
+      });
+    }
+  }, [searchParams]);
+
   // Form for creating new integration
   const createForm = useForm({
     initialValues: {
       providerId: '',
-      clientId: '',
-      clientSecret: '',
-      scopes: '',
+      metadata: {
+        displayName: ''
+      }
     },
     validate: {
       providerId: (value) => (!value ? 'Please select a cloud provider' : null),
-      clientId: (value) => (!value ? 'Client ID is required' : null),
-      clientSecret: (value) => (!value ? 'Client Secret is required' : null),
+      'metadata.displayName': (value) => (!value ? 'Display name is required' : null),
     },
   });
 
@@ -96,13 +130,59 @@ const TenantIntegrationsPage: React.FC = () => {
     if (!currentTenant) return;
     
     try {
-      // This would typically create a new integration
-      // For now, we'll just close the modal
-      console.log('Creating integration:', values);
+      // Find the selected cloud provider
+      const selectedProvider = cloudProviders?.find(p => p.id === values.providerId);
+      if (!selectedProvider) {
+        notifications.show({
+          title: 'Error',
+          message: 'Selected cloud provider not found',
+          color: 'red',
+          icon: <IconX size={16} />,
+        });
+        return;
+      }
+
+      // Create the integration first
+      const integrationData: CloudProviderIntegrationCreate = {
+        providerId: values.providerId,
+        status: 'active',
+        metadata: values.metadata
+      };
+
+      const newIntegration = await createTenantIntegration({
+        tenantId: currentTenant.id,
+        data: integrationData
+      });
+
+      // Build OAuth URL and redirect
+      const oauthUrl = buildOAuthUrl(
+        selectedProvider,
+        newIntegration,
+        getOAuthCallbackUri()
+      );
+
+      // Close modal and redirect to OAuth
       setShowCreateModal(false);
       createForm.reset();
+      
+      notifications.show({
+        title: 'Redirecting to OAuth',
+        message: 'You will be redirected to authorize the integration',
+        color: 'blue',
+        icon: <IconInfoCircle size={16} />,
+      });
+
+      // Redirect to OAuth authorization
+      window.location.href = oauthUrl;
+
     } catch (error) {
       console.error('Failed to create integration:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to create integration',
+        color: 'red',
+        icon: <IconX size={16} />,
+      });
     }
   };
 
@@ -113,11 +193,27 @@ const TenantIntegrationsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (integrationToDelete && currentTenant) {
       try {
-        // This would typically delete the integration
-        console.log('Deleting integration:', integrationToDelete.id);
+        await deleteTenantIntegration({
+          tenantId: currentTenant.id,
+          integrationId: integrationToDelete.id
+        });
+        
+        notifications.show({
+          title: 'Integration Deleted',
+          message: 'Cloud provider integration has been removed successfully',
+          color: 'green',
+          icon: <IconCheck size={16} />,
+        });
+        
         setIntegrationToDelete(null);
       } catch (error) {
         console.error('Failed to delete integration:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to delete integration',
+          color: 'red',
+          icon: <IconX size={16} />,
+        });
       }
     }
   };
@@ -130,8 +226,21 @@ const TenantIntegrationsPage: React.FC = () => {
         tenantId: currentTenant.id,
         integrationId: integration.id
       });
+      
+      notifications.show({
+        title: 'Token Refreshed',
+        message: 'OAuth token has been refreshed successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
     } catch (error) {
       console.error('Failed to refresh token:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to refresh OAuth token',
+        color: 'red',
+        icon: <IconX size={16} />,
+      });
     }
   };
 
@@ -139,13 +248,27 @@ const TenantIntegrationsPage: React.FC = () => {
     if (!currentTenant) return;
     
     try {
+      const newStatus = integration.status === 'active' ? 'revoked' : 'active';
       await updateTenantIntegration({
         tenantId: currentTenant.id,
         integrationId: integration.id,
-        data: { isActive: !integration.isActive }
+        data: { status: newStatus }
+      });
+      
+      notifications.show({
+        title: 'Integration Updated',
+        message: `Integration has been ${newStatus === 'active' ? 'activated' : 'deactivated'}`,
+        color: 'green',
+        icon: <IconCheck size={16} />,
       });
     } catch (error) {
       console.error('Failed to toggle integration status:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update integration status',
+        color: 'red',
+        icon: <IconX size={16} />,
+      });
     }
   };
 
@@ -207,7 +330,7 @@ const TenantIntegrationsPage: React.FC = () => {
         </Button>
       </Group>
 
-      {(integrationsError || updateIntegrationError || refreshTokenError) && (
+      {(integrationsError || createIntegrationError || updateIntegrationError || deleteIntegrationError || refreshTokenError) && (
         <Alert 
           icon={<IconAlertCircle size={16} />} 
           title="Error" 
@@ -215,14 +338,16 @@ const TenantIntegrationsPage: React.FC = () => {
           mb="md"
         >
           {integrationsError instanceof Error ? integrationsError.message : 
+           createIntegrationError instanceof Error ? createIntegrationError.message :
            updateIntegrationError instanceof Error ? updateIntegrationError.message :
+           deleteIntegrationError instanceof Error ? deleteIntegrationError.message :
            refreshTokenError instanceof Error ? refreshTokenError.message :
            'An error occurred'}
         </Alert>
       )}
 
       <Paper withBorder p="md" radius="md" pos="relative">
-        <LoadingOverlay visible={isUpdatingIntegration || isRefreshingToken} />
+        <LoadingOverlay visible={isCreatingIntegration || isUpdatingIntegration || isDeletingIntegration || isRefreshingToken} />
         
         <Title order={3} mb="md">
           Active Integrations {integrations && ` (${integrations.length})`}
@@ -258,10 +383,12 @@ const TenantIntegrationsPage: React.FC = () => {
                   </Table.Td>
                   <Table.Td>
                     <Badge 
-                      color={integration.isActive ? 'green' : 'gray'} 
+                      color={integration.status === 'active' ? 'green' : 
+                             integration.status === 'expired' ? 'yellow' :
+                             integration.status === 'error' ? 'red' : 'gray'} 
                       variant="light"
                     >
-                      {integration.isActive ? 'Active' : 'Inactive'}
+                      {integration.status.charAt(0).toUpperCase() + integration.status.slice(1)}
                     </Badge>
                   </Table.Td>
                   <Table.Td>
@@ -319,10 +446,10 @@ const TenantIntegrationsPage: React.FC = () => {
                           <IconRefresh size={16} />
                         </ActionIcon>
                       </Tooltip>
-                      <Tooltip label={integration.isActive ? "Deactivate" : "Activate"}>
+                      <Tooltip label={integration.status === 'active' ? "Deactivate" : "Activate"}>
                         <ActionIcon
                           variant="subtle"
-                          color={integration.isActive ? "orange" : "green"}
+                          color={integration.status === 'active' ? "orange" : "green"}
                           onClick={() => handleToggleActive(integration)}
                         >
                           <IconKey size={16} />
@@ -373,10 +500,10 @@ const TenantIntegrationsPage: React.FC = () => {
           <Stack gap="md">
             <Alert 
               icon={<IconInfoCircle size={16} />} 
-              title="OAuth Setup Required" 
+              title="OAuth Integration" 
               color="blue"
             >
-              You'll need to configure OAuth credentials in your cloud provider's developer console first.
+              After selecting a provider, you'll be redirected to authorize the integration with your cloud provider account.
             </Alert>
 
             <Select
@@ -384,28 +511,16 @@ const TenantIntegrationsPage: React.FC = () => {
               placeholder="Select a cloud provider"
               data={cloudProviders?.map((provider: any) => ({
                 value: provider.id,
-                label: `${provider.name} (${provider.type})`
+                label: `${provider.name}`
               })) || []}
               {...createForm.getInputProps('providerId')}
             />
 
             <TextInput
-              label="Client ID"
-              placeholder="Enter OAuth client ID"
-              {...createForm.getInputProps('clientId')}
-            />
-
-            <PasswordInput
-              label="Client Secret"
-              placeholder="Enter OAuth client secret"
-              {...createForm.getInputProps('clientSecret')}
-            />
-
-            <Textarea
-              label="Scopes (Optional)"
-              placeholder="Enter OAuth scopes, one per line"
-              minRows={3}
-              {...createForm.getInputProps('scopes')}
+              label="Display Name"
+              placeholder="Enter a name for this integration"
+              description="This name will help you identify this integration"
+              {...createForm.getInputProps('metadata.displayName')}
             />
 
             <Group justify="flex-end" mt="md">
@@ -417,9 +532,10 @@ const TenantIntegrationsPage: React.FC = () => {
               </Button>
               <Button 
                 type="submit"
-                leftSection={<IconPlus size={16} />}
+                leftSection={<IconExternalLink size={16} />}
+                loading={isCreatingIntegration}
               >
-                Create Integration
+                Connect Provider
               </Button>
             </Group>
           </Stack>

@@ -184,6 +184,38 @@ export const useTenants = (includeArchived: boolean = false) => {
     },
   });
 
+  // Create tenant integration
+  const createTenantIntegrationMutation = useMutation({
+    mutationFn: async ({ tenantId, data }: { 
+      tenantId: string; 
+      data: any 
+    }) => {
+      const response = await api.post(`/tenants/${tenantId}/integrations`, data);
+      return handleApiResponse(response, false);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+    },
+  });
+
+  // Delete tenant integration
+  const deleteTenantIntegrationMutation = useMutation({
+    mutationFn: async ({ tenantId, integrationId }: { 
+      tenantId: string; 
+      integrationId: string; 
+    }) => {
+      const response = await api.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
+      return handleDeleteResponse(response);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
+    },
+  });
+
   // Refresh OAuth token for tenant integration
   const refreshIntegrationTokenMutation = useMutation({
     mutationFn: async ({ tenantId, integrationId }: { 
@@ -227,11 +259,17 @@ export const useTenants = (includeArchived: boolean = false) => {
     
     // Tenant integrations
     getTenantIntegrations: useTenantIntegrations,
+    createTenantIntegration: createTenantIntegrationMutation.mutate,
     updateTenantIntegration: updateTenantIntegrationMutation.mutate,
+    deleteTenantIntegration: deleteTenantIntegrationMutation.mutate,
     refreshIntegrationToken: refreshIntegrationTokenMutation.mutate,
+    isCreatingIntegration: createTenantIntegrationMutation.isPending,
     isUpdatingIntegration: updateTenantIntegrationMutation.isPending,
+    isDeletingIntegration: deleteTenantIntegrationMutation.isPending,
     isRefreshingToken: refreshIntegrationTokenMutation.isPending,
+    createIntegrationError: createTenantIntegrationMutation.error,
     updateIntegrationError: updateTenantIntegrationMutation.error,
+    deleteIntegrationError: deleteTenantIntegrationMutation.error,
     refreshTokenError: refreshIntegrationTokenMutation.error,
   };
 };

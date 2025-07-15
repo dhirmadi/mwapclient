@@ -11,6 +11,7 @@ import Home from '../../pages/Home';
 import Dashboard from '../../pages/Dashboard';
 import NotFound from '../../pages/NotFound';
 import Unauthorized from '../../pages/Unauthorized';
+import OAuthCallbackPage from '../../pages/OAuthCallbackPage';
 
 // Feature Pages
 import { LoginPage, ProfilePage } from '../../features/auth';
@@ -63,6 +64,7 @@ const AppRouter: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
