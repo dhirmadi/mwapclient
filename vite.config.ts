@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(process.cwd(), './src'),
+      '@': resolve(__dirname, './src'),
     },
   },
   server: {
@@ -22,10 +22,10 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://mwapss.shibari.photo',
+        target: 'https://mwapss.shibari.photo/api/v1',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api'),
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
