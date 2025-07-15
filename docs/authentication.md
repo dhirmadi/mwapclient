@@ -469,6 +469,110 @@ const logout = () => {
 };
 ```
 
+## Authentication Race Conditions
+
+### Common Issue: Component Rendering Before Authentication Ready
+
+A common issue in React applications with authentication is components rendering before the authentication state is fully ready. This can cause:
+
+- Role-based UI elements not displaying correctly
+- API calls failing due to missing tokens
+- Poor user experience with flickering or missing content
+
+### Solution: isReady State Coordination
+
+The AuthContext provides an `isReady` state that indicates when authentication is fully initialized:
+
+```tsx
+// In AuthContext
+const [isReady, setIsReady] = useState(false);
+
+useEffect(() => {
+  const initializeAuth = async () => {
+    if (isAuthenticated && user) {
+      try {
+        // Fetch user roles and permissions
+        await loadUserRoles();
+        setIsReady(true);
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+        setIsReady(true); // Still set ready to prevent infinite loading
+      }
+    } else if (!isLoading) {
+      setIsReady(true); // Not authenticated, but ready
+    }
+  };
+
+  initializeAuth();
+}, [isAuthenticated, user, isLoading]);
+```
+
+### Best Practices for Components
+
+When building components that depend on authentication state:
+
+1. **Always check isReady before rendering role-based content**:
+```tsx
+const MyComponent = () => {
+  const { isReady, isSuperAdmin } = useAuth();
+  
+  if (!isReady) {
+    return <LoadingSpinner />;
+  }
+  
+  return (
+    <div>
+      {isSuperAdmin && <AdminPanel />}
+    </div>
+  );
+};
+```
+
+2. **Use loading states for better UX**:
+```tsx
+const QuickActions = () => {
+  const { isReady, isSuperAdmin, isTenantOwner } = useAuth();
+  
+  if (!isReady) {
+    return (
+      <Card>
+        <Text>Loading user permissions...</Text>
+      </Card>
+    );
+  }
+  
+  return (
+    <div>
+      {isSuperAdmin && <SuperAdminActions />}
+      {isTenantOwner && <TenantOwnerActions />}
+    </div>
+  );
+};
+```
+
+3. **Coordinate with authentication in useEffect**:
+```tsx
+useEffect(() => {
+  if (isReady && isSuperAdmin) {
+    // Safe to perform admin-specific operations
+    loadAdminData();
+  }
+}, [isReady, isSuperAdmin]);
+```
+
+### Recent Fix: Home Page Quick Actions
+
+**Issue**: SuperAdmin quick actions weren't displaying on the Home page despite API returning correct roles.
+
+**Root Cause**: The Home page (`/`) is not a protected route, so it renders immediately before authentication is ready. Role-based quick actions were evaluated with stale values.
+
+**Solution**: Enhanced Home component to wait for `isReady` state:
+- Added `isReady` check to all role-based quick actions
+- Added loading state while authentication initializes
+- Added debug logging for development troubleshooting
+
 ## Conclusion
 
 The MWAP frontend implements a secure, robust authentication system using Auth0 with the Authorization Code flow with PKCE. This approach provides a high level of security while maintaining a good user experience. Role-based access control ensures that users can only access the features and data they are authorized to use.
+
+**Key Takeaway**: Always coordinate component rendering with authentication readiness using the `isReady` state to prevent race conditions and ensure reliable role-based functionality.

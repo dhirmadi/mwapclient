@@ -42,6 +42,7 @@ This guide provides recommendations for harmonizing the MWAP Client codebase bas
    - Simplified implementation compared to documented approach
    - Inconsistent permission checking across components
    - Role-based UI adaptation not systematically implemented
+   - **FIXED**: Authentication race conditions causing role-based UI elements to not display
 
 6. **Error Handling Inconsistencies**
    - Varied approaches to error handling across components
@@ -304,6 +305,38 @@ const App = () => (
 ```
 
 ## Role-Based Access Control
+
+### Authentication Race Condition Fix (2025-07-14)
+
+**Problem**: Role-based UI elements (like SuperAdmin quick actions) weren't displaying despite correct API responses because components rendered before authentication was fully ready.
+
+**Solution**: Enhanced authentication coordination using `isReady` state:
+
+```tsx
+// Best Practice: Always check isReady before role-based rendering
+const MyComponent = () => {
+  const { isReady, isSuperAdmin, isTenantOwner } = useAuth();
+  
+  // Wait for authentication to be ready
+  if (!isReady) {
+    return <LoadingSpinner message="Loading user permissions..." />;
+  }
+  
+  return (
+    <div>
+      {/* Safe to check roles after isReady is true */}
+      {isReady && isSuperAdmin && <SuperAdminPanel />}
+      {isReady && isTenantOwner && <TenantOwnerPanel />}
+    </div>
+  );
+};
+```
+
+**Key Principles**:
+1. Always use `isReady && roleCheck` for role-based UI elements
+2. Provide loading states while authentication initializes
+3. Add debug logging in development for troubleshooting
+4. Apply this pattern consistently across all components
 
 ### Comprehensive RBAC Implementation
 
