@@ -47,6 +47,21 @@ const CloudProviderEditPage: React.FC = () => {
     deleteError 
   } = useCloudProviders();
 
+  // Validate ID from URL params
+  if (!id || id === 'undefined') {
+    console.error('CloudProviderEditPage - Invalid ID from URL params:', id);
+    return (
+      <Container size="xl">
+        <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red">
+          Invalid cloud provider ID. Please return to the cloud providers list.
+        </Alert>
+        <Button mt="md" onClick={() => navigate('/admin/cloud-providers')}>
+          Back to Cloud Providers
+        </Button>
+      </Container>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<string | null>('general');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);

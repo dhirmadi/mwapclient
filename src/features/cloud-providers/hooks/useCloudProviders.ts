@@ -29,6 +29,15 @@ export const useCloudProviders = () => {
       
       const transformedData = handleApiResponse(response, true);
       console.log('Transformed cloud providers data:', transformedData);
+      
+      // Validate that all providers have valid IDs
+      if (Array.isArray(transformedData)) {
+        const invalidProviders = transformedData.filter(provider => !provider.id);
+        if (invalidProviders.length > 0) {
+          console.error('useCloudProviders - Found providers without valid IDs:', invalidProviders);
+        }
+      }
+      
       return transformedData;
     },
     enabled: isReady, // Wait for authentication to be complete
@@ -54,6 +63,10 @@ export const useCloudProviders = () => {
   // Update a cloud provider
   const updateCloudProviderMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CloudProviderUpdate }) => {
+      if (!id || id === 'undefined') {
+        throw new Error(`Cannot update cloud provider with invalid ID: ${id}`);
+      }
+      
       const response = await api.patch(`/cloud-providers/${id}`, data);
       console.log(`updateCloudProvider ${id} response:`, response.data);
       
@@ -70,6 +83,10 @@ export const useCloudProviders = () => {
   // Delete a cloud provider
   const deleteCloudProviderMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!id || id === 'undefined') {
+        throw new Error(`Cannot delete cloud provider with invalid ID: ${id}`);
+      }
+      
       const response = await api.delete(`/cloud-providers/${id}`);
       console.log(`deleteCloudProvider ${id} response:`, response.data);
       
@@ -113,14 +130,24 @@ export const useCloudProviders = () => {
     return useQuery({
       queryKey: ['cloud-provider', id],
       queryFn: async () => {
-        const response = await api.get(`/cloud-providers/${id!}`);
+        if (!id || id === 'undefined') {
+          throw new Error(`Invalid cloud provider ID: ${id}`);
+        }
+        
+        const response = await api.get(`/cloud-providers/${id}`);
         console.log(`useCloudProvider - fetchCloudProvider ${id} response:`, response.data);
         
         const transformedData = handleApiResponse(response, false);
         console.log('Transformed cloud provider data:', transformedData);
+        
+        // Validate the returned data has a valid ID
+        if (!transformedData.id) {
+          console.error('useCloudProvider - Fetched provider missing ID:', transformedData);
+        }
+        
         return transformedData;
       },
-      enabled: !!id && isReady, // Wait for auth and require ID
+      enabled: !!id && id !== 'undefined' && isReady, // Wait for auth and require valid ID
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
