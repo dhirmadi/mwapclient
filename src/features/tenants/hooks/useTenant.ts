@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse } from '../../../shared/utils/dataTransform';
 import { Tenant } from '../types';
 
 /**
@@ -13,7 +14,7 @@ const useTenant = (id?: string) => {
       
       try {
         const response = await api.get(`/tenants/${id}`);
-        return response.data;
+        return handleApiResponse(response, false);
       } catch (error) {
         console.error('Error in useTenant hook:', error);
         throw error;

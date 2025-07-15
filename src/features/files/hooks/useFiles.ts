@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse } from '../../../shared/utils/dataTransform';
 import { File, FileListParams } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -11,7 +12,7 @@ const fetchProjectFiles = (projectId?: string, params: FileListParams = {}) => {
     queryKey: ['project-files', projectId, params],
     queryFn: async () => {
       const response = await api.get(`/projects/${projectId!}/files`, { params });
-      return response.data;
+      return handleApiResponse(response, true);
     },
     enabled: !!projectId && isReady, // Wait for auth and require projectId
   });
