@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: '/api/v1',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
