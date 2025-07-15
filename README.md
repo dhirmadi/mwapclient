@@ -170,9 +170,21 @@ src/
 ## 📚 Documentation
 
 Additional documentation is available in the `docs/` directory:
-- API specifications
-- User flow diagrams
-- Architecture documentation
+
+### Core Documentation
+- **API Configuration**: `docs/API_CONFIGURATION.md` - API setup and proxy configuration
+- **Architecture**: `docs/architecture.md` - Overall system architecture
+- **User Flows**: `docs/UserFlowSpecification.md` - Detailed user flow specifications
+- **RBAC**: `docs/rbac.md` - Role-based access control implementation
+
+### Development & Fixes
+- **ID Transformation Fix**: `docs/ID_TRANSFORMATION_FIX.md` - Solution for MongoDB _id to id mapping
+- **Code Review Improvements**: `docs/CODE_REVIEW_IMPROVEMENTS.md` - Enhancements based on GitHub Copilot review
+- **Cloud Provider Integration**: `docs/CLOUD_PROVIDER_INTEGRATION_IMPLEMENTATION.md` - OAuth integration implementation
+
+### API Documentation
+- **v3 API**: `docs/v3-api.md` - Complete v3 API documentation
+- **API Specifications**: `docs/api/` - OpenAPI schemas and endpoint documentation
 
 ## 📄 License
 
