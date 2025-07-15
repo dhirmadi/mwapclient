@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { ProjectType, ProjectTypeCreate, ProjectTypeUpdate } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -20,26 +21,7 @@ export const useProjectTypes = () => {
         const response = await api.get("/project-types");
         console.log('useProjectTypes - fetchProjectTypes response:', response.data);
         
-        let rawData: any[] = [];
-        
-        // Handle both response formats: { success: true, data: [...] } or directly the array
-        if (response.data && response.data.success && Array.isArray(response.data.data)) {
-          console.log('Using wrapped response format');
-          rawData = response.data.data;
-        } else if (Array.isArray(response.data)) {
-          console.log('Using direct array format');
-          rawData = response.data;
-        } else {
-          console.log('No valid data found, returning empty array');
-          return [];
-        }
-        
-        // Transform _id to id for frontend compatibility
-        const transformedData = rawData.map(projectType => ({
-          ...projectType,
-          id: projectType._id || projectType.id, // Use _id if available, fallback to id
-        }));
-        
+        const transformedData = handleApiResponse(response, true);
         console.log('Transformed project types data:', transformedData);
         return transformedData;
       } catch (error) {
@@ -60,26 +42,7 @@ export const useProjectTypes = () => {
           const response = await api.get(`/project-types/${id!}`);
           console.log(`useProjectType - fetchProjectType ${id} response:`, response.data);
           
-          let rawData: any = null;
-          
-          // Handle both response formats: { success: true, data: {...} } or directly the object
-          if (response.data && response.data.success && response.data.data) {
-            console.log('Using wrapped response format');
-            rawData = response.data.data;
-          } else if (response.data && !response.data.success) {
-            console.log('Using direct object format');
-            rawData = response.data;
-          } else {
-            console.log('No valid data found for project type');
-            throw new Error('Project type not found');
-          }
-          
-          // Transform _id to id for frontend compatibility
-          const transformedData = {
-            ...rawData,
-            id: rawData._id || rawData.id, // Use _id if available, fallback to id
-          };
-          
+          const transformedData = handleApiResponse(response, false);
           console.log('Transformed project type data:', transformedData);
           return transformedData;
         } catch (error) {
@@ -109,28 +72,9 @@ export const useProjectTypes = () => {
         const response = await api.post("/project-types", payload);
         console.log('createProjectType response:', response.data);
         
-        let rawData: any = null;
-        
-        // Handle both response formats: { success: true, data: {...} } or directly the object
-        if (response.data && response.data.success && response.data.data) {
-          rawData = response.data.data;
-        } else if (response.data && !response.data.success) {
-          rawData = response.data;
-        } else {
-          rawData = response.data;
-        }
-        
-        // Transform _id to id for frontend compatibility
-        if (rawData && typeof rawData === 'object') {
-          const transformedData = {
-            ...rawData,
-            id: rawData._id || rawData.id,
-          };
-          console.log('Transformed created project type data:', transformedData);
-          return transformedData;
-        }
-        
-        return rawData;
+        const transformedData = handleApiResponse(response, false);
+        console.log('Transformed created project type data:', transformedData);
+        return transformedData;
       } catch (error) {
         console.error('Error creating project type:', error);
         throw error;
@@ -156,28 +100,9 @@ export const useProjectTypes = () => {
         const response = await api.patch(`/project-types/${id}`, payload);
         console.log(`updateProjectType ${id} response:`, response.data);
         
-        let rawData: any = null;
-        
-        // Handle both response formats: { success: true, data: {...} } or directly the object
-        if (response.data && response.data.success && response.data.data) {
-          rawData = response.data.data;
-        } else if (response.data && !response.data.success) {
-          rawData = response.data;
-        } else {
-          rawData = response.data;
-        }
-        
-        // Transform _id to id for frontend compatibility
-        if (rawData && typeof rawData === 'object') {
-          const transformedData = {
-            ...rawData,
-            id: rawData._id || rawData.id,
-          };
-          console.log('Transformed updated project type data:', transformedData);
-          return transformedData;
-        }
-        
-        return rawData;
+        const transformedData = handleApiResponse(response, false);
+        console.log('Transformed updated project type data:', transformedData);
+        return transformedData;
       } catch (error) {
         console.error(`Error updating project type ${id}:`, error);
         throw error;
@@ -196,17 +121,7 @@ export const useProjectTypes = () => {
         const response = await api.delete(`/project-types/${id}`);
         console.log(`deleteProjectType ${id} response:`, response.data);
         
-        // Handle both response formats: { success: true, data: {...} } or directly the object
-        if (response.data && response.data.success && response.data.data) {
-          return response.data.data;
-        } else if (response.data && response.data.success === false) {
-          throw new Error(response.data.message || 'Failed to delete project type');
-        } else if (response.data === null || response.data === undefined || response.data === '') {
-          // DELETE requests often return empty responses on success
-          return { success: true };
-        }
-        
-        return response.data;
+        return handleDeleteResponse(response);
       } catch (error) {
         console.error(`Error deleting project type ${id}:`, error);
         throw error;

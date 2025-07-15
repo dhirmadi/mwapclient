@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { 
   CloudProviderCreate, 
   CloudProviderUpdate,
@@ -26,26 +27,7 @@ export const useCloudProviders = () => {
       const response = await api.get('/cloud-providers');
       console.log('useCloudProviders - fetchCloudProviders response:', response.data);
       
-      let rawData: any[] = [];
-      
-      // Handle both response formats: { success: true, data: [...] } or directly the array
-      if (response.data && response.data.success && Array.isArray(response.data.data)) {
-        console.log('Using wrapped response format');
-        rawData = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        console.log('Using direct array format');
-        rawData = response.data;
-      } else {
-        console.log('No valid data found, returning empty array');
-        return [];
-      }
-      
-      // Transform _id to id for frontend compatibility
-      const transformedData = rawData.map(provider => ({
-        ...provider,
-        id: provider._id || provider.id, // Use _id if available, fallback to id
-      }));
-      
+      const transformedData = handleApiResponse(response, true);
       console.log('Transformed cloud providers data:', transformedData);
       return transformedData;
     },
@@ -60,28 +42,9 @@ export const useCloudProviders = () => {
       const response = await api.post("/cloud-providers", data);
       console.log('createCloudProvider response:', response.data);
       
-      let rawData: any = null;
-      
-      // Handle both response formats: { success: true, data: {...} } or directly the object
-      if (response.data && response.data.success && response.data.data) {
-        rawData = response.data.data;
-      } else if (response.data && !response.data.success) {
-        rawData = response.data;
-      } else {
-        rawData = response.data;
-      }
-      
-      // Transform _id to id for frontend compatibility
-      if (rawData && typeof rawData === 'object') {
-        const transformedData = {
-          ...rawData,
-          id: rawData._id || rawData.id,
-        };
-        console.log('Transformed created cloud provider data:', transformedData);
-        return transformedData;
-      }
-      
-      return rawData;
+      const transformedData = handleApiResponse(response, false);
+      console.log('Transformed created cloud provider data:', transformedData);
+      return transformedData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
@@ -94,31 +57,9 @@ export const useCloudProviders = () => {
       const response = await api.patch(`/cloud-providers/${id}`, data);
       console.log(`updateCloudProvider ${id} response:`, response.data);
       
-      let rawData: any = null;
-      
-      // Handle both response formats: { success: true, data: {...} } or directly the object
-      if (response.data && response.data.success && response.data.data) {
-        rawData = response.data.data;
-      } else if (response.data && response.data.success === false) {
-        throw new Error(response.data.message || 'Failed to update cloud provider');
-      } else if (Array.isArray(response.data) || (response.data && typeof response.data === 'object' && !response.data.success)) {
-        // Direct object format (no wrapper)
-        rawData = response.data;
-      } else {
-        rawData = response.data;
-      }
-      
-      // Transform _id to id for frontend compatibility
-      if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
-        const transformedData = {
-          ...rawData,
-          id: rawData._id || rawData.id,
-        };
-        console.log('Transformed updated cloud provider data:', transformedData);
-        return transformedData;
-      }
-      
-      return rawData;
+      const transformedData = handleApiResponse(response, false);
+      console.log('Transformed updated cloud provider data:', transformedData);
+      return transformedData;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
@@ -132,17 +73,7 @@ export const useCloudProviders = () => {
       const response = await api.delete(`/cloud-providers/${id}`);
       console.log(`deleteCloudProvider ${id} response:`, response.data);
       
-      // Handle both response formats: { success: true, data: {...} } or directly the object
-      if (response.data && response.data.success && response.data.data) {
-        return response.data.data;
-      } else if (response.data && response.data.success === false) {
-        throw new Error(response.data.message || 'Failed to delete cloud provider');
-      } else if (response.data === null || response.data === undefined || response.data === '') {
-        // DELETE requests often return empty responses on success
-        return { success: true };
-      }
-      
-      return response.data;
+      return handleDeleteResponse(response);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
@@ -185,30 +116,7 @@ export const useCloudProviders = () => {
         const response = await api.get(`/cloud-providers/${id!}`);
         console.log(`useCloudProvider - fetchCloudProvider ${id} response:`, response.data);
         
-        let rawData: any = null;
-        
-        // Handle both response formats: { success: true, data: {...} } or directly the object
-        if (response.data && response.data.success && response.data.data) {
-          console.log('Using wrapped response format');
-          rawData = response.data.data;
-        } else if (response.data && response.data.success === false) {
-          console.log('API returned error:', response.data.message);
-          throw new Error(response.data.message || 'Cloud provider not found');
-        } else if (response.data && typeof response.data === 'object' && !response.data.success) {
-          // Direct object format (no wrapper)
-          console.log('Using direct object format');
-          rawData = response.data;
-        } else {
-          console.log('No valid data found for cloud provider');
-          throw new Error('Cloud provider not found');
-        }
-        
-        // Transform _id to id for frontend compatibility
-        const transformedData = {
-          ...rawData,
-          id: rawData._id || rawData.id, // Use _id if available, fallback to id
-        };
-        
+        const transformedData = handleApiResponse(response, false);
         console.log('Transformed cloud provider data:', transformedData);
         return transformedData;
       },
