@@ -101,30 +101,25 @@ const CloudProviderEditPage: React.FC = () => {
     try {
       setFormError(null);
       
-      // Only include fields that have been changed
-      const updateData: CloudProviderUpdate = {};
-      
-      if (values.name !== cloudProvider?.name) updateData.name = values.name;
-      if (values.slug !== cloudProvider?.slug) updateData.slug = values.slug;
-      if (JSON.stringify(values.scopes) !== JSON.stringify(cloudProvider?.scopes)) {
-        updateData.scopes = values.scopes;
-      }
-      if (values.authUrl !== cloudProvider?.authUrl) updateData.authUrl = values.authUrl;
-      if (values.tokenUrl !== cloudProvider?.tokenUrl) updateData.tokenUrl = values.tokenUrl;
-      if (values.clientId !== cloudProvider?.clientId) updateData.clientId = values.clientId;
-      if (values.clientSecret) updateData.clientSecret = values.clientSecret; // Only if provided
-      if (values.grantType !== cloudProvider?.grantType) updateData.grantType = values.grantType;
-      if (values.tokenMethod !== cloudProvider?.tokenMethod) updateData.tokenMethod = values.tokenMethod;
-      if (JSON.stringify(values.metadata) !== JSON.stringify(cloudProvider?.metadata)) {
-        updateData.metadata = values.metadata;
+      // Prepare update data - include all fields that might have changed
+      const updateData: CloudProviderUpdate = {
+        name: values.name,
+        slug: values.slug,
+        scopes: values.scopes || [],
+        authUrl: values.authUrl,
+        tokenUrl: values.tokenUrl,
+        clientId: values.clientId,
+        grantType: values.grantType,
+        tokenMethod: values.tokenMethod,
+        metadata: values.metadata || {}
+      };
+
+      // Only include clientSecret if it was provided (not empty)
+      if (values.clientSecret && values.clientSecret.trim() !== '') {
+        updateData.clientSecret = values.clientSecret;
       }
 
-      // Only update if there are changes
-      if (Object.keys(updateData).length === 0) {
-        setFormError('No changes detected');
-        return;
-      }
-
+      console.log('Submitting cloud provider update:', updateData);
       await updateCloudProvider({ id, data: updateData });
       
       console.log('Cloud provider updated successfully');
@@ -132,7 +127,7 @@ const CloudProviderEditPage: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to update cloud provider:', error);
-      setFormError('Failed to update cloud provider. Please try again.');
+      setFormError(error instanceof Error ? error.message : 'Failed to update cloud provider. Please try again.');
     }
   };
 
@@ -141,14 +136,16 @@ const CloudProviderEditPage: React.FC = () => {
     if (!id) return;
 
     try {
+      console.log('Deleting cloud provider:', id);
       await deleteCloudProvider(id);
       console.log('Cloud provider deleted successfully');
+      setDeleteModalOpen(false);
       navigate('/admin/cloud-providers');
     } catch (error) {
       console.error('Failed to delete cloud provider:', error);
-      setFormError('Failed to delete cloud provider. Please try again.');
+      setFormError(error instanceof Error ? error.message : 'Failed to delete cloud provider. Please try again.');
+      setDeleteModalOpen(false);
     }
-    setDeleteModalOpen(false);
   };
 
   const handleBack = () => navigate('/admin/cloud-providers');

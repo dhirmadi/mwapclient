@@ -72,7 +72,10 @@ export const useCloudProviders = () => {
       // Handle both response formats: { success: true, data: {...} } or directly the object
       if (response.data && response.data.success && response.data.data) {
         return response.data.data;
-      } else if (response.data && !response.data.success) {
+      } else if (response.data && response.data.success === false) {
+        throw new Error(response.data.message || 'Failed to update cloud provider');
+      } else if (Array.isArray(response.data) || (response.data && typeof response.data === 'object' && !response.data.success)) {
+        // Direct object format (no wrapper)
         return response.data;
       }
       
@@ -93,8 +96,11 @@ export const useCloudProviders = () => {
       // Handle both response formats: { success: true, data: {...} } or directly the object
       if (response.data && response.data.success && response.data.data) {
         return response.data.data;
-      } else if (response.data && !response.data.success) {
-        return response.data;
+      } else if (response.data && response.data.success === false) {
+        throw new Error(response.data.message || 'Failed to delete cloud provider');
+      } else if (response.data === null || response.data === undefined || response.data === '') {
+        // DELETE requests often return empty responses on success
+        return { success: true };
       }
       
       return response.data;
@@ -144,7 +150,11 @@ export const useCloudProviders = () => {
         if (response.data && response.data.success && response.data.data) {
           console.log('Using wrapped response format, returning:', response.data.data);
           return response.data.data;
-        } else if (response.data && !response.data.success) {
+        } else if (response.data && response.data.success === false) {
+          console.log('API returned error:', response.data.message);
+          throw new Error(response.data.message || 'Cloud provider not found');
+        } else if (response.data && typeof response.data === 'object' && !response.data.success) {
+          // Direct object format (no wrapper)
           console.log('Using direct object format, returning:', response.data);
           return response.data;
         }
