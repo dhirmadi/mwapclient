@@ -6,6 +6,20 @@ Never imitate non-technical personas; always respond as an engineer or developer
 
 # MWAP Client Repository Guide for OpenHands with Claude 4 Sonnet
 
+## 🎯 OpenHands Integration Instructions
+
+**Claude, when working on this repository:**
+
+- 🧠 **Read comprehensive documentation**: Start with [`DOCUMENTATION_INDEX.md`](../../DOCUMENTATION_INDEX.md) for complete project understanding
+- 🔁 **Reuse existing patterns**: Follow established components, hooks, types, middleware, and routes
+- ✅ **Maintain type safety**: Keep implementations TypeScript-strict and minimal
+- 📚 **Follow MWAP standards**: Use `AppError`, `logger`, `SuccessResponse` patterns consistently
+- 🔐 **Never skip security**: Always implement authentication/authorization middleware
+- 🚫 **Avoid duplication**: Do not create duplicate functions, services, types, or schemas
+- 🧪 **Validate inputs**: Use Zod for all input validation
+- 🧱 **Maintain modularity**: Follow clean `features/<module>/` structure
+- 📖 **Reference documentation**: Use organized docs structure for accurate implementation
+
 ## Project Overview
 
 The Modular Web Application Platform (MWAP) Client is a comprehensive frontend application designed to provide a secure, role-based interface for managing cloud-based projects, tenants, and resources. This React-based application serves as the user interface for the MWAP ecosystem, enabling organizations to efficiently manage their cloud resources and project workflows.
@@ -100,14 +114,33 @@ This feature-based architecture provides better organization, maintainability, a
 - **Project Deputy**: Can edit project details and manage members
 - **Project Member**: Can view and interact with project resources
 
+## 📚 Comprehensive Documentation Structure
+
+**Complete documentation is organized in [`docs/`](../../docs/) directory:**
+
+### Core Documentation
+- **[Architecture & Solution Design](../../docs/architecture/README.md)** - System architecture, design patterns, technical decisions
+- **[Developer Guidelines](../../docs/development/README.md)** - Coding standards, conventions, best practices
+- **[API Integration](../../docs/api/README.md)** - Complete API documentation including critical Vite configuration
+- **[Security & Authentication](../../docs/security/README.md)** - Authentication flows, security measures, RBAC
+- **[Features](../../docs/features/README.md)** - Detailed description of each application feature
+- **[Components & UI Patterns](../../docs/components/README.md)** - Component structure, UI patterns, file organization
+- **[Changelog & Feature Status](../../docs/changelog/README.md)** - Feature status, migration history, release notes
+
+### Quick Reference
+- **[Getting Started](../../docs/getting-started.md)** - Setup and initial development guide
+- **[Troubleshooting](../../docs/troubleshooting.md)** - Common issues and solutions
+- **[Contributing](../../docs/contributing.md)** - Guidelines for contributing to the project
+
 ## API Documentation
 
-The application communicates with a RESTful API. The API documentation can be found in:
+**⚠️ CRITICAL: Always reference [API Documentation](../../docs/api/README.md) for complete details**
 
-- `/docs/api/v3-openAPI-schema.md`: OpenAPI schema documentation
-- `/docs/api/v3-openAPI.yaml`: OpenAPI specification file
-- `/docs/api/cloud-providers.md`: Cloud provider API documentation
-- `/docs/v3-api.md`: Primary API documentation
+The application communicates with a RESTful API. Key documentation files:
+
+- [`docs/api/README.md`](../../docs/api/README.md): Complete API integration guide
+- [`docs/api/v3-openAPI-schema.md`](../../docs/api/v3-openAPI-schema.md): OpenAPI schema documentation
+- [`docs/api/cloud-providers.md`](../../docs/api/cloud-providers.md): Cloud provider API documentation
 
 
 ### Key API Endpoints (v3)
@@ -165,15 +198,28 @@ The application communicates with a RESTful API. The API documentation can be fo
 4. Enhance error handling and user feedback
 5. Add analytics and reporting capabilities
 
-## Additional Documentation
+## 🔧 Development Workflow for OpenHands
 
-- `/docs/architecture.md`: Overall architecture design
-- `/docs/component-structure.md`: Component organization
-- `/docs/rbac.md`: Role-based access control implementation
-- `/docs/UserFlowSpecification.md`: User flow specifications
-- `/docs/development-guide.md`: Comprehensive guide for harmonizing the codebase
-- `/docs/v3-api.md`: Complete v3 API documentation
-- `/API_V3_MIGRATION_SUMMARY.md`: Detailed migration summary and changes
+### Before Starting Any Task
+1. **Read Documentation**: Review [`DOCUMENTATION_INDEX.md`](../../DOCUMENTATION_INDEX.md) and relevant sections
+2. **Understand Architecture**: Check [`docs/architecture/README.md`](../../docs/architecture/README.md) for system design
+3. **Review Standards**: Follow [`docs/development/README.md`](../../docs/development/README.md) for coding conventions
+4. **Check Security**: Understand [`docs/security/README.md`](../../docs/security/README.md) for authentication patterns
+
+### Task Implementation Pattern
+1. **Analyze existing code**: Use `find`, `grep`, and `git` commands to understand current implementation
+2. **Reuse components**: Check `src/shared/components/` and `src/features/*/` for existing solutions
+3. **Follow patterns**: Use established hooks, types, and API patterns from similar features
+4. **Validate inputs**: Implement Zod schemas for all user inputs
+5. **Handle errors**: Use `AppError` and consistent error handling patterns
+6. **Test thoroughly**: Verify functionality and edge cases
+
+### Critical Implementation Rules
+- **API Configuration**: Never modify Vite proxy configuration in `vite.config.ts`
+- **Authentication**: Always implement proper RBAC checks using existing patterns
+- **Type Safety**: Maintain strict TypeScript compliance
+- **Performance**: Use React Query for data fetching and proper memoization
+- **Security**: Follow established Auth0 and security patterns
 
 ## Development Guidelines
 
@@ -214,14 +260,57 @@ The application is built for production with `npm run build` and can be deployed
 6. Implement comprehensive testing suite
 7. Add performance optimizations and code splitting
 
-## Conclusion
+## 🚀 OpenHands Task Template
 
-The MWAP Client has been successfully transformed into a well-architected React application with:
+Use this template for feature development:
 
-- **Modern Architecture**: Feature-based organization with clear separation of concerns
-- **API Compatibility**: Full v3 API integration with proper type safety
-- **Role-Based Security**: Comprehensive RBAC implementation
-- **Developer Experience**: Consistent patterns and comprehensive documentation
-- **Maintainability**: Modular structure that supports scalable development
+```markdown
+## Task: [Feature Name]
+**Target Files**: `src/features/[module]/[files]`
+**Documentation**: Reference [`docs/features/README.md`](../../docs/features/README.md)
 
-The codebase now meets world-class standards for 2025 and provides a solid foundation for future enhancements and features.
+### Requirements
+- Follow [`docs/development/README.md`](../../docs/development/README.md) coding standards
+- Implement proper RBAC using patterns from [`docs/security/README.md`](../../docs/security/README.md)
+- Use existing components from `src/shared/components/` and `src/features/*/`
+- Validate inputs with Zod schemas
+- Handle errors with `AppError` pattern
+- Use React Query for data fetching
+
+### Implementation Checklist
+- [ ] Analyze existing similar features
+- [ ] Reuse established patterns and components
+- [ ] Implement proper TypeScript types
+- [ ] Add authentication/authorization checks
+- [ ] Validate all user inputs
+- [ ] Handle errors consistently
+- [ ] Test functionality thoroughly
+- [ ] Update relevant documentation
+```
+
+## 📋 Repository Status Summary
+
+**Current State**: Production-ready React application with comprehensive documentation
+
+### ✅ Completed Architecture
+- **Feature-Based Organization**: Modular `src/features/` structure
+- **API v3 Integration**: Full compatibility with backend API
+- **Type Safety**: Comprehensive TypeScript implementation
+- **Security**: Auth0 integration with RBAC
+- **Documentation**: Organized, comprehensive documentation structure
+- **Performance**: React Query, code splitting, optimized builds
+
+### 🎯 Development Standards
+- **Code Quality**: ESLint, Prettier, TypeScript strict mode
+- **Testing**: Vitest with React Testing Library setup
+- **Security**: Authentication middleware, input validation, secure patterns
+- **Performance**: Lazy loading, memoization, efficient data fetching
+- **Maintainability**: Clear separation of concerns, reusable components
+
+### 📖 Documentation Excellence
+- **Complete Coverage**: All aspects documented in organized structure
+- **Developer-Friendly**: Clear guidelines, examples, troubleshooting
+- **Up-to-Date**: Reflects current codebase state and best practices
+- **Searchable**: Well-organized with clear navigation and cross-references
+
+**For any development task, start with [`DOCUMENTATION_INDEX.md`](../../DOCUMENTATION_INDEX.md) to understand the complete system.**
