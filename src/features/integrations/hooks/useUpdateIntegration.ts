@@ -21,14 +21,14 @@ export const useUpdateIntegration = () => {
       integrationId: string; 
       data: IntegrationUpdateRequest; 
     }): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔗 UPDATE INTEGRATION: Updating integration');
         console.log('📊 Mutation Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           data,
           timestamp: new Date().toISOString()
@@ -37,7 +37,7 @@ export const useUpdateIntegration = () => {
 
       try {
         const response = await api.patch(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}`, 
+          `/tenants/${currentTenant}/integrations/${integrationId}`, 
           data
         );
         
@@ -70,7 +70,7 @@ export const useUpdateIntegration = () => {
       
       // Update the integration in the list cache
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [updatedIntegration];
           return oldData.map(integration => 
@@ -81,7 +81,7 @@ export const useUpdateIntegration = () => {
 
       // Invalidate related queries to ensure consistency
       queryClient.invalidateQueries({ 
-        queryKey: ['integrations', currentTenant?.id] 
+        queryKey: ['integrations', currentTenant] 
       });
 
       // Show success notification
@@ -124,14 +124,14 @@ export const useRefreshIntegrationToken = () => {
 
   return useMutation({
     mutationFn: async (integrationId: string): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔗 REFRESH TOKEN: Refreshing integration token');
         console.log('📊 Mutation Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           timestamp: new Date().toISOString()
         });
@@ -139,7 +139,7 @@ export const useRefreshIntegrationToken = () => {
 
       try {
         const response = await api.post(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}/refresh-token`
+          `/tenants/${currentTenant}/integrations/${integrationId}/refresh-token`
         );
         
         if (import.meta.env.DEV) {
@@ -171,7 +171,7 @@ export const useRefreshIntegrationToken = () => {
       
       // Update the integration in the list cache
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [updatedIntegration];
           return oldData.map(integration => 

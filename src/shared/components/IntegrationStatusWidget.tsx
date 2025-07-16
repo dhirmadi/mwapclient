@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Group, Text, Badge, ActionIcon, Skeleton, Alert } from '@mantine/core';
 import { IconPlugConnected, IconPlus, IconAlertCircle } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { useIntegrations } from '../../features/integrations/hooks/useIntegrations';
+import { useIntegrations } from '../../features/integrations';
 import { useAuth } from '../../core/context/AuthContext';
 
 /**

@@ -1,3 +1,7 @@
 // Files Feature Barrel Exports
-export { default as useFiles, useProjectFiles } from './hooks/useFiles';
+
+// Hooks (using consistent named exports)
+export { useFiles, useProjectFiles } from './hooks/useFiles';
+
+// Types
 export type { File, FileListParams } from './types/file.types';

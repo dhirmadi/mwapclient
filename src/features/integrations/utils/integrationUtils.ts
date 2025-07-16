@@ -80,7 +80,7 @@ export const formatTimeUntilExpiration = (integration: Integration): string | nu
   const timeUntilExpiration = getTimeUntilExpiration(integration);
   
   if (timeUntilExpiration === null) return null;
-  if (timeUntilExpiration === 0) return 'Expired';
+  if (timeUntilExpiration <= 0) return 'Expired';
   
   const minutes = Math.floor(timeUntilExpiration / (1000 * 60));
   const hours = Math.floor(minutes / 60);
@@ -320,3 +320,26 @@ export const validateIntegrationMetadata = (metadata: Record<string, unknown>): 
     errors,
   };
 };
+
+/**
+ * Format distance to now (simple implementation)
+ */
+export const formatDistanceToNow = (date: Date): string => {
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInSeconds = Math.floor(diffInMs / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''}`;
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''}`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''}`;
+  } else {
+    return `${diffInDays} day${diffInDays !== 1 ? 's' : ''}`;
+  }
+};
+

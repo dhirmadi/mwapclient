@@ -28,7 +28,7 @@ export const useProjectFiles = (projectId?: string, params: FileListParams = {})
 /**
  * Combined hook for managing project files (read-only as per v3 API)
  */
-const useFiles = (projectId: string, params: FileListParams = {}) => {
+export const useFiles = (projectId: string, params: FileListParams = {}) => {
   const filesQuery = fetchProjectFiles(projectId, params);
 
   return {
@@ -38,5 +38,3 @@ const useFiles = (projectId: string, params: FileListParams = {}) => {
     refetch: filesQuery.refetch,
   };
 };
-
-export default useFiles;

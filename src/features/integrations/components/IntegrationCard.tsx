@@ -33,8 +33,7 @@ import { Integration } from '../types';
 import { useTokenManagement } from '../hooks';
 import { 
   formatDistanceToNow, 
-  getIntegrationStatusColor,
-  getIntegrationStatusIcon,
+  getIntegrationStatusConfig,
   isTokenExpired,
   isTokenExpiringSoon,
   getTimeUntilExpiration
@@ -119,7 +118,6 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
           icon={<IconX size={16} />}
           color="red"
           variant="light"
-          size="xs"
           p="xs"
         >
           <Text size="xs">Token expired - refresh required</Text>
@@ -134,7 +132,6 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
           icon={<IconAlertTriangle size={16} />}
           color="orange"
           variant="light"
-          size="xs"
           p="xs"
         >
           <Text size="xs">Token expires in {timeLeft}</Text>
@@ -148,7 +145,6 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
           icon={<IconX size={16} />}
           color="red"
           variant="light"
-          size="xs"
           p="xs"
         >
           <Text size="xs">Connection error - check configuration</Text>
@@ -199,7 +195,7 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
             justifyContent: 'center',
           }}
         >
-          <Progress size="sm" style={{ width: '60%' }} />
+          <Progress size="sm" value={50} style={{ width: '60%' }} />
         </Box>
       )}
 
@@ -209,7 +205,7 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
           {getProviderIcon()}
           <div>
             <Text fw={500} size={compact ? "sm" : "md"} lineClamp={1}>
-              {integration.metadata?.displayName || integration.provider?.name || 'Unknown Provider'}
+              {String((integration.metadata as any)?.displayName || integration.provider?.name || 'Unknown Provider')}
             </Text>
             <Text size="xs" c="dimmed">
               {integration.provider?.name} • Created {formatDistanceToNow(new Date(integration.createdAt))} ago
@@ -313,11 +309,11 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
       {getStatusAlert()}
 
       {/* Description */}
-      {!compact && integration.metadata?.description && (
+      {!compact && (integration.metadata as any)?.description && (
         <>
           <Divider my="sm" />
           <Text size="sm" c="dimmed" lineClamp={2}>
-            {integration.metadata.description}
+            {String((integration.metadata as any).description)}
           </Text>
         </>
       )}

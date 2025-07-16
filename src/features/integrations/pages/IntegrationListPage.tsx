@@ -67,7 +67,7 @@ const IntegrationListPage: React.FC = () => {
     isLoading, 
     error, 
     refetch 
-  } = useIntegrations(roles?.tenantId);
+  } = useIntegrations();
   
   const { data: cloudProviders } = useCloudProviders();
   const { mutate: deleteIntegration, isPending: isDeleting } = useDeleteIntegration();
@@ -80,7 +80,7 @@ const IntegrationListPage: React.FC = () => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchesName = integration.metadata?.displayName?.toLowerCase().includes(query) ||
+        const matchesName = (integration.metadata?.displayName as string)?.toLowerCase().includes(query) ||
                            integration.provider?.name?.toLowerCase().includes(query);
         const matchesProvider = integration.provider?.type?.toLowerCase().includes(query);
         if (!matchesName && !matchesProvider) return false;
@@ -176,8 +176,11 @@ const IntegrationListPage: React.FC = () => {
     navigate(`/integrations/${integrationId}/edit`);
   };
 
-  const handleDeleteClick = (integration: Integration) => {
-    setIntegrationToDelete(integration);
+  const handleDeleteClick = (integrationId: string) => {
+    const integration = integrations?.find(i => i.id === integrationId);
+    if (integration) {
+      setIntegrationToDelete(integration);
+    }
   };
 
   const handleDeleteConfirm = () => {
@@ -527,7 +530,7 @@ const IntegrationListPage: React.FC = () => {
                   <IconCloud size={16} />
                   <div>
                     <Text fw={500} size="sm">
-                      {integrationToDelete.metadata?.displayName || integrationToDelete.provider?.name}
+                      {String(integrationToDelete.metadata?.displayName || integrationToDelete.provider?.name)}
                     </Text>
                     <Text size="xs" c="dimmed">
                       {integrationToDelete.provider?.type} • Created {formatDistanceToNow(new Date(integrationToDelete.createdAt))} ago

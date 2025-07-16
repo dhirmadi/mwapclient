@@ -85,7 +85,7 @@ export const IntegrationTestingPanel: React.FC<IntegrationTestingPanelProps> = (
     configuration: testConfig,
   });
 
-  const troubleshootingSteps = getTroubleshootingSteps(diagnostics);
+  const troubleshootingSteps = getTroubleshootingSteps(diagnostics || undefined);
 
   // Handle test execution
   const handleRunTests = async () => {

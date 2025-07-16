@@ -2,6 +2,9 @@ export interface CloudProvider {
   id: string;             // Cloud provider ID (transformed from _id)
   name: string;           // Provider name
   slug: string;           // Provider slug
+  type?: string;          // Provider type (e.g., 'google-drive', 'dropbox')
+  description?: string;   // Provider description
+  isActive?: boolean;     // Whether provider is active
   scopes: string[];       // OAuth scopes
   authUrl: string;        // OAuth authorization URL
   tokenUrl: string;       // OAuth token URL

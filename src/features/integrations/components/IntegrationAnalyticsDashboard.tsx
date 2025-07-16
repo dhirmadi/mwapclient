@@ -64,7 +64,7 @@ export const IntegrationAnalyticsDashboard: React.FC<IntegrationAnalyticsDashboa
 
   const tenantAnalytics = useTenantAnalytics({
     tenantId: tenantId!,
-    period,
+    period: period === 'hour' ? 'day' : period,
     enabled: !!tenantId && !integrationId,
   });
 
@@ -131,7 +131,7 @@ export const IntegrationAnalyticsDashboard: React.FC<IntegrationAnalyticsDashboa
         <Text size="sm">
           Failed to load analytics data: {error.message}
         </Text>
-        <Button size="xs" variant="light" mt="xs" onClick={refetch}>
+        <Button size="xs" variant="light" mt="xs" onClick={() => refetch()}>
           Retry
         </Button>
       </Alert>
@@ -204,7 +204,7 @@ export const IntegrationAnalyticsDashboard: React.FC<IntegrationAnalyticsDashboa
           <Tooltip label="Refresh data">
             <ActionIcon
               variant="light"
-              onClick={refetch}
+              onClick={() => refetch()}
               loading={isLoading}
             >
               <IconRefresh size={16} />
@@ -480,7 +480,7 @@ export const IntegrationAnalyticsDashboard: React.FC<IntegrationAnalyticsDashboa
         size="xl"
       >
         {analytics && (
-          <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs value={activeTab} onChange={(value) => setActiveTab(value || 'overview')}>
             <Tabs.List>
               <Tabs.Tab value="overview">Overview</Tabs.Tab>
               {integrationId && (

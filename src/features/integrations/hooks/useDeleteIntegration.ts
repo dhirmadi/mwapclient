@@ -15,14 +15,14 @@ export const useDeleteIntegration = () => {
 
   return useMutation({
     mutationFn: async (integrationId: string): Promise<void> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔗 DELETE INTEGRATION: Deleting integration');
         console.log('📊 Mutation Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           timestamp: new Date().toISOString()
         });
@@ -30,7 +30,7 @@ export const useDeleteIntegration = () => {
 
       try {
         const response = await api.delete(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}`
+          `/tenants/${currentTenant}/integrations/${integrationId}`
         );
         
         if (import.meta.env.DEV) {
@@ -54,7 +54,7 @@ export const useDeleteIntegration = () => {
     onMutate: async (integrationId) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ 
-        queryKey: ['integrations', currentTenant?.id] 
+        queryKey: ['integrations', currentTenant] 
       });
       await queryClient.cancelQueries({ 
         queryKey: ['integration', integrationId] 
@@ -63,7 +63,7 @@ export const useDeleteIntegration = () => {
       // Snapshot the previous value for rollback
       const previousIntegrations = queryClient.getQueryData<Integration[]>([
         'integrations', 
-        currentTenant?.id
+        currentTenant
       ]);
       const previousIntegration = queryClient.getQueryData<Integration>([
         'integration', 
@@ -72,7 +72,7 @@ export const useDeleteIntegration = () => {
 
       // Optimistically remove the integration from the list
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [];
           return oldData.filter(integration => integration.id !== integrationId);
@@ -90,7 +90,7 @@ export const useDeleteIntegration = () => {
     onSuccess: (_, integrationId, context) => {
       // Invalidate related queries to ensure consistency
       queryClient.invalidateQueries({ 
-        queryKey: ['integrations', currentTenant?.id] 
+        queryKey: ['integrations', currentTenant] 
       });
 
       // Show success notification
@@ -109,7 +109,7 @@ export const useDeleteIntegration = () => {
       // Rollback optimistic updates
       if (context?.previousIntegrations) {
         queryClient.setQueryData(
-          ['integrations', currentTenant?.id],
+          ['integrations', currentTenant],
           context.previousIntegrations
         );
       }
@@ -139,7 +139,7 @@ export const useDeleteIntegration = () => {
     onSettled: () => {
       // Always refetch to ensure consistency
       queryClient.invalidateQueries({ 
-        queryKey: ['integrations', currentTenant?.id] 
+        queryKey: ['integrations', currentTenant] 
       });
     },
   });
@@ -155,14 +155,14 @@ export const useRevokeIntegration = () => {
 
   return useMutation({
     mutationFn: async (integrationId: string): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔗 REVOKE INTEGRATION: Revoking integration');
         console.log('📊 Mutation Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           timestamp: new Date().toISOString()
         });
@@ -170,7 +170,7 @@ export const useRevokeIntegration = () => {
 
       try {
         const response = await api.patch(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}`,
+          `/tenants/${currentTenant}/integrations/${integrationId}`,
           { status: 'revoked' }
         );
         
@@ -203,7 +203,7 @@ export const useRevokeIntegration = () => {
       
       // Update the integration in the list cache
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [revokedIntegration];
           return oldData.map(integration => 

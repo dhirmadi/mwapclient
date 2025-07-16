@@ -68,7 +68,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
       if (excludeProviders.includes(provider.id)) return false;
 
       // Filter by type if specified
-      if (filterByType && !filterByType.includes(provider.type)) return false;
+      if (filterByType && provider.type && !filterByType.includes(provider.type)) return false;
       if (typeFilter && provider.type !== typeFilter) return false;
 
       // Filter by search query
@@ -76,7 +76,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
         const query = searchQuery.toLowerCase();
         return (
           provider.name.toLowerCase().includes(query) ||
-          provider.type.toLowerCase().includes(query) ||
+          (provider.type && provider.type.toLowerCase().includes(query)) ||
           (provider.description && provider.description.toLowerCase().includes(query))
         );
       }
@@ -88,7 +88,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
   // Get unique provider types for filter dropdown
   const providerTypes = React.useMemo(() => {
     if (!cloudProviders) return [];
-    const types = [...new Set(cloudProviders.map(p => p.type))];
+    const types = [...new Set(cloudProviders.map(p => p.type).filter(Boolean))] as string[];
     return types.map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }));
   }, [cloudProviders]);
 
@@ -165,7 +165,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
                 {isSelected && <IconCheck size={16} color="var(--mantine-color-blue-6)" />}
               </Group>
               <Text size="xs" c="dimmed">
-                {provider.type.charAt(0).toUpperCase() + provider.type.slice(1)}
+                {provider.type ? provider.type.charAt(0).toUpperCase() + provider.type.slice(1) : 'Unknown'}
               </Text>
             </div>
           </Group>
@@ -182,16 +182,15 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
         {!compact && (
           <Stack gap="xs">
             {/* Scopes */}
-            {provider.scopes && provider.scopes.length > 0 && (
+            {provider.scopes && provider.scopes.length > 0 ? (
               <Group gap="xs">
                 <IconKey size={14} color="var(--mantine-color-gray-6)" />
                 <Text size="xs" c="dimmed">
                   {provider.scopes.length} permission{provider.scopes.length !== 1 ? 's' : ''}
                 </Text>
               </Group>
-            )}
+            ) : null}
 
-            {/* Security Features */}
             <Group gap="xs">
               <IconShield size={14} color="var(--mantine-color-green-6)" />
               <Text size="xs" c="dimmed">
@@ -200,7 +199,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
             </Group>
 
             {/* Additional Info */}
-            {provider.metadata?.supportUrl && (
+            {provider.metadata?.supportUrl ? (
               <Group gap="xs">
                 <IconExternalLink size={14} color="var(--mantine-color-blue-6)" />
                 <Text
@@ -215,7 +214,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
                   Documentation
                 </Text>
               </Group>
-            )}
+            ) : null}
           </Stack>
         )}
       </Card>

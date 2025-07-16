@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { apiClient } from '../../../shared/utils/api';
+import api from '../../../shared/utils/api';
 
 interface UsageMetrics {
   totalRequests: number;
@@ -136,13 +136,13 @@ export const useIntegrationAnalytics = ({
   } = useQuery({
     queryKey: ['integration-analytics', integrationId, queryParams],
     queryFn: async (): Promise<IntegrationAnalytics> => {
-      const response = await apiClient.get(
+      const response = await api.get(
         `/integrations/${integrationId}/analytics?${queryParams}`
       );
       return response.data.data;
     },
     enabled: enabled && !!integrationId,
-    refetchInterval,
+    refetchInterval: refreshInterval,
     staleTime: 60000, // 1 minute
     gcTime: 300000, // 5 minutes
   });
@@ -364,7 +364,7 @@ export const useTenantAnalytics = ({
   } = useQuery({
     queryKey: ['tenant-analytics', tenantId, period],
     queryFn: async (): Promise<TenantAnalytics> => {
-      const response = await apiClient.get(
+      const response = await api.get(
         `/tenants/${tenantId}/analytics?period=${period}`
       );
       return response.data.data;

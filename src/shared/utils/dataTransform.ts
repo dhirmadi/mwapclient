@@ -8,13 +8,13 @@
  * @param data - The object to transform
  * @returns Transformed object with id field
  */
-export const transformIdField = <T extends Record<string, any>>(data: T): T => {
+export const transformIdField = <T extends Record<string, any>>(data: T | null | undefined): T => {
   if (!data || typeof data !== 'object') {
-    return data;
+    return data as unknown as T;
   }
 
   // Extract ID from _id or id field
-  let id = data._id || data.id;
+  let id = (data as any)._id || (data as any).id;
   
   // Handle ObjectId objects (if they come from MongoDB)
   if (id && typeof id === 'object' && id.toString) {
@@ -24,14 +24,14 @@ export const transformIdField = <T extends Record<string, any>>(data: T): T => {
   const transformed = {
     ...data,
     id: id, // Use extracted and normalized ID
-  };
+  } as T;
   
   // Only log if there's an issue with ID transformation
   if (!transformed.id) {
     console.warn('transformIdField - No valid ID found:', { 
       original: data, 
-      originalId: data.id,
-      originalMongoId: data._id,
+      originalId: (data as any).id,
+      originalMongoId: (data as any)._id,
       transformed 
     });
   }
@@ -44,9 +44,9 @@ export const transformIdField = <T extends Record<string, any>>(data: T): T => {
  * @param data - The array to transform
  * @returns Transformed array with id fields
  */
-export const transformIdFields = <T extends Record<string, any>>(data: T[]): T[] => {
+export const transformIdFields = <T extends Record<string, any>>(data: T[] | null | undefined): T[] => {
   if (!Array.isArray(data)) {
-    return data;
+    return data as unknown as T[];
   }
 
   return data.map(transformIdField);
@@ -59,10 +59,10 @@ export const transformIdFields = <T extends Record<string, any>>(data: T[]): T[]
  * @param isArray - Whether the expected data is an array
  * @returns Transformed data with proper ID fields
  */
-export const handleApiResponse = <T extends Record<string, any>>(
+export const handleApiResponse = <T = any>(
   response: any,
   isArray: boolean = false
-): T | T[] => {
+): T => {
   let rawData: any = null;
 
   // Handle wrapped response format: { success: true, data: ... }
@@ -83,15 +83,15 @@ export const handleApiResponse = <T extends Record<string, any>>(
 
   // Transform IDs based on expected data type
   if (isArray && Array.isArray(rawData)) {
-    return transformIdFields(rawData);
+    return transformIdFields(rawData) as T;
   } else if (!isArray && rawData && typeof rawData === 'object') {
-    return transformIdField(rawData);
+    return transformIdField(rawData) as T;
   } else if (isArray && !Array.isArray(rawData)) {
     // Expected array but got single object or null
-    return rawData === null ? [] : [transformIdField(rawData)];
+    return (rawData === null ? [] : [transformIdField(rawData)]) as T;
   }
 
-  return rawData;
+  return rawData as T;
 };
 
 /**

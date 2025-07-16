@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../../shared/utils/api';
-import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
+import { api, handleApiResponseWithTransform as handleApiResponse, handleDeleteResponse } from '../../../shared/utils';
 import { TenantCreate, TenantUpdate } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 

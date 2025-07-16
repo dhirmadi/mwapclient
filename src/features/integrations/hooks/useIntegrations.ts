@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import api from '../../../shared/utils/api';
-import { handleApiResponse } from '../../../shared/utils/dataTransform';
+import { api, handleApiResponseWithTransform as handleApiResponse } from '../../../shared/utils';
 import { useAuth } from '../../../core/context/AuthContext';
 import { Integration, IntegrationListFilters } from '../types';
 
@@ -13,16 +12,16 @@ export const useIntegrations = (filters?: IntegrationListFilters) => {
   const { currentTenant, isReady } = useAuth();
 
   return useQuery({
-    queryKey: ['integrations', currentTenant?.id, filters],
+    queryKey: ['integrations', currentTenant, filters],
     queryFn: async (): Promise<Integration[]> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔗 INTEGRATIONS QUERY: Fetching tenant integrations');
         console.log('📊 Query State:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           filters,
           isReady,
           timestamp: new Date().toISOString()
@@ -58,7 +57,7 @@ export const useIntegrations = (filters?: IntegrationListFilters) => {
         }
 
         const queryString = params.toString();
-        const url = `/tenants/${currentTenant.id}/integrations${queryString ? `?${queryString}` : ''}`;
+        const url = `/tenants/${currentTenant}/integrations${queryString ? `?${queryString}` : ''}`;
         
         const response = await api.get(url);
         
@@ -82,7 +81,7 @@ export const useIntegrations = (filters?: IntegrationListFilters) => {
         throw error;
       }
     },
-    enabled: isReady && !!currentTenant?.id,
+    enabled: isReady && !!currentTenant,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -99,7 +98,7 @@ export const useIntegration = (integrationId: string | undefined) => {
   return useQuery({
     queryKey: ['integration', integrationId],
     queryFn: async (): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
       
@@ -110,7 +109,7 @@ export const useIntegration = (integrationId: string | undefined) => {
       if (import.meta.env.DEV) {
         console.group('🔗 INTEGRATION QUERY: Fetching specific integration');
         console.log('📊 Query State:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           isReady,
           timestamp: new Date().toISOString()
@@ -118,7 +117,7 @@ export const useIntegration = (integrationId: string | undefined) => {
       }
 
       try {
-        const response = await api.get(`/tenants/${currentTenant.id}/integrations/${integrationId}`);
+        const response = await api.get(`/tenants/${currentTenant}/integrations/${integrationId}`);
         
         if (import.meta.env.DEV) {
           console.log('✅ Integration fetched successfully:', response.data);
@@ -140,7 +139,7 @@ export const useIntegration = (integrationId: string | undefined) => {
         throw error;
       }
     },
-    enabled: isReady && !!currentTenant?.id && !!integrationId,
+    enabled: isReady && !!currentTenant && !!integrationId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
   });

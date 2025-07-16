@@ -49,10 +49,11 @@ interface IntegrationWizardProps {
   allowStepNavigation?: boolean;
 }
 
-interface WizardFormData {
+interface WizardFormData extends Record<string, unknown> {
   displayName: string;
   description: string;
   isActive: boolean;
+  selectedProvider?: string;
   settings: {
     autoRefresh: boolean;
     notifyOnExpiration: boolean;
@@ -191,14 +192,13 @@ export const IntegrationWizard: React.FC<IntegrationWizardProps> = ({
     if (!selectedProvider || !roles?.tenantId) return;
 
     const integrationData: IntegrationCreateRequest = {
-      tenantId: roles.tenantId,
       providerId: selectedProvider.id,
       metadata: {
         displayName: values.displayName,
         description: values.description,
         settings: values.settings,
       },
-      isActive: values.isActive,
+
     };
 
     createIntegration(integrationData, {
@@ -561,7 +561,7 @@ export const IntegrationWizard: React.FC<IntegrationWizardProps> = ({
         {activeStep < steps.length - 1 && (
           <Button
             rightSection={<IconArrowRight size={16} />}
-            onClick={activeStep === 1 ? form.onSubmit(handleFormSubmit) : handleNextStep}
+            onClick={activeStep === 1 ? () => form.onSubmit(handleFormSubmit)() : handleNextStep}
             disabled={!currentStep.isValid()}
             loading={isCreating}
           >

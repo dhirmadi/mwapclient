@@ -4,7 +4,7 @@ import { CloudProvider } from '../../cloud-providers/types';
  * Integration Status Enum
  * Represents the current state of a cloud provider integration
  */
-export type IntegrationStatus = 'pending' | 'active' | 'expired' | 'error' | 'revoked';
+export type IntegrationStatus = 'pending' | 'active' | 'inactive' | 'expired' | 'error' | 'revoked';
 
 /**
  * Integration Health Status
@@ -22,6 +22,7 @@ export interface Integration {
   providerId: string;           // Reference to cloud provider
   provider?: CloudProvider;     // Populated provider data for UI convenience
   status: IntegrationStatus;    // Current integration status
+  isActive?: boolean;           // Whether integration is active (derived from status)
   accessToken?: string;         // OAuth access token (encrypted in backend)
   refreshToken?: string;        // OAuth refresh token (encrypted in backend)
   tokenExpiresAt?: string;      // Token expiration date (ISO string)
@@ -53,6 +54,7 @@ export interface IntegrationCreateRequest {
  */
 export interface IntegrationUpdateRequest {
   status?: IntegrationStatus;   // Update integration status
+  isActive?: boolean;           // Update active status
   accessToken?: string;         // Update access token (will be encrypted)
   refreshToken?: string;        // Update refresh token (will be encrypted)
   tokenExpiresAt?: string;      // Update token expiration date (ISO string)

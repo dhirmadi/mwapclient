@@ -45,7 +45,7 @@ export const useOAuthFlow = () => {
     providerId: string,
     metadata?: Record<string, unknown>
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
-    if (!currentTenant?.id) {
+    if (!currentTenant) {
       return { success: false, error: 'No current tenant available' };
     }
 
@@ -69,7 +69,7 @@ export const useOAuthFlow = () => {
         console.group('🔗 OAUTH FLOW: Initiating OAuth flow');
         console.log('📊 Flow Data:', {
           providerId,
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           userId: user.sub,
           metadata,
           timestamp: new Date().toISOString()
@@ -80,8 +80,8 @@ export const useOAuthFlow = () => {
       const integrationRequest: IntegrationCreateRequest = {
         providerId,
         metadata: {
-          displayName: metadata?.displayName || `${provider.name} Integration`,
-          description: metadata?.description || `Integration with ${provider.name}`,
+          displayName: (metadata as any)?.displayName || `${provider.name} Integration`,
+          description: (metadata as any)?.description || `Integration with ${provider.name}`,
           ...metadata,
         },
       };
@@ -100,7 +100,7 @@ export const useOAuthFlow = () => {
       const oauthConfig = await buildOAuthUrl(
         provider,
         integration.id,
-        currentTenant.id,
+        currentTenant,
         redirectUri,
         user.sub
       );
@@ -141,14 +141,14 @@ export const useOAuthFlow = () => {
 
       return { success: false, error: errorMessage };
     }
-  }, [currentTenant?.id, user?.sub, cloudProviders, createIntegration]);
+  }, [currentTenant, user?.sub, cloudProviders, createIntegration]);
 
   /**
    * Handle OAuth callback and complete token exchange
    */
   const handleCallback = useMutation({
     mutationFn: async (searchParams: URLSearchParams): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
@@ -161,7 +161,7 @@ export const useOAuthFlow = () => {
       if (import.meta.env.DEV) {
         console.group('🔗 OAUTH CALLBACK: Processing OAuth callback');
         console.log('📊 Callback Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           searchParams: Object.fromEntries(searchParams.entries()),
           timestamp: new Date().toISOString()
         });
@@ -187,7 +187,7 @@ export const useOAuthFlow = () => {
 
       // Exchange authorization code for tokens
       const response = await api.post(
-        `/tenants/${currentTenant.id}/integrations/${state.integrationId}/oauth/callback`,
+        `/tenants/${currentTenant}/integrations/${state.integrationId}/oauth/callback`,
         {
           code,
           codeVerifier: state.codeVerifier,
@@ -220,7 +220,7 @@ export const useOAuthFlow = () => {
       
       // Update integrations list
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [integration];
           return oldData.map(item => 
@@ -287,12 +287,12 @@ export const useOAuthFlow = () => {
       try {
         // Delete the placeholder integration if flow is cancelled
         await api.delete(
-          `/tenants/${currentTenant?.id}/integrations/${flowState.integrationId}`
+          `/tenants/${currentTenant}/integrations/${flowState.integrationId}`
         );
         
         // Invalidate integrations cache
         queryClient.invalidateQueries({ 
-          queryKey: ['integrations', currentTenant?.id] 
+          queryKey: ['integrations', currentTenant] 
         });
       } catch (error) {
         console.error('Failed to cleanup cancelled OAuth flow:', error);
@@ -300,7 +300,7 @@ export const useOAuthFlow = () => {
     }
     
     resetFlow();
-  }, [flowState.integrationId, flowState.step, currentTenant?.id, queryClient, resetFlow]);
+  }, [flowState.integrationId, flowState.step, currentTenant, queryClient, resetFlow]);
 
   /**
    * Get user-friendly error message

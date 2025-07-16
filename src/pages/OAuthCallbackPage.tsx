@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Container, Paper, Text, Loader, Alert, Stack, Button, Progress } from '@mantine/core';
+import { Container, Paper, Text, Loader, Alert, Stack, Button, Progress, Group } from '@mantine/core';
 import { IconCheck, IconX, IconAlertCircle, IconRefresh } from '@tabler/icons-react';
-import { parseOAuthState, getOAuthSuccessUri, getOAuthErrorUri } from '../shared/utils/oauth';
-import { useOAuthFlow } from '../features/integrations/hooks/useOAuthFlow';
-import { validateOAuthCallback, getErrorMessage } from '../features/integrations/utils/oauthUtils';
+import { parseOAuthState, getOAuthSuccessUri, getOAuthErrorUri } from '../shared/utils';
+import { useOAuthFlow } from '../features/integrations';
+import { validateOAuthCallback } from '../features/integrations/utils/oauthUtils';
 
 const OAuthCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -186,14 +186,14 @@ const OAuthCallbackPage: React.FC = () => {
                 >
                   {error ? getFlowErrorMessage(error) : 'Unknown error occurred'}
                 </Alert>
-                <Stack direction="row" gap="sm" mt="md">
+                <Group gap="sm" mt="md">
                   <Button onClick={handleRetry} variant="filled">
                     Return to Integrations
                   </Button>
                   <Button onClick={handleCancel} variant="outline">
                     Cancel
                   </Button>
-                </Stack>
+                </Group>
               </>
             )}
           </Stack>

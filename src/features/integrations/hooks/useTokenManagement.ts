@@ -41,14 +41,14 @@ export const useTokenManagement = (integrationId?: string) => {
   const checkTokenHealth = useQuery({
     queryKey: ['integration-health', integrationId],
     queryFn: async (): Promise<IntegrationHealth> => {
-      if (!currentTenant?.id || !integrationId) {
+      if (!currentTenant || !integrationId) {
         throw new Error('Missing tenant or integration ID');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔍 TOKEN HEALTH: Checking integration health');
         console.log('📊 Health Check Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           timestamp: new Date().toISOString()
         });
@@ -56,7 +56,7 @@ export const useTokenManagement = (integrationId?: string) => {
 
       try {
         const response = await api.get(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}/health`
+          `/tenants/${currentTenant}/integrations/${integrationId}/health`
         );
         
         const healthData = handleApiResponse(response, false);
@@ -81,7 +81,7 @@ export const useTokenManagement = (integrationId?: string) => {
         throw error;
       }
     },
-    enabled: !!currentTenant?.id && !!integrationId,
+    enabled: !!currentTenant && !!integrationId,
     staleTime: HEALTH_CHECK_CONFIG.CHECK_INTERVAL_MS,
     gcTime: HEALTH_CHECK_CONFIG.CHECK_INTERVAL_MS * 2,
     refetchInterval: HEALTH_CHECK_CONFIG.CHECK_INTERVAL_MS,
@@ -95,14 +95,14 @@ export const useTokenManagement = (integrationId?: string) => {
    */
   const refreshToken = useMutation({
     mutationFn: async (integrationId: string): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔄 TOKEN REFRESH: Refreshing integration token');
         console.log('📊 Refresh Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           timestamp: new Date().toISOString()
         });
@@ -110,7 +110,7 @@ export const useTokenManagement = (integrationId?: string) => {
 
       try {
         const response = await api.post(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}/refresh-token`
+          `/tenants/${currentTenant}/integrations/${integrationId}/refresh-token`
         );
         
         const updatedIntegration = handleApiResponse(response, false);
@@ -138,7 +138,7 @@ export const useTokenManagement = (integrationId?: string) => {
       
       // Update integrations list
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [updatedIntegration];
           return oldData.map(item => 
@@ -200,14 +200,14 @@ export const useTokenManagement = (integrationId?: string) => {
       };
       error?: string;
     }> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🧪 CONNECTION TEST: Testing integration connection');
         console.log('📊 Test Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           integrationId,
           timestamp: new Date().toISOString()
         });
@@ -215,7 +215,7 @@ export const useTokenManagement = (integrationId?: string) => {
 
       try {
         const response = await api.post(
-          `/tenants/${currentTenant.id}/integrations/${integrationId}/test`
+          `/tenants/${currentTenant}/integrations/${integrationId}/test`
         );
         
         const testResult = handleApiResponse(response, false);

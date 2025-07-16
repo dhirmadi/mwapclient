@@ -6,6 +6,7 @@ import { IntegrationStatus, TokenStatus } from '../types';
 export const INTEGRATION_STATUS = {
   PENDING: 'pending' as const,
   ACTIVE: 'active' as const,
+  INACTIVE: 'inactive' as const,
   EXPIRED: 'expired' as const,
   ERROR: 'error' as const,
   REVOKED: 'revoked' as const,
@@ -17,6 +18,7 @@ export const INTEGRATION_STATUS = {
 export const TOKEN_STATUS = {
   ACTIVE: 'active' as const,
   EXPIRED: 'expired' as const,
+  EXPIRING_SOON: 'expiring_soon' as const,
   REFRESHING: 'refreshing' as const,
   ERROR: 'error' as const,
   REVOKED: 'revoked' as const,
@@ -38,6 +40,12 @@ export const INTEGRATION_STATUS_CONFIG = {
     color: 'green',
     description: 'Integration is working properly',
     icon: 'check',
+  },
+  [INTEGRATION_STATUS.INACTIVE]: {
+    label: 'Inactive',
+    color: 'gray',
+    description: 'Integration is disabled',
+    icon: 'pause',
   },
   [INTEGRATION_STATUS.EXPIRED]: {
     label: 'Expired',
@@ -74,6 +82,12 @@ export const TOKEN_STATUS_CONFIG = {
     color: 'red',
     description: 'Token has expired',
     icon: 'x-circle',
+  },
+  [TOKEN_STATUS.EXPIRING_SOON]: {
+    label: 'Expiring Soon',
+    color: 'orange',
+    description: 'Token is expiring soon',
+    icon: 'clock',
   },
   [TOKEN_STATUS.REFRESHING]: {
     label: 'Refreshing',

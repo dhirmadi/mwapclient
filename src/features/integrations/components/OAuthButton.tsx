@@ -289,7 +289,6 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
             icon={<IconAlertCircle size={16} />}
             color="red"
             variant="light"
-            size="sm"
           >
             <Group justify="space-between">
               <Text size="sm">
@@ -312,7 +311,6 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
             icon={<IconCheck size={16} />}
             color="green"
             variant="light"
-            size="sm"
           >
             <Text size="sm">
               Successfully connected to {provider.name}!
@@ -326,7 +324,6 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
             icon={<IconAlertCircle size={16} />}
             color="orange"
             variant="light"
-            size="sm"
           >
             <Text size="sm">
               This provider is currently unavailable. Please try again later.

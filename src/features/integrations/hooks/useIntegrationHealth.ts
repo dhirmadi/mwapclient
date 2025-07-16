@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
-import { apiClient } from '../../../shared/utils/api';
+import api from '../../../shared/utils/api';
 import { Integration, IntegrationHealthStatus, TokenHealth } from '../types';
 
 interface IntegrationHealthData {
@@ -70,7 +70,7 @@ export const useIntegrationHealth = ({
 
   // Fetch health data
   const fetchHealthData = useCallback(async (): Promise<IntegrationHealthData> => {
-    const response = await apiClient.get(`/integrations/${integrationId}/health`);
+    const response = await api.get(`/integrations/${integrationId}/health`);
     return response.data.data;
   }, [integrationId]);
 

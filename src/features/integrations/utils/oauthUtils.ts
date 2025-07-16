@@ -333,3 +333,34 @@ export function validateScopes(
     missingScopes,
   };
 }
+
+/**
+ * Get user-friendly error message for OAuth errors
+ */
+export function getOAuthErrorMessage(error: string | OAuthError | undefined): string {
+  if (!error) {
+    return 'An unknown error occurred';
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  // Handle OAuth error object
+  const errorMessages: Record<string, string> = {
+    'access_denied': 'Access was denied by the user',
+    'invalid_request': 'The request was invalid',
+    'invalid_client': 'Invalid client credentials',
+    'invalid_grant': 'The authorization grant is invalid',
+    'unauthorized_client': 'The client is not authorized',
+    'unsupported_grant_type': 'The grant type is not supported',
+    'invalid_scope': 'The requested scope is invalid',
+    'server_error': 'The authorization server encountered an error',
+    'temporarily_unavailable': 'The service is temporarily unavailable',
+  };
+  
+  return error.error_description || 
+         errorMessages[error.error] || 
+         `OAuth error: ${error.error}` ||
+         'An unknown OAuth error occurred';
+}

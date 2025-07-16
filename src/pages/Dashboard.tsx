@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/context/AuthContext';
 import { Card, SimpleGrid, Text, Title, Group } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import IntegrationStatusWidget from '../shared/components/IntegrationStatusWidget';
+import { IntegrationStatusWidget } from '../shared/components';
 
 // SuperAdmin Dashboard Component
 const SuperAdminDashboard: React.FC = () => {

@@ -3,9 +3,9 @@ import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/context/AuthContext';
 import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
-import { useTenants } from '../features/tenants/hooks/useTenants';
-import { useProjects } from '../features/projects/hooks/useProjects';
-import { useIntegrations } from '../features/integrations/hooks/useIntegrations';
+import { useTenants } from '../features/tenants';
+import { useProjects } from '../features/projects';
+import { useIntegrations } from '../features/integrations';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
-import { apiClient } from '../../../shared/utils/api';
+import { useState, useCallback, useEffect } from 'react';
+import api from '../../../shared/utils/api';
 
 interface TestResult {
   testId: string;
@@ -138,7 +138,7 @@ export const useIntegrationTesting = ({
       setAbortController(controller);
 
       try {
-        const response = await apiClient.post(
+        const response = await api.post(
           `/integrations/${integrationId}/test`,
           {
             configuration: { ...configuration, ...config },
@@ -159,7 +159,7 @@ export const useIntegrationTesting = ({
   const diagnosticsQuery = useQuery({
     queryKey: ['integration-diagnostics', integrationId],
     queryFn: async (): Promise<DiagnosticInfo> => {
-      const response = await apiClient.get(`/integrations/${integrationId}/diagnostics`);
+      const response = await api.get(`/integrations/${integrationId}/diagnostics`);
       return response.data.data;
     },
     enabled: !!integrationId,
@@ -170,7 +170,7 @@ export const useIntegrationTesting = ({
   const historyQuery = useQuery({
     queryKey: ['integration-test-history', integrationId],
     queryFn: async (): Promise<ConnectionTestSuite[]> => {
-      const response = await apiClient.get(`/integrations/${integrationId}/test-history`);
+      const response = await api.get(`/integrations/${integrationId}/test-history`);
       return response.data.data;
     },
     enabled: !!integrationId,
@@ -206,7 +206,7 @@ export const useIntegrationTesting = ({
         instructions: 'Click the refresh button to automatically renew the access token',
         automatedFix: async () => {
           try {
-            await apiClient.post(`/integrations/${integrationId}/refresh-token`);
+            await api.post(`/integrations/${integrationId}/refresh-token`);
             return true;
           } catch {
             return false;
@@ -377,7 +377,7 @@ export const useIntegrationTesting = ({
     }
 
     const permissionTest = tests.find(test => test.name.includes('permission'));
-    if (permissionTest && tokenTest.status === 'failed') {
+    if (permissionTest && tokenTest && tokenTest.status === 'failed') {
       recommendations.push('Permission test failed - check granted scopes and re-authorize if needed');
     }
 
@@ -395,7 +395,7 @@ export const useIntegrationTesting = ({
   }, []);
 
   // Auto-run tests if enabled
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoRun && integrationId && !currentSuite) {
       runTestsMutation.mutate(configuration);
     }
@@ -411,7 +411,10 @@ export const useIntegrationTesting = ({
     isRunning: runTestsMutation.isPending,
     
     // Diagnostics
-    getDiagnostics: diagnosticsQuery.refetch,
+    getDiagnostics: async () => {
+      const result = await diagnosticsQuery.refetch();
+      return result.data!;
+    },
     diagnostics: diagnosticsQuery.data || null,
     isLoadingDiagnostics: diagnosticsQuery.isLoading,
     

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
-import { apiClient } from '../../../shared/utils/api';
+import api from '../../../shared/utils/api';
 import { Integration, IntegrationStatus } from '../types';
 
 interface BulkOperationResult {
@@ -155,7 +155,7 @@ export const useBulkOperations = (): UseBulkOperationsReturn => {
       return processBatch(
         request,
         async (integrationId, signal) => {
-          const response = await apiClient.post(
+          const response = await api.post(
             `/integrations/${integrationId}/refresh-token`,
             { forceRefresh: request.forceRefresh },
             { signal }
@@ -173,7 +173,7 @@ export const useBulkOperations = (): UseBulkOperationsReturn => {
       return processBatch(
         request,
         async (integrationId, signal) => {
-          const response = await apiClient.patch(
+          const response = await api.patch(
             `/integrations/${integrationId}`,
             { status: request.status },
             { signal }
@@ -191,7 +191,7 @@ export const useBulkOperations = (): UseBulkOperationsReturn => {
       return processBatch(
         request,
         async (integrationId, signal) => {
-          const response = await apiClient.delete(
+          const response = await api.delete(
             `/integrations/${integrationId}`,
             {
               signal,
@@ -213,7 +213,7 @@ export const useBulkOperations = (): UseBulkOperationsReturn => {
       return processBatch(
         request,
         async (integrationId, signal) => {
-          const response = await apiClient.post(
+          const response = await api.post(
             `/integrations/${integrationId}/test`,
             { timeout: request.timeout },
             { signal }

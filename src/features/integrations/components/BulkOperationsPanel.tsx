@@ -272,14 +272,14 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
               <Button
                 size="xs"
                 variant="light"
-                onClick={() => selectAll(integrations.filter(i => i.isActive).map(i => i.id))}
+                onClick={() => selectAll(integrations.filter(i => i.status === 'active').map(i => i.id))}
               >
                 Select Active
               </Button>
               <Button
                 size="xs"
                 variant="light"
-                onClick={() => selectAll(integrations.filter(i => !i.isActive).map(i => i.id))}
+                onClick={() => selectAll(integrations.filter(i => i.status !== 'active').map(i => i.id))}
               >
                 Select Inactive
               </Button>
@@ -296,14 +296,14 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                     />
                     <div style={{ flex: 1 }}>
                       <Text size="sm" fw={500}>
-                        {integration.metadata?.displayName || integration.provider?.name}
+                        {String(integration.metadata?.displayName || integration.provider?.name || 'Unknown')}
                       </Text>
                       <Group gap="xs">
                         <Badge
                           size="xs"
-                          color={integration.isActive ? 'green' : 'gray'}
+                          color={integration.status === 'active' ? 'green' : 'gray'}
                         >
-                          {integration.isActive ? 'Active' : 'Inactive'}
+                          {integration.status === 'active' ? 'Active' : 'Inactive'}
                         </Badge>
                         <Text size="xs" c="dimmed">
                           {integration.provider?.type}
@@ -425,7 +425,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                       <IconX size={16} color="var(--mantine-color-red-6)" />
                     )}
                     <Text size="sm" style={{ flex: 1 }}>
-                      {integrations.find(i => i.id === result.integrationId)?.metadata?.displayName || result.integrationId}
+                      {String(integrations.find(i => i.id === result.integrationId)?.metadata?.displayName || result.integrationId)}
                     </Text>
                     {result.error && (
                       <Tooltip label={result.error}>
@@ -480,9 +480,9 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                   .slice(0, 5)
                   .map((integration) => (
                     <List.Item key={integration.id}>
-                      {integration.metadata?.displayName || integration.provider?.name}
-                      <Badge size="xs" ml="xs" color={integration.isActive ? 'green' : 'gray'}>
-                        {integration.isActive ? 'Active' : 'Inactive'}
+                      {String(integration.metadata?.displayName || integration.provider?.name || 'Unknown')}
+                      <Badge size="xs" ml="xs" color={integration.status === 'active' ? 'green' : 'gray'}>
+                        {integration.status === 'active' ? 'Active' : 'Inactive'}
                       </Badge>
                     </List.Item>
                   ))}

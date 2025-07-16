@@ -42,7 +42,7 @@ import { ProviderSelector, OAuthButton } from '../components';
 import { CloudProvider } from '../../cloud-providers/types';
 import { IntegrationCreateRequest } from '../types';
 
-interface IntegrationFormData {
+interface IntegrationFormData extends Record<string, unknown> {
   displayName: string;
   description: string;
   isActive: boolean;
@@ -159,14 +159,13 @@ const IntegrationCreatePage: React.FC = () => {
     if (!selectedProvider || !roles?.tenantId) return;
 
     const integrationData: IntegrationCreateRequest = {
-      tenantId: roles.tenantId,
+
       providerId: selectedProvider.id,
       metadata: {
         displayName: values.displayName,
         description: values.description,
         settings: values.settings,
       },
-      isActive: values.isActive,
     };
 
     createIntegration(integrationData, {
@@ -521,7 +520,7 @@ const IntegrationCreatePage: React.FC = () => {
         {activeStep < 2 && (
           <Button
             rightSection={<IconArrowRight size={16} />}
-            onClick={activeStep === 1 ? form.onSubmit(handleFormSubmit) : handleNextStep}
+            onClick={activeStep === 1 ? () => form.onSubmit(handleFormSubmit)() : handleNextStep}
             disabled={!canProceed()}
             loading={isCreating}
           >

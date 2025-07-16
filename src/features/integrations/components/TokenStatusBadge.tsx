@@ -189,7 +189,7 @@ export const TokenStatusBadge: React.FC<TokenStatusBadgeProps> = React.memo(({
                 </Group>
               )}
 
-              {tokenHealth.needsRefresh && (
+              {tokenHealth.isExpiringSoon && (
                 <Group gap="xs">
                   <IconRefresh size={12} color="blue" />
                   <Text size="xs" c="blue">

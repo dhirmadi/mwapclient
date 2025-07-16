@@ -47,6 +47,7 @@ export interface OAuthTokenResponse {
 export type TokenStatus = 
   | 'active'                    // Token is valid and active
   | 'expired'                   // Token has expired
+  | 'expiring_soon'             // Token is expiring soon
   | 'refreshing'                // Token is being refreshed
   | 'error'                     // Token has an error
   | 'revoked'                   // Token has been revoked
@@ -60,7 +61,9 @@ export interface TokenHealth {
   status: TokenStatus;          // Current token status
   expiresAt?: string;           // Token expiration timestamp (ISO string)
   expiresIn?: number;           // Seconds until expiration
+  isExpired?: boolean;          // Whether token is expired
   isExpiringSoon: boolean;      // Whether token expires within warning threshold
+  scopes?: string[];            // Token scopes
   lastRefreshed?: string;       // Last refresh timestamp (ISO string)
   refreshAttempts: number;      // Number of refresh attempts
   lastError?: string;           // Last error message

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
 import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { 
+  CloudProvider,
   CloudProviderCreate, 
   CloudProviderUpdate
 } from '../types';
@@ -20,18 +21,18 @@ export const useCloudProviders = () => {
     isLoading, 
     error,
     refetch 
-  } = useQuery({
+  } = useQuery<CloudProvider[]>({
     queryKey: ['cloud-providers'],
     queryFn: async () => {
       const response = await api.get('/cloud-providers');
       console.log('useCloudProviders - fetchCloudProviders response:', response.data);
       
-      const transformedData = handleApiResponse(response, true);
+      const transformedData = handleApiResponse<CloudProvider[]>(response, true);
       console.log('Transformed cloud providers data:', transformedData);
       
       // Validate that all providers have valid IDs
       if (Array.isArray(transformedData)) {
-        const invalidProviders = transformedData.filter(provider => !provider.id);
+        const invalidProviders = transformedData.filter((provider: CloudProvider) => !provider.id);
         if (invalidProviders.length > 0) {
           console.error('useCloudProviders - Found providers without valid IDs:', invalidProviders);
         }
@@ -45,12 +46,12 @@ export const useCloudProviders = () => {
   });
 
   // Create a new cloud provider
-  const createCloudProviderMutation = useMutation({
+  const createCloudProviderMutation = useMutation<CloudProvider, Error, CloudProviderCreate>({
     mutationFn: async (data: CloudProviderCreate) => {
       const response = await api.post("/cloud-providers", data);
       console.log('createCloudProvider response:', response.data);
       
-      const transformedData = handleApiResponse(response, false);
+      const transformedData = handleApiResponse<CloudProvider>(response, false);
       console.log('Transformed created cloud provider data:', transformedData);
       return transformedData;
     },
@@ -60,7 +61,7 @@ export const useCloudProviders = () => {
   });
 
   // Update a cloud provider
-  const updateCloudProviderMutation = useMutation({
+  const updateCloudProviderMutation = useMutation<CloudProvider, Error, { id: string; data: CloudProviderUpdate }>({
     mutationFn: async ({ id, data }: { id: string; data: CloudProviderUpdate }) => {
       if (!id || id === 'undefined') {
         throw new Error(`Cannot update cloud provider with invalid ID: ${id}`);
@@ -69,7 +70,7 @@ export const useCloudProviders = () => {
       const response = await api.patch(`/cloud-providers/${id}`, data);
       console.log(`updateCloudProvider ${id} response:`, response.data);
       
-      const transformedData = handleApiResponse(response, false);
+      const transformedData = handleApiResponse<CloudProvider>(response, false);
       console.log('Transformed updated cloud provider data:', transformedData);
       return transformedData;
     },
@@ -80,7 +81,7 @@ export const useCloudProviders = () => {
   });
 
   // Delete a cloud provider
-  const deleteCloudProviderMutation = useMutation({
+  const deleteCloudProviderMutation = useMutation<{ success: boolean }, Error, string>({
     mutationFn: async (id: string) => {
       if (!id || id === 'undefined') {
         throw new Error(`Cannot delete cloud provider with invalid ID: ${id}`);
@@ -102,7 +103,7 @@ export const useCloudProviders = () => {
    * Hook for fetching a single cloud provider by ID
    */
   const useCloudProvider = (id?: string) => {
-    return useQuery({
+    return useQuery<CloudProvider>({
       queryKey: ['cloud-provider', id],
       queryFn: async () => {
         if (!id || id === 'undefined') {
@@ -112,7 +113,7 @@ export const useCloudProviders = () => {
         const response = await api.get(`/cloud-providers/${id}`);
         console.log(`useCloudProvider - fetchCloudProvider ${id} response:`, response.data);
         
-        const transformedData = handleApiResponse(response, false);
+        const transformedData = handleApiResponse<CloudProvider>(response, false);
         console.log('Transformed cloud provider data:', transformedData);
         
         // Validate the returned data has a valid ID
@@ -130,6 +131,7 @@ export const useCloudProviders = () => {
   return {
     // Cloud Providers
     cloudProviders,
+    data: cloudProviders, // For backward compatibility
     isLoading,
     error,
     refetch,

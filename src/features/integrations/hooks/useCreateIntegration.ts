@@ -15,21 +15,21 @@ export const useCreateIntegration = () => {
 
   return useMutation({
     mutationFn: async (data: IntegrationCreateRequest): Promise<Integration> => {
-      if (!currentTenant?.id) {
+      if (!currentTenant) {
         throw new Error('No current tenant available');
       }
 
       if (import.meta.env.DEV) {
         console.group('🔗 CREATE INTEGRATION: Creating new integration');
         console.log('📊 Mutation Data:', {
-          tenantId: currentTenant.id,
+          tenantId: currentTenant,
           data,
           timestamp: new Date().toISOString()
         });
       }
 
       try {
-        const response = await api.post(`/tenants/${currentTenant.id}/integrations`, data);
+        const response = await api.post(`/tenants/${currentTenant}/integrations`, data);
         
         if (import.meta.env.DEV) {
           console.log('✅ Integration created successfully:', response.data);
@@ -54,12 +54,12 @@ export const useCreateIntegration = () => {
     onSuccess: (newIntegration) => {
       // Invalidate and refetch integrations list
       queryClient.invalidateQueries({ 
-        queryKey: ['integrations', currentTenant?.id] 
+        queryKey: ['integrations', currentTenant] 
       });
       
       // Optimistically add the new integration to the cache
       queryClient.setQueryData(
-        ['integrations', currentTenant?.id],
+        ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [newIntegration];
           return [...oldData, newIntegration];

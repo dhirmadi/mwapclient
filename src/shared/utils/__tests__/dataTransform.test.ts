@@ -11,7 +11,7 @@ describe('dataTransform', () => {
 
       const result = transformIdField(input);
 
-      expect(result.id).toBe('507f1f77bcf86cd799439011');
+      expect((result as any).id).toBe('507f1f77bcf86cd799439011');
       expect(result.name).toBe('Test Provider');
       expect(result.slug).toBe('test-provider');
     });
@@ -40,7 +40,7 @@ describe('dataTransform', () => {
 
       const result = transformIdField(input);
 
-      expect(result.id).toBe('507f1f77bcf86cd799439011');
+      expect((result as any).id).toBe('507f1f77bcf86cd799439011');
       expect(result.name).toBe('Test Provider');
       expect(result.slug).toBe('test-provider');
     });
@@ -69,8 +69,8 @@ describe('dataTransform', () => {
       const result = transformIdFields(input);
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('507f1f77bcf86cd799439011');
-      expect(result[1].id).toBe('507f1f77bcf86cd799439012');
+      expect((result[0] as any).id).toBe('507f1f77bcf86cd799439011');
+      expect((result[1] as any).id).toBe('507f1f77bcf86cd799439012');
     });
 
     it('should handle empty array', () => {

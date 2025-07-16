@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../core/context/AuthContext';
-import { testNetworkConnectivity } from '../shared/utils/api';
+import { testNetworkConnectivity } from '../shared/utils';
 
 interface DebugPanelProps {
   isVisible?: boolean;
