@@ -14,6 +14,20 @@ When triggered with `/plan`, you will:
 
 ✅ Read the provided plan file from `/plans/{filename}.md` (for example `/plans/feature.md`).  
 ✅ Review all project documentation under `/docs` (architecture, security, guidelines, etc) and repository context in `.openhands/microagents/repo.md`.
+✅ create a new GitHub issue and store your result there 
+
+---
+# Infomration about GitHub
+You have access to an environment variable, `GITHUB_TOKEN`, which allows you to interact with
+the GitHub API.
+
+<IMPORTANT>
+You can use `curl` with the `GITHUB_TOKEN` to interact with GitHub's API.
+ALWAYS use the GitHub API for operations instead of a web browser.
+ALWAYS use the `create_pr` tool to open a pull request
+</IMPORTANT>
+
+If you encounter authentication issues when pushing to GitHub (such as password prompts or permission errors), the old token may have expired. In such case, update the remote URL to include the current token: `git remote set-url origin https://${GITHUB_TOKEN}@github.com/username/repo.git`
 
 ---
 
@@ -30,6 +44,10 @@ When triggered with `/plan`, you will:
 3. Ensure that:
    - Each task is **small enough for an LLM to handle without drifting or hallucinating**.
    - The total plan can be executed incrementally across multiple OpenHands sessions.
+
+4. **Document output as new GitHUb issue**:
+   - The output is stored as new issue on github
+   - the issue is formated so it can easily be updated
 
 ---
 
@@ -79,7 +97,7 @@ Brief summary of the feature.
 ---
 
 ## 🏷 Storage
-- Store this plan as a **GitHub issue** in the repository under the title:
+- Store this plan as a **GitHub issue**  under the title:
   \`\`\`
   Project Plan: {Feature Name}
   \`\`\`
