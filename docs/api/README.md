@@ -140,83 +140,31 @@ Response:
 }
 ```
 
-### Integration Management
-
-#### Core Integration Operations
+#### Tenant Integrations
 ```typescript
-// List tenant integrations
-GET /api/integrations
+// Get tenant integrations
+GET /api/tenants/{tenantId}/integrations
 
-// Get integration details
-GET /api/integrations/{integrationId}
-
-// Create new integration
-POST /api/integrations
+// Create integration
+POST /api/tenants/{tenantId}/integrations
 {
-  "name": string,
   "cloudProviderId": string,
-  "description"?: string,
-  "settings"?: object
+  "name": string,
+  "config": object
 }
 
 // Update integration
-PATCH /api/integrations/{integrationId}
+PATCH /api/tenants/{tenantId}/integrations/{integrationId}
 {
   "name"?: string,
-  "description"?: string,
-  "settings"?: object
+  "config"?: object
 }
 
 // Delete integration
-DELETE /api/integrations/{integrationId}
-```
+DELETE /api/tenants/{tenantId}/integrations/{integrationId}
 
-#### OAuth Flow Management
-```typescript
-// Initiate OAuth flow
-POST /api/integrations/{integrationId}/oauth/initiate
-{
-  "providerId": string
-}
-
-// Handle OAuth callback (internal)
-POST /api/oauth/callback
-{
-  "code": string,
-  "state": string
-}
-```
-
-#### Token Management
-```typescript
 // Refresh OAuth token
-POST /api/integrations/{integrationId}/tokens/refresh
-
-// Check token health
-GET /api/integrations/{integrationId}/tokens/health
-
-// Response format for token operations
-{
-  "success": boolean,
-  "data": {
-    "tokenStatus": "active" | "expired" | "error",
-    "expiresAt": string,
-    "lastRefresh": string,
-    "health": "healthy" | "warning" | "error"
-  }
-}
-```
-
-#### Integration Operations
-```typescript
-// Test integration connection
-POST /api/integrations/{integrationId}/test
-
-// Get integration usage statistics
-GET /api/integrations/{integrationId}/usage
-
-// Get integration health status
-GET /api/integrations/{integrationId}/health
+POST /api/oauth/tenants/{tenantId}/integrations/{integrationId}/refresh
 ```
 
 ### Project Management
