@@ -314,3 +314,225 @@ Use this template for feature development:
 - **Searchable**: Well-organized with clear navigation and cross-references
 
 **For any development task, start with [`DOCUMENTATION_INDEX.md`](../../DOCUMENTATION_INDEX.md) to understand the complete system.**
+
+## 🐙 GitHub Issues Management
+
+### Repository Context
+- **Repository**: `dhirmadi/mwapclient`
+- **GitHub API Base**: `https://api.github.com/repos/dhirmadi/mwapclient`
+- **Authentication**: Uses `GITHUB_TOKEN` environment variable
+
+### GitHub Issues CRUD Operations
+
+#### CREATE - Create New Issue
+```bash
+curl -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues \
+  -d '{
+    "title": "Issue title",
+    "body": "Issue description with markdown support",
+    "labels": ["bug", "enhancement", "documentation"],
+    "assignees": ["username"],
+    "milestone": 1
+  }'
+```
+
+#### READ - Get Issues
+```bash
+# List all issues (open by default)
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     -H "Accept: application/vnd.github.v3+json" \
+     https://api.github.com/repos/dhirmadi/mwapclient/issues
+
+# Get specific issue by number
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     -H "Accept: application/vnd.github.v3+json" \
+     https://api.github.com/repos/dhirmadi/mwapclient/issues/34
+
+# Filter issues by state, labels, assignee
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     "https://api.github.com/repos/dhirmadi/mwapclient/issues?state=closed&labels=bug,enhancement&assignee=username"
+```
+
+#### UPDATE - Modify Existing Issue
+```bash
+curl -X PATCH \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34 \
+  -d '{
+    "title": "Updated title",
+    "body": "Updated description",
+    "state": "open",
+    "labels": ["updated-label"],
+    "assignees": ["new-assignee"]
+  }'
+```
+
+#### DELETE - Close/Lock Issue
+```bash
+# Close an issue
+curl -X PATCH \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34 \
+  -d '{"state": "closed", "state_reason": "completed"}'
+
+# Lock an issue (prevents further comments)
+curl -X PUT \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34/lock \
+  -d '{"lock_reason": "resolved"}'
+
+# Reopen a closed issue
+curl -X PATCH \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34 \
+  -d '{"state": "open"}'
+```
+
+### Advanced GitHub Operations
+
+#### Comments Management
+```bash
+# Create comment
+curl -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34/comments \
+  -d '{"body": "Comment with **markdown** support"}'
+
+# List comments
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     https://api.github.com/repos/dhirmadi/mwapclient/issues/34/comments
+
+# Update comment
+curl -X PATCH \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/comments/COMMENT_ID \
+  -d '{"body": "Updated comment"}'
+```
+
+#### Labels Management
+```bash
+# Add labels to issue
+curl -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34/labels \
+  -d '["bug", "enhancement"]'
+
+# Remove specific label
+curl -X DELETE \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34/labels/bug
+
+# Replace all labels
+curl -X PUT \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  https://api.github.com/repos/dhirmadi/mwapclient/issues/34/labels \
+  -d '["new-label", "another-label"]'
+
+# List repository labels
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     https://api.github.com/repos/dhirmadi/mwapclient/labels
+```
+
+### Issue Management Workflows
+
+#### Common Issue Lifecycle Patterns
+1. **Bug Report Workflow**:
+   - Create issue with `bug` label
+   - Assign to developer
+   - Update with investigation findings
+   - Close when fixed with `state_reason: "completed"`
+
+2. **Feature Request Workflow**:
+   - Create issue with `enhancement` label
+   - Add to milestone for planning
+   - Update with implementation details
+   - Close when feature is deployed
+
+3. **Documentation Task**:
+   - Create issue with `documentation` label
+   - Assign to technical writer
+   - Update with progress
+   - Close when documentation is complete
+
+#### Bulk Operations
+```bash
+# Get all open issues for bulk processing
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     "https://api.github.com/repos/dhirmadi/mwapclient/issues?state=open&per_page=100" \
+     | jq '.[] | {number: .number, title: .title, labels: [.labels[].name]}'
+
+# Close multiple issues (requires scripting)
+for issue_number in 32 33 34; do
+  curl -X PATCH \
+    -H "Authorization: token $GITHUB_TOKEN" \
+    https://api.github.com/repos/dhirmadi/mwapclient/issues/$issue_number \
+    -d '{"state": "closed"}'
+done
+```
+
+### GitHub API Best Practices
+
+#### Rate Limiting
+- **Authenticated requests**: 5,000 requests per hour
+- **Check rate limit**: `curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/rate_limit`
+- **Headers to monitor**: `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+#### Error Handling
+- **HTTP 404**: Issue not found or no access
+- **HTTP 422**: Validation failed (invalid data)
+- **HTTP 403**: Rate limit exceeded or insufficient permissions
+- **Always check response status** before processing data
+
+#### Security Considerations
+- **Never log GITHUB_TOKEN** in scripts or outputs
+- **Use minimal permissions** for tokens
+- **Validate input data** before API calls
+- **Handle sensitive information** in issue bodies carefully
+
+### Common Query Patterns
+
+#### Filter Examples
+```bash
+# Issues created in last 7 days
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     "https://api.github.com/repos/dhirmadi/mwapclient/issues?since=$(date -d '7 days ago' -Iseconds)"
+
+# Issues with specific labels
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     "https://api.github.com/repos/dhirmadi/mwapclient/issues?labels=bug,critical"
+
+# Issues assigned to specific user
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     "https://api.github.com/repos/dhirmadi/mwapclient/issues?assignee=dhirmadi"
+
+# Closed issues
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     "https://api.github.com/repos/dhirmadi/mwapclient/issues?state=closed"
+```
+
+#### Useful jq Filters
+```bash
+# Extract issue numbers and titles
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     https://api.github.com/repos/dhirmadi/mwapclient/issues \
+     | jq '.[] | {number: .number, title: .title}'
+
+# Count issues by label
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     https://api.github.com/repos/dhirmadi/mwapclient/issues \
+     | jq '[.[] | .labels[].name] | group_by(.) | map({label: .[0], count: length})'
+
+# Get issues updated in last 24 hours
+curl -H "Authorization: token $GITHUB_TOKEN" \
+     https://api.github.com/repos/dhirmadi/mwapclient/issues \
+     | jq --arg date "$(date -d '1 day ago' -Iseconds)" \
+     '.[] | select(.updated_at > $date) | {number: .number, title: .title, updated: .updated_at}'
+```
