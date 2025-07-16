@@ -630,6 +630,370 @@ export const useProjects = (
 };
 ```
 
+## Integration Feature Development Patterns
+
+### Feature Architecture Example
+The Integration Management feature serves as a reference implementation for clean feature architecture:
+
+```typescript
+// src/features/integrations/
+├── hooks/                    # React hooks for data management
+│   ├── useIntegrations.ts    # Query hooks for data fetching
+│   ├── useCreateIntegration.ts # Mutation hooks for data modification
+│   ├── useOAuthFlow.ts       # Complex business logic hooks
+│   └── useTokenManagement.ts # Specialized functionality hooks
+├── pages/                    # Feature pages with clear responsibilities
+│   ├── IntegrationListPage.tsx    # List/dashboard pages
+│   ├── IntegrationCreatePage.tsx  # Creation/form pages
+│   └── IntegrationDetailsPage.tsx # Detail/management pages
+├── components/               # Reusable UI components
+│   ├── IntegrationCard.tsx   # Display components
+│   ├── TokenStatusBadge.tsx  # Status/indicator components
+│   └── OAuthButton.tsx       # Action components
+├── types/                    # TypeScript definitions
+│   ├── integration.types.ts  # Core domain types
+│   └── oauth.types.ts        # Specialized types
+└── utils/                    # Business logic and utilities
+    ├── constants.ts          # Configuration constants
+    ├── integrationUtils.ts   # Business logic functions
+    └── oauthUtils.ts         # Specialized utilities
+```
+
+### Hook Development Patterns
+
+#### Query Hooks (Data Fetching)
+```typescript
+// Pattern: useEntityName() for listing, useEntity() for single item
+export const useIntegrations = () => {
+  return useQuery({
+    queryKey: ['integrations'],
+    queryFn: () => api.get('/integrations'),
+    enabled: isTenantOwner, // Role-based enabling
+  });
+};
+
+export const useIntegration = (id: string) => {
+  return useQuery({
+    queryKey: ['integrations', id],
+    queryFn: () => api.get(`/integrations/${id}`),
+    enabled: !!id,
+  });
+};
+```
+
+#### Mutation Hooks (Data Modification)
+```typescript
+// Pattern: useVerbEntity() for actions
+export const useCreateIntegration = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: IntegrationCreateRequest) => api.post('/integrations', data),
+    onSuccess: () => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      // Show success notification
+      notifications.show({
+        title: 'Success',
+        message: 'Integration created successfully',
+        color: 'green',
+      });
+    },
+    onError: (error) => {
+      // Handle errors consistently
+      notifications.show({
+        title: 'Error',
+        message: getErrorMessage(error),
+        color: 'red',
+      });
+    },
+  });
+};
+```
+
+#### Complex Business Logic Hooks
+```typescript
+// Pattern: useFeatureFlow() for multi-step processes
+export const useOAuthFlow = () => {
+  const [flowState, setFlowState] = useState<OAuthFlowState>('idle');
+  const createIntegration = useCreateIntegration();
+  
+  const initiateOAuth = useCallback(async (providerId: string) => {
+    setFlowState('initiating');
+    try {
+      // Complex business logic
+      const pkceChallenge = generatePKCEChallenge();
+      const oauthState = createOAuthState(providerId);
+      const authUrl = buildOAuthUrl(providerId, pkceChallenge, oauthState);
+      
+      // Redirect to OAuth provider
+      window.location.href = authUrl;
+    } catch (error) {
+      setFlowState('error');
+      throw error;
+    }
+  }, []);
+  
+  return {
+    flowState,
+    initiateOAuth,
+    resetFlow: () => setFlowState('idle'),
+  };
+};
+```
+
+### Component Development Patterns
+
+#### Display Components
+```typescript
+// Pattern: Clear props interface, memoization for performance
+interface IntegrationCardProps {
+  integration: Integration;
+  onRefresh?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  showActions?: boolean;
+}
+
+export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
+  integration,
+  onRefresh,
+  onDelete,
+  showActions = true,
+}) => {
+  // Component implementation with proper error boundaries
+  return (
+    <Card>
+      <TokenStatusBadge status={integration.tokenStatus} />
+      {/* Component content */}
+      {showActions && (
+        <Group>
+          <Button onClick={() => onRefresh?.(integration.id)}>
+            Refresh
+          </Button>
+          <Button color="red" onClick={() => onDelete?.(integration.id)}>
+            Delete
+          </Button>
+        </Group>
+      )}
+    </Card>
+  );
+});
+```
+
+#### Form/Action Components
+```typescript
+// Pattern: Controlled components with validation
+export const IntegrationCreateForm: React.FC = () => {
+  const form = useForm<IntegrationCreateRequest>({
+    validate: zodResolver(integrationCreateSchema),
+    initialValues: {
+      name: '',
+      cloudProviderId: '',
+      description: '',
+    },
+  });
+  
+  const createIntegration = useCreateIntegration();
+  
+  const handleSubmit = form.onSubmit(async (values) => {
+    try {
+      await createIntegration.mutateAsync(values);
+      form.reset();
+    } catch (error) {
+      // Error handling is done in the hook
+    }
+  });
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields with proper validation */}
+    </form>
+  );
+};
+```
+
+### Security Implementation Patterns
+
+#### OAuth Flow Security
+```typescript
+// Pattern: Comprehensive security measures
+export const generatePKCEChallenge = (): PKCEChallenge => {
+  // Use cryptographically secure random generation
+  const codeVerifier = generateRandomString(128);
+  const codeChallenge = base64URLEncode(sha256(codeVerifier));
+  
+  return {
+    codeVerifier,
+    codeChallenge,
+    codeChallengeMethod: 'S256'
+  };
+};
+
+export const createOAuthState = (integrationId: string): OAuthState => {
+  return {
+    integrationId,
+    nonce: generateRandomString(32), // CSRF protection
+    timestamp: Date.now(), // Expiration tracking
+    csrfToken: generateCSRFToken(), // Additional CSRF protection
+  };
+};
+```
+
+#### Input Validation Patterns
+```typescript
+// Pattern: Zod schemas for comprehensive validation
+export const integrationCreateSchema = z.object({
+  name: z.string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be less than 100 characters')
+    .regex(/^[a-zA-Z0-9\s-_]+$/, 'Name contains invalid characters'),
+  cloudProviderId: z.string().uuid('Invalid provider ID'),
+  description: z.string().max(500, 'Description too long').optional(),
+  settings: z.record(z.any()).optional(),
+});
+
+// Use in components
+const form = useForm({
+  validate: zodResolver(integrationCreateSchema),
+});
+```
+
+### Error Handling Patterns
+
+#### Consistent Error Processing
+```typescript
+// Pattern: Centralized error handling utility
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof AxiosError) {
+    return error.response?.data?.message || 'Network error occurred';
+  }
+  
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  return 'An unexpected error occurred';
+};
+
+// Pattern: Error boundaries for graceful degradation
+export const IntegrationErrorBoundary: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  return (
+    <ErrorBoundary
+      fallback={<IntegrationErrorFallback />}
+      onError={(error) => {
+        console.error('Integration error:', error);
+        // Log to monitoring service
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+};
+```
+
+### Testing Patterns
+
+#### Hook Testing
+```typescript
+// Pattern: Comprehensive hook testing with React Query
+describe('useIntegrations', () => {
+  it('should fetch integrations successfully', async () => {
+    const mockIntegrations = [mockIntegration()];
+    mockApi.get.mockResolvedValue({ data: mockIntegrations });
+    
+    const { result } = renderHook(() => useIntegrations(), {
+      wrapper: createQueryWrapper(),
+    });
+    
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    
+    expect(result.current.data).toEqual(mockIntegrations);
+  });
+});
+```
+
+#### Component Testing
+```typescript
+// Pattern: User-centric testing approach
+describe('IntegrationCard', () => {
+  it('should display integration information correctly', () => {
+    const mockIntegration = createMockIntegration();
+    
+    render(<IntegrationCard integration={mockIntegration} />);
+    
+    expect(screen.getByText(mockIntegration.name)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /refresh/i })).toBeInTheDocument();
+  });
+  
+  it('should handle refresh action', async () => {
+    const onRefresh = jest.fn();
+    const mockIntegration = createMockIntegration();
+    
+    render(
+      <IntegrationCard 
+        integration={mockIntegration} 
+        onRefresh={onRefresh} 
+      />
+    );
+    
+    await user.click(screen.getByRole('button', { name: /refresh/i }));
+    
+    expect(onRefresh).toHaveBeenCalledWith(mockIntegration.id);
+  });
+});
+```
+
+### Performance Optimization Patterns
+
+#### React Query Optimization
+```typescript
+// Pattern: Efficient caching and background updates
+export const useIntegrations = () => {
+  return useQuery({
+    queryKey: ['integrations'],
+    queryFn: () => api.get('/integrations'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+};
+
+// Pattern: Optimistic updates for better UX
+export const useUpdateIntegration = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: UpdateParams) => api.patch(`/integrations/${id}`, data),
+    onMutate: async ({ id, data }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['integrations', id] });
+      
+      // Snapshot previous value
+      const previousIntegration = queryClient.getQueryData(['integrations', id]);
+      
+      // Optimistically update
+      queryClient.setQueryData(['integrations', id], (old: Integration) => ({
+        ...old,
+        ...data,
+      }));
+      
+      return { previousIntegration };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousIntegration) {
+        queryClient.setQueryData(['integrations', variables.id], context.previousIntegration);
+      }
+    },
+  });
+};
+```
+
 ### README Standards
 - **Purpose**: Clear description of what the component/feature does
 - **Usage**: Code examples showing how to use it

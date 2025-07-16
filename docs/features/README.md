@@ -10,10 +10,11 @@ The MWAP Client provides a comprehensive set of features for managing multi-tena
 1. **[Authentication & Authorization](#authentication--authorization)** - Secure user authentication and role-based access control
 2. **[Tenant Management](#tenant-management)** - Organization-level management and settings
 3. **[Project Management](#project-management)** - Project creation, configuration, and lifecycle management
-4. **[Cloud Provider Integration](#cloud-provider-integration)** - Connect and manage cloud storage providers
-5. **[Project Type Management](#project-type-management)** - Define and manage project templates
-6. **[File Management](#file-management)** - Browse and manage files across cloud providers
-7. **[User Management](#user-management)** - Manage users and their roles within projects
+4. **[Integration Management](#integration-management)** - Standalone cloud provider integration management with OAuth flows
+5. **[Cloud Provider Management](#cloud-provider-management)** - Define and configure available cloud storage providers
+6. **[Project Type Management](#project-type-management)** - Define and manage project templates
+7. **[File Management](#file-management)** - Browse and manage files across cloud providers
+8. **[User Management](#user-management)** - Manage users and their roles within projects
 
 ### Administrative Features
 - **System Administration** - Platform-wide configuration and monitoring
@@ -63,11 +64,10 @@ Component Render → Auth Ready Check → Role Validation → Conditional UI Ren
 ## Tenant Management
 
 ### Description
-Organization-level management allowing tenant owners to configure their organization settings, manage cloud integrations, and oversee projects.
+Organization-level management allowing tenant owners to configure their organization settings and oversee projects.
 
 ### Key Functionality
 - **Tenant Configuration**: Organization name, settings, and preferences
-- **Cloud Provider Integrations**: Connect and manage cloud storage providers
 - **Project Oversight**: View and manage all tenant projects
 - **Member Management**: Invite and manage organization members
 - **Settings Management**: Configure tenant-specific settings
@@ -84,9 +84,9 @@ Organization-level management allowing tenant owners to configure their organiza
 #### Tenant Owner
 - View and edit their tenant information
 - Manage tenant settings and preferences
-- Create and configure cloud provider integrations
 - Oversee all projects within their tenant
 - Invite and manage project members
+- Create and manage cloud provider integrations (via Integration Management)
 
 ### User Flows
 ```
@@ -97,7 +97,7 @@ Tenant Configuration (Tenant Owner):
 Tenant Dashboard → Settings → Edit Configuration → Save Changes → Updated Tenant
 
 Cloud Integration Setup:
-Tenant Settings → Integrations → Add Provider → OAuth Flow → Integration Created
+Dashboard → Integrations → Add Provider → OAuth Flow → Integration Created
 ```
 
 ### Technical Implementation
@@ -125,10 +125,6 @@ export const useCurrentTenant = () => {
 - `GET /api/tenants/me` - Get current user's tenant
 - `POST /api/tenants` - Create new tenant (SuperAdmin only)
 - `PATCH /api/tenants/{tenantId}` - Update tenant
-- `GET /api/tenants/{tenantId}/integrations` - List tenant integrations
-- `POST /api/tenants/{tenantId}/integrations` - Create integration
-- `PATCH /api/tenants/{tenantId}/integrations/{integrationId}` - Update integration
-- `DELETE /api/tenants/{tenantId}/integrations/{integrationId}` - Delete integration
 
 ---
 
@@ -228,53 +224,180 @@ export const useCreateProject = () => {
 
 ---
 
-## Cloud Provider Integration
+## Integration Management
 
 ### Description
-Seamless integration with multiple cloud storage providers, enabling unified access to files and resources across different platforms.
-
-### Supported Providers
-- **Google Drive**: Full integration with Google Drive API
-- **Dropbox**: Complete Dropbox API integration
-- **OneDrive**: Microsoft OneDrive integration
-- **Amazon S3**: AWS S3 bucket integration (planned)
+Standalone cloud provider integration management system that provides tenant owners with a dedicated interface to connect pre-configured cloud providers using secure OAuth flows with comprehensive token management.
 
 ### Key Functionality
-- **OAuth Integration**: Secure OAuth 2.0 flow for provider authentication
-- **Token Management**: Automatic token refresh and renewal
-- **Unified File Access**: Browse files across different providers with consistent interface
-- **Provider Configuration**: Configure provider settings and permissions
-- **Integration Management**: Add, update, and remove provider integrations
+- **Integration Lifecycle Management**: Create, configure, update, and delete cloud provider integrations
+- **Secure OAuth Flow**: PKCE-enhanced OAuth 2.0 flow with CSRF protection
+- **Token Management**: Automatic token refresh, health monitoring, and expiration tracking
+- **Integration Health Monitoring**: Real-time status monitoring and connection testing
+- **Bulk Operations**: Manage multiple integrations simultaneously
+- **Integration Analytics**: Usage tracking and performance metrics
 
 ### Features by Role
 
-#### SuperAdmin
-- Manage global cloud provider configurations
-- Add new cloud provider types to the system
-- Configure provider-specific settings and limitations
-- Monitor provider usage and performance
-
 #### Tenant Owner
-- Create cloud provider integrations for their tenant
-- Configure integration settings and permissions
-- Manage OAuth tokens and refresh cycles
-- Monitor integration usage within their tenant
+- Create new cloud provider integrations for their tenant
+- Configure integration settings and OAuth parameters
+- Monitor integration health and token status
+- Refresh expired tokens manually or automatically
+- Test integration connections and troubleshoot issues
+- View integration usage analytics and metrics
+- Manage integration lifecycle (activate, deactivate, delete)
 
 ### User Flows
 ```
-Provider Integration Setup:
-Tenant Settings → Integrations → Add Provider → Select Provider Type → OAuth Flow → Configure Settings → Integration Created
+Integration Creation:
+Dashboard → Integrations → Create Integration → Select Provider → OAuth Flow → Integration Created
 
-OAuth Token Refresh:
-System Background → Token Expiry Check → Refresh Token Request → Update Stored Token → Continue Operation
+Integration Management:
+Integrations Dashboard → Select Integration → View Details → Manage Settings → Update Integration
 
-File Access Through Integration:
-Project Dashboard → Files → Select Integration → Browse Provider Files → Access File
+Token Refresh:
+Integration Details → Token Status → Refresh Token → Updated Token → Health Check
+
+Bulk Operations:
+Integrations Dashboard → Select Multiple → Bulk Actions → Confirm → Operations Applied
 ```
 
 ### Technical Implementation
 ```typescript
-// Cloud provider integration hooks
+// Integration management hooks
+export const useIntegrations = () => {
+  return useQuery({
+    queryKey: ['integrations'],
+    queryFn: () => api.get('/integrations'),
+    enabled: isTenantOwner,
+  });
+};
+
+export const useCreateIntegration = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: IntegrationCreateRequest) => api.post('/integrations', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+    },
+  });
+};
+
+export const useOAuthFlow = () => {
+  return useMutation({
+    mutationFn: ({ providerId, integrationId }: OAuthFlowParams) =>
+      api.post(`/integrations/${integrationId}/oauth/initiate`, { providerId }),
+  });
+};
+
+export const useTokenManagement = () => {
+  return useMutation({
+    mutationFn: ({ integrationId }: TokenRefreshParams) =>
+      api.post(`/integrations/${integrationId}/tokens/refresh`),
+  });
+};
+```
+
+### OAuth Flow with PKCE Implementation
+```typescript
+// Enhanced OAuth callback handling with PKCE
+export const OAuthCallbackPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { handleCallback } = useOAuthFlow();
+  
+  useEffect(() => {
+    const processOAuthCallback = async () => {
+      const params = new URLSearchParams(location.search);
+      const code = params.get('code');
+      const state = params.get('state');
+      const error = params.get('error');
+      
+      if (error) {
+        navigate('/integrations', { 
+          state: { error: `OAuth error: ${error}` }
+        });
+        return;
+      }
+      
+      if (code && state) {
+        try {
+          await handleCallback({ code, state });
+          navigate('/integrations', { 
+            state: { message: 'Integration completed successfully' }
+          });
+        } catch (error) {
+          navigate('/integrations', { 
+            state: { error: 'Integration failed. Please try again.' }
+          });
+        }
+      }
+    };
+    
+    processOAuthCallback();
+  }, [location, navigate, handleCallback]);
+  
+  return <LoadingSpinner message="Completing integration..." />;
+};
+```
+
+### API Endpoints
+- `GET /api/integrations` - List tenant integrations
+- `GET /api/integrations/{integrationId}` - Get integration details
+- `POST /api/integrations` - Create new integration
+- `PATCH /api/integrations/{integrationId}` - Update integration
+- `DELETE /api/integrations/{integrationId}` - Delete integration
+- `POST /api/integrations/{integrationId}/oauth/initiate` - Initiate OAuth flow
+- `POST /api/integrations/{integrationId}/tokens/refresh` - Refresh OAuth token
+- `GET /api/integrations/{integrationId}/health` - Check integration health
+- `POST /api/integrations/{integrationId}/test` - Test integration connection
+
+---
+
+## Cloud Provider Management
+
+### Description
+Administrative system for defining and configuring available cloud storage providers that can be used for tenant integrations.
+
+### Supported Providers
+- **Google Drive**: Full integration with Google Drive API v3
+- **Dropbox**: Complete Dropbox API v2 integration
+- **OneDrive**: Microsoft Graph API integration for OneDrive
+- **Amazon S3**: AWS S3 bucket integration (planned)
+
+### Key Functionality
+- **Provider Definition**: Define cloud provider configurations and OAuth settings
+- **OAuth Configuration**: Configure OAuth client credentials and scopes
+- **Provider Settings**: Set provider-specific limitations and capabilities
+- **Provider Status**: Enable/disable providers system-wide
+- **Provider Monitoring**: Monitor provider usage and performance across tenants
+
+### Features by Role
+
+#### SuperAdmin
+- Create new cloud provider definitions
+- Configure OAuth settings and credentials
+- Set provider limitations and capabilities
+- Enable/disable providers system-wide
+- Monitor provider usage across all tenants
+- Update provider configurations and settings
+
+### User Flows
+```
+Provider Creation:
+SuperAdmin Dashboard → Cloud Providers → Create Provider → Configure OAuth → Set Limitations → Create Provider
+
+Provider Configuration:
+Cloud Providers → Select Provider → Edit Settings → Update OAuth Config → Save Changes
+
+Provider Monitoring:
+Cloud Providers → Provider Details → View Usage Stats → Monitor Performance → Generate Reports
+```
+
+### Technical Implementation
+```typescript
+// Cloud provider management hooks
 export const useCloudProviders = () => {
   return useQuery({
     queryKey: ['cloud-providers'],
@@ -283,65 +406,68 @@ export const useCloudProviders = () => {
   });
 };
 
-export const useTenantIntegrations = (tenantId: string) => {
-  return useQuery({
-    queryKey: ['tenants', tenantId, 'integrations'],
-    queryFn: () => api.get(`/tenants/${tenantId}/integrations`),
+export const useCreateCloudProvider = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CloudProviderCreateRequest) => api.post('/cloud-providers', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
+    },
   });
 };
 
-export const useRefreshIntegrationToken = () => {
+export const useUpdateCloudProvider = () => {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ tenantId, integrationId }: RefreshTokenParams) =>
-      api.post(`/oauth/tenants/${tenantId}/integrations/${integrationId}/refresh`),
+    mutationFn: ({ id, data }: UpdateCloudProviderParams) => 
+      api.patch(`/cloud-providers/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cloud-providers'] });
+    },
   });
 };
 ```
 
-### OAuth Flow Implementation
+### Provider Configuration Schema
 ```typescript
-// OAuth callback handling
-export const OAuthCallbackPage: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  useEffect(() => {
-    const handleOAuthCallback = async () => {
-      const params = new URLSearchParams(location.search);
-      const code = params.get('code');
-      const state = params.get('state');
-      
-      if (code && state) {
-        try {
-          // Exchange code for tokens
-          await api.post('/oauth/callback', { code, state });
-          navigate('/tenant/integrations', { 
-            state: { message: 'Integration successful' }
-          });
-        } catch (error) {
-          navigate('/tenant/integrations', { 
-            state: { error: 'Integration failed' }
-          });
-        }
-      }
-    };
-    
-    handleOAuthCallback();
-  }, [location, navigate]);
-  
-  return <LoadingSpinner message="Completing integration..." />;
-};
+interface CloudProviderConfig {
+  id: string;
+  name: string;
+  type: 'google-drive' | 'dropbox' | 'onedrive' | 's3';
+  displayName: string;
+  description: string;
+  iconUrl: string;
+  isEnabled: boolean;
+  oauthConfig: {
+    clientId: string;
+    clientSecret: string;
+    authorizationUrl: string;
+    tokenUrl: string;
+    scopes: string[];
+    redirectUri: string;
+  };
+  capabilities: {
+    supportsFileUpload: boolean;
+    supportsFileDownload: boolean;
+    supportsFolderCreation: boolean;
+    maxFileSize: number;
+    allowedFileTypes: string[];
+  };
+  limitations: {
+    maxIntegrationsPerTenant: number;
+    rateLimitPerHour: number;
+    quotaLimitGB: number;
+  };
+}
 ```
 
 ### API Endpoints
-- `GET /api/cloud-providers` - List available cloud providers
-- `POST /api/cloud-providers` - Create new cloud provider (SuperAdmin)
-- `PATCH /api/cloud-providers/{providerId}` - Update cloud provider
-- `GET /api/tenants/{tenantId}/integrations` - List tenant integrations
-- `POST /api/tenants/{tenantId}/integrations` - Create integration
-- `PATCH /api/tenants/{tenantId}/integrations/{integrationId}` - Update integration
-- `DELETE /api/tenants/{tenantId}/integrations/{integrationId}` - Delete integration
-- `POST /api/oauth/tenants/{tenantId}/integrations/{integrationId}/refresh` - Refresh OAuth token
+- `GET /api/cloud-providers` - List all cloud providers
+- `GET /api/cloud-providers/{providerId}` - Get provider details
+- `POST /api/cloud-providers` - Create new provider (SuperAdmin)
+- `PATCH /api/cloud-providers/{providerId}` - Update provider (SuperAdmin)
+- `DELETE /api/cloud-providers/{providerId}` - Delete provider (SuperAdmin)
+- `GET /api/cloud-providers/{providerId}/usage` - Get provider usage statistics
 
 ---
 
@@ -678,7 +804,8 @@ export const useSystemHealth = () => {
 - Authentication & Authorization (Auth0 integration, RBAC)
 - Tenant Management (CRUD operations, settings)
 - Project Management (Full lifecycle management)
-- Cloud Provider Integration (Google Drive, Dropbox, OneDrive)
+- Integration Management (Standalone cloud provider integration system)
+- Cloud Provider Management (Provider definitions and configurations)
 - Project Type Management (Template system)
 - File Management (Read-only access, unified browser)
 - User Management (Invitations, role management)

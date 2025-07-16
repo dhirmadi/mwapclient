@@ -53,7 +53,7 @@ interface IntegrationCardProps {
   compact?: boolean;
 }
 
-export const IntegrationCard: React.FC<IntegrationCardProps> = ({
+export const IntegrationCard: React.FC<IntegrationCardProps> = React.memo(({
   integration,
   onRefresh,
   onEdit,
@@ -371,4 +371,6 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = ({
       )}
     </Card>
   );
-};
+});
+
+IntegrationCard.displayName = 'IntegrationCard';

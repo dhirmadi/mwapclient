@@ -140,31 +140,83 @@ Response:
 }
 ```
 
-#### Tenant Integrations
-```typescript
-// Get integrations
-GET /api/tenants/{tenantId}/integrations
+### Integration Management
 
-// Create integration
-POST /api/tenants/{tenantId}/integrations
+#### Core Integration Operations
+```typescript
+// List tenant integrations
+GET /api/integrations
+
+// Get integration details
+GET /api/integrations/{integrationId}
+
+// Create new integration
+POST /api/integrations
 {
-  "cloudProviderId": string,
   "name": string,
-  "config": object
+  "cloudProviderId": string,
+  "description"?: string,
+  "settings"?: object
 }
 
 // Update integration
-PATCH /api/tenants/{tenantId}/integrations/{integrationId}
+PATCH /api/integrations/{integrationId}
 {
   "name"?: string,
-  "config"?: object
+  "description"?: string,
+  "settings"?: object
 }
 
 // Delete integration
-DELETE /api/tenants/{tenantId}/integrations/{integrationId}
+DELETE /api/integrations/{integrationId}
+```
 
+#### OAuth Flow Management
+```typescript
+// Initiate OAuth flow
+POST /api/integrations/{integrationId}/oauth/initiate
+{
+  "providerId": string
+}
+
+// Handle OAuth callback (internal)
+POST /api/oauth/callback
+{
+  "code": string,
+  "state": string
+}
+```
+
+#### Token Management
+```typescript
 // Refresh OAuth token
-POST /api/oauth/tenants/{tenantId}/integrations/{integrationId}/refresh
+POST /api/integrations/{integrationId}/tokens/refresh
+
+// Check token health
+GET /api/integrations/{integrationId}/tokens/health
+
+// Response format for token operations
+{
+  "success": boolean,
+  "data": {
+    "tokenStatus": "active" | "expired" | "error",
+    "expiresAt": string,
+    "lastRefresh": string,
+    "health": "healthy" | "warning" | "error"
+  }
+}
+```
+
+#### Integration Operations
+```typescript
+// Test integration connection
+POST /api/integrations/{integrationId}/test
+
+// Get integration usage statistics
+GET /api/integrations/{integrationId}/usage
+
+// Get integration health status
+GET /api/integrations/{integrationId}/health
 ```
 
 ### Project Management

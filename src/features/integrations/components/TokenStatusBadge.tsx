@@ -22,7 +22,7 @@ interface TokenStatusBadgeProps {
   variant?: 'filled' | 'light' | 'outline' | 'dot';
 }
 
-export const TokenStatusBadge: React.FC<TokenStatusBadgeProps> = ({
+export const TokenStatusBadge: React.FC<TokenStatusBadgeProps> = React.memo(({
   status,
   tokenHealth,
   size = 'sm',
@@ -255,4 +255,6 @@ export const TokenStatusBadge: React.FC<TokenStatusBadgeProps> = ({
       {badge}
     </Tooltip>
   );
-};
+});
+
+TokenStatusBadge.displayName = 'TokenStatusBadge';
