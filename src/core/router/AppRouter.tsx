@@ -4,6 +4,7 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import { Notifications } from '@mantine/notifications';
 import AuthProvider from '../context/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
+import RedirectRoute from './RedirectRoute';
 import MainLayout from '../layouts/MainLayout';
 
 // Pages
@@ -42,6 +43,11 @@ import {
   ProjectMembersPage,
   ProjectFilesPage
 } from '../../features/projects';
+import {
+  IntegrationListPage,
+  IntegrationCreatePage,
+  IntegrationDetailsPage
+} from '../../features/integrations';
 
 // Note: QueryClient is now created in App.tsx to avoid duplication
 // This ensures React Query Devtools work correctly
@@ -96,8 +102,24 @@ const AppRouter: React.FC = () => {
                   <Route element={<ProtectedRoute requiredRoles={['TENANT_OWNER']} />}>
                     <Route path="/tenant/dashboard" element={<Dashboard />} />
                     <Route path="/tenant/settings" element={<TenantSettingsPage />} />
-                    <Route path="/tenant/integrations" element={<TenantIntegrationsPage />} />
                     <Route path="/tenant/management" element={<TenantManagementPage />} />
+                    
+                    {/* New Integration Routes */}
+                    <Route path="/integrations" element={<IntegrationListPage />} />
+                    <Route path="/integrations/create" element={<IntegrationCreatePage />} />
+                    <Route path="/integrations/:id" element={<IntegrationDetailsPage />} />
+                    
+                    {/* Backward Compatibility Redirects */}
+                    <Route 
+                      path="/tenant/integrations" 
+                      element={
+                        <RedirectRoute 
+                          to="/integrations" 
+                          showNotification={true}
+                          notificationMessage="Integration management has moved to a dedicated section. You've been redirected to the new location."
+                        />
+                      } 
+                    />
                   </Route>
 
                   {/* Project Routes */}

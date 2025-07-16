@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/context/AuthContext';
 import { Card, SimpleGrid, Text, Title, Group } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import IntegrationStatusWidget from '../shared/components/IntegrationStatusWidget';
 
 // SuperAdmin Dashboard Component
 const SuperAdminDashboard: React.FC = () => {
@@ -63,9 +64,29 @@ const TenantOwnerDashboard: React.FC = () => {
       <div className="mt-6">
         <Title order={2} mb="md">Quick Actions</Title>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg" mb="xl">
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
+            <Title order={3} mb="md">Projects</Title>
+            <Text c="dimmed">Manage your organization's projects</Text>
+          </Card>
+          
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/integrations">
+            <Title order={3} mb="md">Cloud Integrations</Title>
+            <Text c="dimmed">Connect and manage cloud storage providers</Text>
+          </Card>
+          
           <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/tenant/management">
             <Title order={3} mb="md">Tenant Management</Title>
-            <Text c="dimmed">Manage your tenant's projects and integrations</Text>
+            <Text c="dimmed">Advanced tenant administration</Text>
+          </Card>
+        </SimpleGrid>
+        
+        <Title order={2} mb="md">Status Overview</Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg" mb="xl">
+          <IntegrationStatusWidget />
+          
+          <Card shadow="sm" p="lg" radius="md" withBorder component={Link} to="/projects">
+            <Title order={4} mb="md">Project Status</Title>
+            <Text c="dimmed">View project overview and activity</Text>
           </Card>
         </SimpleGrid>
         
