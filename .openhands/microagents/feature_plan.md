@@ -96,13 +96,14 @@ Brief summary of the feature.
 
 ---
 
-## 🏷 Storage
-- Store this plan as a **GitHub issue**  under the title:
-  \`\`\`
-  Project Plan: {Feature Name}
-  \`\`\`
-- Include appropriate labels (e.g. `planning`, `openhands`, `phase-1`).
-
+## 🏷 Storage & Issue Creation
+1. **Generate the markdown plan** following the specified format
+2. **Create a GitHub issue** using the GitHub API with curl:
+   - Extract repo owner/name from git remote
+   - Use GITHUB_TOKEN for authentication
+   - Set title as "Project Plan: {Feature Name}"
+   - Add labels: ["planning", "openhands", "phase-1"]
+3. **Provide the GitHub issue URL** to the user for tracking
 ---
 
 ## 🧠 Example
