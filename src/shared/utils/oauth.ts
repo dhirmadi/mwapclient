@@ -66,13 +66,13 @@ export function getOAuthCallbackUri(): string {
  * Get OAuth success redirect URI
  */
 export function getOAuthSuccessUri(): string {
-  return `${window.location.origin}/tenant/integrations?oauth=success`;
+  return `${window.location.origin}/integrations?oauth=success`;
 }
 
 /**
  * Get OAuth error redirect URI
  */
 export function getOAuthErrorUri(error?: string): string {
-  const baseUri = `${window.location.origin}/tenant/integrations?oauth=error`;
+  const baseUri = `${window.location.origin}/integrations?oauth=error`;
   return error ? `${baseUri}&error=${encodeURIComponent(error)}` : baseUri;
 }

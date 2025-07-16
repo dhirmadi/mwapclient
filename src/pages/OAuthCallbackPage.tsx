@@ -99,7 +99,7 @@ const OAuthCallbackPage: React.FC = () => {
 
         // Redirect to integrations page after a short delay
         setTimeout(() => {
-          navigate('/tenant/integrations?oauth=success');
+          navigate('/integrations?oauth=success');
         }, 2000);
 
       } catch (error) {
@@ -114,7 +114,7 @@ const OAuthCallbackPage: React.FC = () => {
 
   const handleRetry = () => {
     if (legacyMode) {
-      navigate('/tenant/integrations');
+      navigate('/integrations');
     } else {
       navigate('/integrations');
     }

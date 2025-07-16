@@ -13,9 +13,9 @@ const Home: React.FC = () => {
   const { currentTenant, isLoadingCurrentTenant } = useTenants();
   const [hasNoTenant, setHasNoTenant] = useState<boolean>(false);
   
-  // Get tenant integrations
+  // Get integrations
   const { 
-    data: tenantIntegrations, 
+    data: integrations, 
     isLoading: isLoadingIntegrations 
   } = useIntegrations();
   
@@ -30,14 +30,14 @@ const Home: React.FC = () => {
   const [hasProjects, setHasProjects] = useState<boolean>(false);
   
   useEffect(() => {
-    if (isTenantOwner && tenantIntegrations) {
-      setHasIntegrations(tenantIntegrations.length > 0);
+    if (isTenantOwner && integrations) {
+      setHasIntegrations(integrations.length > 0);
     }
     
     if (isTenantOwner && projects) {
       setHasProjects(projects.length > 0);
     }
-  }, [isTenantOwner, tenantIntegrations, projects]);
+  }, [isTenantOwner, integrations, projects]);
   
   // Handle logout
   const handleLogout = () => {
@@ -349,7 +349,7 @@ const Home: React.FC = () => {
                 </Text>
                 <Button 
                   component={Link} 
-                  to="/tenant/integrations" 
+                  to="/integrations" 
                   variant="filled" 
                   color={hasIntegrations ? "indigo" : "teal"}
                   fullWidth
