@@ -22,7 +22,6 @@ import {
   TenantDetailsPage, 
   TenantEditPage,
   TenantSettingsPage,
-  TenantIntegrationsPage,
   TenantManagementPage
 } from '../../features/tenants';
 import {

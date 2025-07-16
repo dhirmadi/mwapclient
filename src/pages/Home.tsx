@@ -5,6 +5,7 @@ import { useAuth } from '../core/context/AuthContext';
 import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
 import { useTenants } from '../features/tenants/hooks/useTenants';
 import { useProjects } from '../features/projects/hooks/useProjects';
+import { useIntegrations } from '../features/integrations/hooks/useIntegrations';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const Home: React.FC = () => {
   const { 
     data: tenantIntegrations, 
     isLoading: isLoadingIntegrations 
-  } = useTenants().getTenantIntegrations(roles?.tenantId || undefined);
+  } = useIntegrations();
   
   // Get projects
   const { 

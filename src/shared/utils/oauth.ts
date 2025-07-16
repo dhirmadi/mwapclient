@@ -1,4 +1,5 @@
-import { CloudProvider, CloudProviderIntegration } from '../../features/cloud-providers/types';
+import { CloudProvider } from '../../features/cloud-providers/types';
+import { Integration } from '../../features/integrations/types';
 
 export interface OAuthState {
   integrationId: string;
@@ -11,7 +12,7 @@ export interface OAuthState {
  */
 export function buildOAuthUrl(
   cloudProvider: CloudProvider,
-  integration: CloudProviderIntegration,
+  integration: Integration,
   redirectUri: string
 ): string {
   const url = new URL(cloudProvider.authUrl);

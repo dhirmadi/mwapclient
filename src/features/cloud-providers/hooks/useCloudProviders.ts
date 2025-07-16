@@ -3,8 +3,7 @@ import api from '../../../shared/utils/api';
 import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
 import { 
   CloudProviderCreate, 
-  CloudProviderUpdate,
-  CloudProviderIntegrationCreate
+  CloudProviderUpdate
 } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 
@@ -97,31 +96,7 @@ export const useCloudProviders = () => {
     },
   });
 
-  // Create a tenant integration
-  const createIntegrationMutation = useMutation({
-    mutationFn: async ({ tenantId, data }: { tenantId: string; data: CloudProviderIntegrationCreate }) => {
-      const response = await api.post(`/tenants/${tenantId}/integrations`, data);
-      return response.data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
-      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
-    },
-  });
 
-  // Delete a tenant integration
-  const deleteIntegrationMutation = useMutation({
-    mutationFn: async ({ tenantId, integrationId }: { tenantId: string; integrationId: string }) => {
-      const response = await api.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
-      return response.data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tenant-integrations', variables.tenantId] });
-      queryClient.invalidateQueries({ queryKey: ['tenant', variables.tenantId] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-current'] });
-    },
-  });
 
   /**
    * Hook for fetching a single cloud provider by ID
@@ -168,14 +143,6 @@ export const useCloudProviders = () => {
     createError: createCloudProviderMutation.error,
     updateError: updateCloudProviderMutation.error,
     deleteError: deleteCloudProviderMutation.error,
-    
-    // Tenant Integrations
-    createIntegration: createIntegrationMutation.mutate,
-    deleteIntegration: deleteIntegrationMutation.mutate,
-    isCreatingIntegration: createIntegrationMutation.isPending,
-    isDeletingIntegration: deleteIntegrationMutation.isPending,
-    createIntegrationError: createIntegrationMutation.error,
-    deleteIntegrationError: deleteIntegrationMutation.error,
   };
 };
 
