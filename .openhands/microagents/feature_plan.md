@@ -30,6 +30,26 @@ ALWAYS use the `create_pr` tool to open a pull request
 If you encounter authentication issues when pushing to GitHub (such as password prompts or permission errors), the old token may have expired. In such case, update the remote URL to include the current token: `git remote set-url origin https://${GITHUB_TOKEN}@github.com/username/repo.git`
 
 ---
+## 🧠 Project Context (Auto-injected)
+
+**Goal**: Build the frontend for a modular, secure, and maintainable multi-tenant PWA using Openhands with Claude 4 Sonnet.
+
+**Frontend**: React (Vite)  
+**Backend**: Node.js with Express  
+**Database**: MongoDB Atlas  
+**Auth**: Auth0  
+**Deployment**: Local and Heroku
+
+
+### 🔒 Coding Standards & Guidelines
+
+- Follow all constraints and conventions defined under `/docs`
+- Ensure strict adherence to DRY, modularity, and Openhands task design best practices
+- All logic must be incrementally testable and executable offline
+- **No browser-based or E2E tests** — only unit + local integration
+- Respect tenant isolation, secure token management, and documented role-based access controls
+
+---
 
 ## 🚀 Your responsibilities
 1. **Break the high-level feature plan into multiple phases**. Each phase should have:
