@@ -1,0 +1,79 @@
+{
+  "cursor.general.enableAutoSave": true,
+  "cursor.general.autoSaveDelay": 1000,
+  "cursor.chat.enableCodeContext": true,
+  "cursor.chat.maxContextLines": 1000,
+  "cursor.composer.enableMultiFileEditing": true,
+  "cursor.composer.maxFilesPerEdit": 10,
+  "cursor.ai.enableInlineCompletion": true,
+  "cursor.ai.enableCodeSuggestions": true,
+  "cursor.ai.model": "claude-3.5-sonnet",
+  "cursor.ai.temperature": 0.1,
+  "cursor.ai.maxTokens": 4000,
+  "cursor.ai.enableDocumentationContext": true,
+  "cursor.ai.enableProjectContext": true,
+  "cursor.ai.contextFiles": [
+    "DOCUMENTATION_INDEX.md",
+    "docs/architecture/README.md",
+    "docs/development/README.md",
+    "docs/api/README.md",
+    "docs/security/README.md",
+    "docs/features/README.md",
+    "package.json",
+    "tsconfig.app.json",
+    "vite.config.ts"
+  ],
+  "cursor.ai.ignoreFiles": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    ".git/**",
+    "*.log",
+    "*.lock",
+    ".env*"
+  ],
+  "cursor.ai.enableTypeScriptSupport": true,
+  "cursor.ai.enableReactSupport": true,
+  "cursor.ai.enableTailwindSupport": true,
+  "cursor.ai.customInstructions": "Always follow MWAP Client patterns from .cursor/cursor-rules.md. Reference comprehensive documentation before making changes. Maintain TypeScript strict compliance and security standards.",
+  "cursor.ai.codeStyle": {
+    "typescript": {
+      "strictMode": true,
+      "explicitReturnTypes": true,
+      "noImplicitAny": true,
+      "preferInterfaces": true
+    },
+    "react": {
+      "functionalComponents": true,
+      "hooksPattern": true,
+      "memoization": true,
+      "errorBoundaries": true
+    },
+    "formatting": {
+      "semiColons": true,
+      "trailingCommas": "es5",
+      "singleQuotes": true,
+      "tabWidth": 2,
+      "printWidth": 80
+    }
+  },
+  "cursor.ai.securityRules": {
+    "enforceAuth": true,
+    "validateInputs": true,
+    "sanitizeData": true,
+    "secureHeaders": true,
+    "noHardcodedSecrets": true
+  },
+  "cursor.ai.performanceRules": {
+    "enableMemoization": true,
+    "lazyLoading": true,
+    "bundleOptimization": true,
+    "imageOptimization": true
+  },
+  "cursor.ai.accessibilityRules": {
+    "wcagCompliance": true,
+    "semanticHTML": true,
+    "keyboardNavigation": true,
+    "screenReaderSupport": true
+  }
+}
