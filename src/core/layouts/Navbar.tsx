@@ -24,7 +24,8 @@ import {
   IconCloud, 
   IconTemplate, 
   IconSettings, 
-  IconUsers 
+  IconUsers,
+  IconPlugConnected
 } from '@tabler/icons-react';
 
 /**
@@ -76,6 +77,12 @@ const Navbar: React.FC = () => {
       path: '/projects',
       icon: <IconFolder size={18} />,
       visible: true,
+    },
+    {
+      name: 'Integrations',
+      path: '/integrations',
+      icon: <IconPlugConnected size={18} />,
+      visible: isTenantOwner,
     },
     {
       name: 'Users',

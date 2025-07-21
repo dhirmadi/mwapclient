@@ -142,7 +142,7 @@ Response:
 
 #### Tenant Integrations
 ```typescript
-// Get integrations
+// Get tenant integrations
 GET /api/tenants/{tenantId}/integrations
 
 // Create integration

@@ -396,7 +396,7 @@ const CloudProviderEditPage: React.FC = () => {
             <Text fw={500}>This action cannot be undone!</Text>
             <Text size="sm">
               Deleting this cloud provider will remove it permanently and may affect 
-              existing tenant integrations.
+              existing integrations.
             </Text>
           </Alert>
           

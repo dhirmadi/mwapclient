@@ -3,8 +3,9 @@ import { Container, Title, Text, Button, Group, Card, SimpleGrid, ThemeIcon, Box
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/context/AuthContext';
 import { IconBuildingSkyscraper, IconFolder, IconCloud, IconTemplate, IconUser, IconPlus, IconLogout, IconSettings } from '@tabler/icons-react';
-import { useTenants } from '../features/tenants/hooks/useTenants';
-import { useProjects } from '../features/projects/hooks/useProjects';
+import { useTenants } from '../features/tenants';
+import { useProjects } from '../features/projects';
+import { useIntegrations } from '../features/integrations';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -12,11 +13,11 @@ const Home: React.FC = () => {
   const { currentTenant, isLoadingCurrentTenant } = useTenants();
   const [hasNoTenant, setHasNoTenant] = useState<boolean>(false);
   
-  // Get tenant integrations
+  // Get integrations
   const { 
-    data: tenantIntegrations, 
+    data: integrations, 
     isLoading: isLoadingIntegrations 
-  } = useTenants().getTenantIntegrations(roles?.tenantId || undefined);
+  } = useIntegrations();
   
   // Get projects
   const { 
@@ -29,14 +30,14 @@ const Home: React.FC = () => {
   const [hasProjects, setHasProjects] = useState<boolean>(false);
   
   useEffect(() => {
-    if (isTenantOwner && tenantIntegrations) {
-      setHasIntegrations(tenantIntegrations.length > 0);
+    if (isTenantOwner && integrations) {
+      setHasIntegrations(integrations.length > 0);
     }
     
     if (isTenantOwner && projects) {
       setHasProjects(projects.length > 0);
     }
-  }, [isTenantOwner, tenantIntegrations, projects]);
+  }, [isTenantOwner, integrations, projects]);
   
   // Handle logout
   const handleLogout = () => {
@@ -348,7 +349,7 @@ const Home: React.FC = () => {
                 </Text>
                 <Button 
                   component={Link} 
-                  to="/tenant/integrations" 
+                  to="/integrations" 
                   variant="filled" 
                   color={hasIntegrations ? "indigo" : "teal"}
                   fullWidth

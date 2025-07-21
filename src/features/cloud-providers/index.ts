@@ -5,4 +5,4 @@ export { default as CloudProviderEditPage } from './pages/CloudProviderEditPage'
 
 export { useCloudProviders } from './hooks/useCloudProviders';
 
-export type { CloudProvider, CloudProviderCreate, CloudProviderUpdate, CloudProviderIntegration } from './types/cloud-provider.types';
+export type { CloudProvider, CloudProviderCreate, CloudProviderUpdate } from './types/cloud-provider.types';

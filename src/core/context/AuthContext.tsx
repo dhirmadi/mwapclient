@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import api from '../../shared/utils/api';
-import { handleApiResponse } from '../../shared/utils/dataTransform';
+import { api, handleApiResponseWithTransform as handleApiResponse } from '../../shared/utils';
 import { UserRolesResponse } from '../../shared/types/auth';
 
 // Helper function to validate and normalize roles response
@@ -92,6 +91,7 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   isTenantOwner: boolean;
   roles: UserRolesResponse | null;
+  currentTenant: string | null;
   hasProjectRole: (projectId: string, role: string) => boolean;
   getToken: () => Promise<string>;
 }
@@ -107,6 +107,7 @@ const AuthContext = createContext<AuthContextType>({
   isSuperAdmin: false,
   isTenantOwner: false,
   roles: null,
+  currentTenant: null,
   hasProjectRole: () => false,
   getToken: async () => '',
 });
@@ -195,7 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Fetch user roles from API
       const response = await api.get('/users/me/roles');
-      const userRoles = handleApiResponse(response, false);
+      const userRoles = handleApiResponse<UserRolesResponse>(response, false) as UserRolesResponse;
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {
@@ -462,6 +463,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isSuperAdmin,
     isTenantOwner,
     roles,
+    currentTenant: roles?.tenantId || null,
     hasProjectRole,
     getToken,
   }), [
