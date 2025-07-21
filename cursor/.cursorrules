@@ -1,0 +1,166 @@
+# 🎯 MWAP Client - Cursor AI Rules
+
+## 🏗️ Project Context
+You are working on the **Modular Web Application Platform (MWAP) Client**, a comprehensive React TypeScript application with:
+- **Feature-based architecture** (`src/features/`)
+- **Multi-tenant support** with role-based access control
+- **Cloud provider integrations** with OAuth flows
+- **Mantine UI** components with Tailwind CSS
+- **React Query** for server state management
+- **Auth0** authentication with PKCE flow
+
+## 📚 Essential Documentation
+**ALWAYS reference these docs before making changes:**
+- `DOCUMENTATION_INDEX.md` - Complete documentation overview
+- `docs/architecture/README.md` - System architecture and design patterns
+- `docs/development/README.md` - Coding standards and conventions
+- `docs/api/README.md` - API integration patterns (CRITICAL for endpoints)
+- `docs/security/README.md` - Authentication and RBAC patterns
+- `docs/features/README.md` - Feature-specific implementation details
+
+## 🎯 Core Development Principles
+
+### 1. **Feature-Based Architecture**
+- Organize code by feature in `src/features/[feature-name]/`
+- Each feature has: `components/`, `hooks/`, `pages/`, `types/`, `utils/`
+- Shared code goes in `src/shared/`
+- Never break the feature boundaries
+
+### 2. **Type Safety First**
+- Use strict TypeScript mode
+- Define interfaces for all data structures
+- Use Zod for runtime validation
+- Match API types exactly (reference `docs/api/`)
+- Never use `any` - use proper typing
+
+### 3. **Consistent Patterns**
+- **API Calls**: Use React Query with consistent patterns
+- **Error Handling**: Use `AppError` class and consistent error boundaries
+- **Authentication**: Follow Auth0 patterns in `src/core/context/AuthContext.tsx`
+- **RBAC**: Use role-based access control patterns throughout
+- **Forms**: Use React Hook Form with Mantine components
+
+### 4. **Component Standards**
+- Use Mantine UI components consistently
+- Follow existing component patterns in `src/shared/components/`
+- Implement proper loading states and error handling
+- Use TypeScript interfaces for all props
+- Follow accessibility best practices
+
+## 🔧 Technical Requirements
+
+### API Integration
+- **Base URL**: `/api` (configured in `src/shared/utils/api.ts`)
+- **Proxy**: Vite proxy handles `/api/*` → backend (DO NOT MODIFY `vite.config.ts`)
+- **Endpoints**: Use v3 API patterns (reference `docs/api/v3-openAPI-schema.md`)
+- **Methods**: Use PATCH for updates, not PUT
+- **Responses**: Expect wrapped responses: `{success: true, data: {...}}`
+
+### Authentication & Security
+- **Auth0**: Use existing Auth0 React SDK patterns
+- **RBAC**: Implement role checks: `SuperAdmin`, `TenantOwner`, `ProjectMember`
+- **Route Protection**: Use `ProtectedRoute` component patterns
+- **Token Management**: Follow existing token handling patterns
+
+### Data Fetching
+- **React Query**: Use for all server state
+- **Caching**: 5-minute default cache, invalidate appropriately
+- **Loading States**: Implement consistent loading UX
+- **Error States**: Handle errors with user-friendly messages
+
+### Cloud Provider Integration
+- **OAuth Flow**: Use PKCE implementation in `src/features/integrations/`
+- **Provider Status**: Check `provider.isActive` before enabling features
+- **Token Management**: Handle OAuth token refresh automatically
+- **Error Handling**: Provide clear feedback for integration issues
+
+## 🚫 Critical Don'ts
+
+### Never Do These:
+- **DON'T** modify `vite.config.ts` proxy configuration
+- **DON'T** create duplicate components, hooks, or utilities
+- **DON'T** skip authentication/authorization checks
+- **DON'T** use hardcoded values instead of proper state management
+- **DON'T** break TypeScript strict mode
+- **DON'T** ignore existing patterns and conventions
+
+### Code Quality:
+- **DON'T** add unnecessary comments (code should be self-documenting)
+- **DON'T** create overly complex components (split when needed)
+- **DON'T** ignore error handling
+- **DON'T** skip input validation with Zod
+- **DON'T** use inline styles (use Mantine props and Tailwind classes)
+
+## ✅ Best Practices
+
+### When Adding Features:
+1. **Analyze existing patterns** in similar features
+2. **Reuse components** from `src/shared/components/`
+3. **Follow feature structure** with proper organization
+4. **Implement proper RBAC** for all user interactions
+5. **Add comprehensive error handling**
+6. **Use React Query** for data fetching
+7. **Validate inputs** with Zod schemas
+8. **Test thoroughly** with different user roles
+
+### When Fixing Bugs:
+1. **Understand the root cause** before implementing fixes
+2. **Check related features** that might be affected
+3. **Follow existing error handling patterns**
+4. **Ensure fix doesn't break other functionality**
+5. **Update types if data structures change**
+
+### When Refactoring:
+1. **Maintain backward compatibility** where possible
+2. **Update all related imports and references**
+3. **Keep the same API contracts**
+4. **Test thoroughly after changes**
+5. **Update documentation if patterns change**
+
+## 🎯 Current Focus Areas
+
+### Cloud Provider Integration Issues:
+- **Primary Issue**: `provider.isActive` field missing/false prevents OAuth flow
+- **Admin Interface**: Missing `isActive` toggle in CloudProviderEditPage
+- **Type Definitions**: `CloudProviderUpdate` missing `isActive` and `type` fields
+- **Status Display**: CloudProviderListPage shows hardcoded "Active" badge
+- **Template System**: CloudProviderCreatePage doesn't set top-level `type` field
+
+### Priority Fixes Needed:
+1. **Complete admin interface** for cloud provider management
+2. **Fix type definitions** to include missing fields
+3. **Implement proper status management** throughout the system
+4. **Ensure data integrity** for provider activation
+
+## 🔍 Code Review Checklist
+
+Before suggesting any code changes, verify:
+- [ ] Follows feature-based architecture
+- [ ] Uses existing patterns and components
+- [ ] Implements proper TypeScript typing
+- [ ] Includes authentication/authorization checks
+- [ ] Handles errors consistently
+- [ ] Uses React Query for data fetching
+- [ ] Validates inputs with Zod
+- [ ] Follows Mantine UI patterns
+- [ ] Maintains accessibility standards
+- [ ] Updates relevant documentation
+
+## 💡 AI Assistant Guidelines
+
+### When Helping with Code:
+- **Reference documentation** before suggesting solutions
+- **Analyze existing patterns** and follow them consistently
+- **Provide complete solutions** that integrate properly
+- **Explain the reasoning** behind architectural decisions
+- **Consider security implications** of all changes
+- **Test suggestions** against project requirements
+
+### When Explaining Issues:
+- **Identify root causes** not just symptoms
+- **Reference specific files and line numbers**
+- **Explain how issues affect user experience**
+- **Provide step-by-step solutions**
+- **Consider impact on related features**
+
+Remember: This is a production-ready application with established patterns. Always work within the existing architecture and maintain the high code quality standards.
