@@ -1,0 +1,244 @@
+{
+  "name": "MWAP Client",
+  "description": "Modular Web Application Platform Client - React TypeScript Application",
+  "version": "1.0.0",
+  "type": "react-typescript",
+  "framework": "vite",
+  "language": "typescript",
+  "ui": "mantine",
+  "styling": "tailwindcss",
+  "stateManagement": "react-query",
+  "authentication": "auth0",
+  "validation": "zod",
+  "testing": "vitest",
+  "architecture": "feature-based",
+  "documentation": "comprehensive",
+  "folders": {
+    "src": {
+      "description": "Source code directory",
+      "structure": {
+        "features": {
+          "description": "Feature-based modules",
+          "pattern": "[module]/hooks|pages|types|index.ts",
+          "modules": [
+            "auth",
+            "tenants", 
+            "projects",
+            "project-types",
+            "cloud-providers",
+            "files"
+          ]
+        },
+        "shared": {
+          "description": "Shared components, hooks, types, utilities",
+          "structure": {
+            "components": "Reusable UI components",
+            "hooks": "Global custom hooks",
+            "types": "Global TypeScript types",
+            "utils": "Utility functions and API client"
+          }
+        },
+        "core": {
+          "description": "Core application functionality",
+          "structure": {
+            "context": "React context providers",
+            "layouts": "Layout components",
+            "router": "Routing configuration"
+          }
+        },
+        "components": "Global UI components",
+        "pages": "Top-level pages",
+        "assets": "Static assets"
+      }
+    },
+    "docs": {
+      "description": "Comprehensive project documentation",
+      "structure": {
+        "architecture": "System design and technical decisions",
+        "development": "Coding standards and conventions",
+        "api": "API integration documentation",
+        "security": "Authentication and security patterns",
+        "features": "Feature specifications",
+        "components": "UI component documentation",
+        "changelog": "Feature status and migration history"
+      }
+    },
+    ".cursor": {
+      "description": "Cursor AI IDE configuration",
+      "files": [
+        "cursor-rules.md",
+        "instructions.md",
+        "composer.md",
+        "chat.md",
+        "docs.md",
+        "prompts.md",
+        "settings.json",
+        "snippets.json",
+        "workspace.json"
+      ]
+    }
+  },
+  "keyFiles": {
+    "documentation": [
+      "DOCUMENTATION_INDEX.md",
+      "docs/architecture/README.md",
+      "docs/development/README.md",
+      "docs/api/README.md",
+      "docs/security/README.md",
+      "docs/features/README.md"
+    ],
+    "configuration": [
+      "package.json",
+      "tsconfig.app.json",
+      "vite.config.ts",
+      "tailwind.config.js",
+      "eslint.config.js"
+    ],
+    "core": [
+      "src/App.tsx",
+      "src/main.tsx",
+      "src/shared/utils/api.ts",
+      "src/core/context/AuthContext.tsx",
+      "src/core/router/index.tsx"
+    ]
+  },
+  "patterns": {
+    "components": {
+      "naming": "PascalCase",
+      "structure": "Functional components with TypeScript",
+      "props": "Interface-based prop types",
+      "exports": "Default exports for components"
+    },
+    "hooks": {
+      "naming": "use[HookName]",
+      "structure": "Custom hooks with TypeScript",
+      "returns": "Object with named properties",
+      "exports": "Default exports for hooks"
+    },
+    "types": {
+      "naming": "PascalCase for interfaces, camelCase for types",
+      "structure": "Interface-first approach",
+      "exports": "Named exports for types",
+      "location": "Feature-specific or shared types"
+    },
+    "api": {
+      "client": "Configured axios client",
+      "baseUrl": "/api",
+      "versioning": "/api/v1/",
+      "authentication": "Bearer token",
+      "errorHandling": "Consistent error patterns"
+    }
+  },
+  "standards": {
+    "typescript": {
+      "strict": true,
+      "explicitReturnTypes": true,
+      "noImplicitAny": true,
+      "preferInterfaces": true
+    },
+    "react": {
+      "functionalComponents": true,
+      "hooksPattern": true,
+      "memoization": true,
+      "errorBoundaries": true
+    },
+    "security": {
+      "authentication": "Auth0 PKCE flow",
+      "authorization": "Role-based access control",
+      "validation": "Zod schemas",
+      "sanitization": "Input sanitization"
+    },
+    "performance": {
+      "codesplitting": "Route and component based",
+      "memoization": "React.memo, useMemo, useCallback",
+      "bundleOptimization": "Vite optimization",
+      "lazyLoading": "Dynamic imports"
+    },
+    "accessibility": {
+      "wcag": "WCAG 2.1 AA compliance",
+      "semanticHtml": "Proper HTML semantics",
+      "keyboardNavigation": "Full keyboard support",
+      "screenReader": "Screen reader compatibility"
+    }
+  },
+  "dependencies": {
+    "core": [
+      "react",
+      "react-dom",
+      "typescript",
+      "vite"
+    ],
+    "ui": [
+      "@mantine/core",
+      "@mantine/hooks",
+      "@mantine/form",
+      "@mantine/notifications",
+      "tailwindcss"
+    ],
+    "state": [
+      "@tanstack/react-query",
+      "@tanstack/react-query-devtools"
+    ],
+    "auth": [
+      "@auth0/auth0-react"
+    ],
+    "validation": [
+      "zod",
+      "@hookform/resolvers"
+    ],
+    "http": [
+      "axios"
+    ],
+    "routing": [
+      "react-router-dom"
+    ],
+    "icons": [
+      "@tabler/icons-react"
+    ]
+  },
+  "scripts": {
+    "dev": "Start development server",
+    "build": "Build for production",
+    "lint": "Run ESLint",
+    "preview": "Preview production build"
+  },
+  "environments": {
+    "development": {
+      "server": "http://localhost:5173",
+      "api": "Proxied through Vite",
+      "auth0": "Development tenant"
+    },
+    "production": {
+      "build": "Static files",
+      "api": "Production API endpoint",
+      "auth0": "Production tenant"
+    }
+  },
+  "qualityGates": {
+    "typescript": "No TypeScript errors",
+    "linting": "ESLint passes",
+    "security": "Security patterns implemented",
+    "performance": "Performance standards met",
+    "accessibility": "WCAG compliance",
+    "testing": "Tests pass (when available)"
+  },
+  "bestPractices": [
+    "Read documentation before coding",
+    "Follow established patterns",
+    "Reuse existing components and hooks",
+    "Implement proper error handling",
+    "Use TypeScript strictly",
+    "Validate all user inputs",
+    "Test implementations thoroughly",
+    "Update documentation when needed"
+  ],
+  "commonTasks": {
+    "newFeature": "Create feature directory, types, hooks, pages, exports",
+    "newComponent": "Create component with TypeScript, Mantine UI, accessibility",
+    "apiIntegration": "Use React Query, proper error handling, type safety",
+    "formHandling": "Use Mantine form, Zod validation, proper submission",
+    "authentication": "Implement Auth0 patterns, RBAC, route protection",
+    "bugFix": "Analyze issue, follow patterns, test thoroughly",
+    "refactoring": "Maintain patterns, improve performance, update docs"
+  }
+}
