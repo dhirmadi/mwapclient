@@ -130,9 +130,9 @@ export const OAUTH_CONFIG = {
   TOKEN_EXPIRATION_WARNING_MS: 5 * 60 * 1000,
   
   // Default redirect paths
-  CALLBACK_PATH: '/oauth/callback',
-  SUCCESS_PATH: '/integrations?oauth=success',
-  ERROR_PATH: '/integrations?oauth=error',
+  CALLBACK_PATH: '/api/v1/oauth/callback',
+  SUCCESS_PATH: '/oauth/success',
+  ERROR_PATH: '/oauth/error',
 } as const;
 
 /**
@@ -243,3 +243,30 @@ export const DEFAULT_INTEGRATION_METADATA = {
   tags: [] as string[],
   settings: {} as Record<string, unknown>,
 } as const;
+
+export const BACKEND_DOMAINS = {
+  development: 'https://mwapss.shibari.photo',
+  staging: 'https://staging.mwapss.shibari.photo',
+  production: 'https://mwapps.shibari.photo'
+};
+
+export const OAUTH_DOMAINS = {
+  production: 'mwapps.shibari.photo',
+  staging: 'mwapss.shibari.photo',
+  development: 'localhost'
+};
+
+export const BACKEND_DEV_PORT = 3001;
+
+export const OAUTH_PROTOCOLS = {
+  production: 'https',
+  staging: 'https',
+  development: 'https'
+};
+
+// Add environment-aware allowed domains
+export const ALLOWED_DOMAINS = {
+  development: ['localhost', '127.0.0.1', 'mwapss.shibari.photo'],
+  staging: ['mwapss.shibari.photo'],
+  production: ['mwapps.shibari.photo'],
+};

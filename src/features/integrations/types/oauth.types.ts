@@ -6,7 +6,6 @@ export interface OAuthState {
   integrationId: string;        // Integration ID for callback handling
   tenantId: string;             // Tenant ID for security validation
   nonce: string;                // CSRF protection nonce
-  codeVerifier: string;         // PKCE code verifier
   timestamp: number;            // State creation timestamp for expiration
   userId?: string;              // Optional user ID for additional validation
 }

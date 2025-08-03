@@ -69,7 +69,9 @@ const AppRouter: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
-              <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+              <Route path="/oauth/success" element={<OAuthCallbackPage />} />
+              <Route path="/oauth/error" element={<OAuthCallbackPage />} />
+              {/* <Route path="/oauth/callback" element={<OAuthCallbackPage />} /> // Deprecated */}
 
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>

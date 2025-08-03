@@ -6,7 +6,7 @@ import {
   OAuthError, 
   OAuthErrorType 
 } from '../types';
-import { OAUTH_CONFIG } from './constants';
+import { OAUTH_CONFIG, OAUTH_DOMAINS, OAUTH_PROTOCOLS, BACKEND_DEV_PORT } from './constants';
 
 /**
  * Generate cryptographically secure random string
@@ -33,11 +33,20 @@ async function sha256(plain: string): Promise<string> {
     .replace(/=/g, '');
 }
 
+function base64URLEncode(buffer: Uint8Array): string {
+  return btoa(String.fromCharCode(...buffer))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
 /**
  * Generate PKCE code verifier and challenge
  */
 export async function generatePKCEChallenge(): Promise<PKCEChallenge> {
-  const codeVerifier = generateRandomString(OAUTH_CONFIG.CODE_VERIFIER_LENGTH);
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  const codeVerifier = base64URLEncode(array);
   const codeChallenge = await sha256(codeVerifier);
   
   return {
@@ -53,7 +62,6 @@ export async function generatePKCEChallenge(): Promise<PKCEChallenge> {
 export function createOAuthState(
   integrationId: string,
   tenantId: string,
-  codeVerifier: string,
   userId?: string
 ): OAuthState {
   const nonce = generateRandomString(32);
@@ -63,7 +71,6 @@ export function createOAuthState(
     integrationId,
     tenantId,
     nonce,
-    codeVerifier,
     timestamp,
     userId,
   };
@@ -102,7 +109,7 @@ export function parseOAuthState(stateParam: string): OAuthState | null {
     
     // Validate required fields
     if (!state.integrationId || !state.tenantId || !state.nonce || 
-        !state.codeVerifier || !state.timestamp) {
+        !state.timestamp) {
       console.error('OAuth state missing required fields:', state);
       return null;
     }
@@ -136,7 +143,7 @@ export async function buildOAuthUrl(
   const pkce = await generatePKCEChallenge();
   
   // Create secure state
-  const oauthState = createOAuthState(integrationId, tenantId, pkce.codeVerifier, userId);
+  const oauthState = createOAuthState(integrationId, tenantId, userId);
   const encodedState = encodeOAuthState(oauthState);
   
   // Build OAuth configuration
@@ -260,8 +267,11 @@ export function validateOAuthCallback(searchParams: URLSearchParams): {
  * Get OAuth callback redirect URI for the current environment
  */
 export function getOAuthCallbackUri(): string {
-  const baseUrl = window.location.origin;
-  return `${baseUrl}${OAUTH_CONFIG.CALLBACK_PATH}`;
+  const mode = import.meta.env.MODE as 'production' | 'staging' | 'development';
+  const domain = OAUTH_DOMAINS[mode] || OAUTH_DOMAINS.development;
+  const protocol = OAUTH_PROTOCOLS[mode] || OAUTH_PROTOCOLS.development;
+  const port = mode === 'development' ? `:${BACKEND_DEV_PORT}` : '';
+  return `${protocol}://${domain}${port}${OAUTH_CONFIG.CALLBACK_PATH}`;
 }
 
 /**
@@ -276,7 +286,7 @@ export function getOAuthSuccessUri(): string {
  */
 export function getOAuthErrorUri(error?: string): string {
   const baseUri = `${window.location.origin}${OAUTH_CONFIG.ERROR_PATH}`;
-  return error ? `${baseUri}&error=${encodeURIComponent(error)}` : baseUri;
+  return error ? `${baseUri}?message=${encodeURIComponent(error)}` : baseUri;
 }
 
 /**
@@ -337,30 +347,50 @@ export function validateScopes(
 /**
  * Get user-friendly error message for OAuth errors
  */
-export function getOAuthErrorMessage(error: string | OAuthError | undefined): string {
-  if (!error) {
-    return 'An unknown error occurred';
-  }
-  
-  if (typeof error === 'string') {
-    return error;
-  }
-  
-  // Handle OAuth error object
+export function getOAuthErrorMessage(error?: OAuthError): string {
+  if (!error) return 'Unknown error occurred';
   const errorMessages: Record<string, string> = {
-    'access_denied': 'Access was denied by the user',
-    'invalid_request': 'The request was invalid',
-    'invalid_client': 'Invalid client credentials',
-    'invalid_grant': 'The authorization grant is invalid',
-    'unauthorized_client': 'The client is not authorized',
-    'unsupported_grant_type': 'The grant type is not supported',
-    'invalid_scope': 'The requested scope is invalid',
-    'server_error': 'The authorization server encountered an error',
-    'temporarily_unavailable': 'The service is temporarily unavailable',
+    access_denied: 'You denied access to the application',
+    invalid_request: 'The request was invalid',
+    invalid_client: 'Invalid client credentials',
+    invalid_grant: 'The authorization grant is invalid',
+    unauthorized_client: 'The client is not authorized',
+    unsupported_grant_type: 'The grant type is not supported',
+    invalid_scope: 'The requested scope is invalid',
+    server_error: 'The authorization server encountered an error',
+    temporarily_unavailable: 'The service is temporarily unavailable',
   };
-  
-  return error.error_description || 
-         errorMessages[error.error] || 
-         `OAuth error: ${error.error}` ||
-         'An unknown OAuth error occurred';
+  return error.error_description || errorMessages[error.error] || `OAuth error: ${error.error}`;
+}
+
+export { sha256 };
+
+interface PKCEValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export function validatePKCEParameters(metadata: any): PKCEValidationResult {
+  const errors: string[] = [];
+  if (!metadata.code_verifier) {
+    errors.push('Missing code_verifier');
+  } else {
+    const verifier = metadata.code_verifier;
+    if (verifier.length < 43 || verifier.length > 128) {
+      errors.push('code_verifier must be 43-128 characters');
+    }
+    if (!/^[A-Za-z0-9\-._~]+$/.test(verifier)) {
+      errors.push('code_verifier contains invalid characters');
+    }
+  }
+  if (!metadata.code_challenge) {
+    errors.push('Missing code_challenge');
+  }
+  if (metadata.code_challenge_method !== 'S256') {
+    errors.push('code_challenge_method must be S256');
+  }
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 }

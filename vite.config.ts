@@ -1,6 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import { resolve } from 'path'; // Ensure this is present for resolve()
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+/// <reference types="node" />
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,6 +18,10 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
+    https: {
+      key: fs.readFileSync(path.resolve(__dirname, 'certs/localhost_key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, 'certs/localhost.pem')),
+    },
     port: 5173,
     strictPort: true,
     cors: true,
@@ -24,8 +34,8 @@ export default defineConfig({
       '/api': {
         target: 'https://mwapss.shibari.photo/api/v1',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\//, ''),
       },
     },
   },
