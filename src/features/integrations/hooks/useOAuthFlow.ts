@@ -9,7 +9,7 @@ import {
   OAuthFlowStep, 
   OAuthError, 
   Integration,
-  IntegrationCreateRequest 
+  IntegrationCreateRequest,
 } from '../types';
 import { 
   getOAuthCallbackUri,
@@ -19,6 +19,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import api from '../../../shared/utils/api';
 import { handleApiResponse } from '../../../shared/utils/dataTransform';
+import { CloudProvider } from '../../cloud-providers/types';
 
 /**
  * Hook for managing complete OAuth flow lifecycle
@@ -42,7 +43,7 @@ export const useOAuthFlow = () => {
    */
   const initiateOAuth = useCallback(async (providerId: string, metadata?: Record<string, unknown>): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
     if (!currentTenant || !user?.sub) return { success: false, error: 'Invalid tenant or user' };
-    const provider = cloudProviders?.find(p => p.id === providerId);
+    const provider: CloudProvider | undefined = (cloudProviders as CloudProvider[] | undefined)?.find((p: CloudProvider) => p.id === providerId);
     if (!provider) return { success: false, error: 'Provider not found' };
     try {
       setFlowState({ step: 'initialization', isLoading: true, progress: 10 });
@@ -58,56 +59,36 @@ export const useOAuthFlow = () => {
       const validation = validatePKCEParameters(pkceMetadata);
       if (!validation.isValid) throw new Error(`PKCE invalid: ${validation.errors.join(', ')}`);
       // Query existing
-      let integration: Integration | null = null;
+      let integration: Integration;
+      const integrationRequest: IntegrationCreateRequest = {
+        providerId,
+        metadata: {
+          displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
+          description: (metadata?.description as string) || `Integration with ${provider.name}`,
+          ...metadata,
+          ...pkceMetadata
+        },
+      };
       try {
-        const existingResponse = await api.get(`/tenants/${currentTenant}/integrations?providerId=${providerId}`);
-        const existingList = handleApiResponse<Integration[]>(existingResponse, true);
-        if (existingList.length > 0) {
-          integration = existingList[0];
-          const needsUpdate = integration.status !== 'active' || !integration.metadata?.access_token || !integration.metadata?.code_verifier;
-          if (needsUpdate) {
-            await api.patch(`/tenants/${currentTenant}/integrations/${integration.id}`, { metadata: { ...integration.metadata, ...pkceMetadata } });
-            if (import.meta.env.DEV) console.log('Updated existing integration with PKCE for re-auth');
+        integration = await createIntegration.mutateAsync(integrationRequest);
+      } catch (createError: any) {
+        if (createError.response?.status === 409) {
+          const existingResponse = await api.get(`/tenants/${currentTenant}/integrations?providerId=${providerId}`);
+          const existingList = handleApiResponse<Integration[]>(existingResponse, true);
+          if (existingList.success && existingList.data && existingList.data.length > 0) {
+            integration = existingList.data[0];
+            await updateIntegration.mutateAsync({ integrationId: integration.id, data: { metadata: { ...integration.metadata, ...pkceMetadata } } });
           } else {
-            if (import.meta.env.DEV) console.log('Existing active integration - skipping to initiation');
+            throw new Error('Failed to recover');
           }
-        }
-      } catch (queryError) {
-        console.warn('Query existing failed:', queryError);
-      }
-      if (!integration) {
-        const integrationRequest: IntegrationCreateRequest = {
-          providerId,
-          metadata: {
-            displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
-            description: (metadata?.description as string) || `Integration with ${provider.name}`,
-            ...metadata,
-            ...pkceMetadata
-          },
-        };
-        try {
-          integration = await createIntegration.mutateAsync(integrationRequest);
-        } catch (createError: any) {
-          if (createError.response?.status === 409) {
-            // Race: Retry query and update
-            const retryResponse = await api.get(`/tenants/${currentTenant}/integrations?providerId=${providerId}`);
-            const retryList = handleApiResponse<Integration[]>(retryResponse, true);
-            if (retryList.length > 0) {
-              integration = retryList[0];
-              await api.patch(`/tenants/${currentTenant}/integrations/${integration.id}`, { metadata: { ...integration.metadata, ...pkceMetadata } });
-              if (import.meta.env.DEV) console.log('Recovered from race condition by updating existing');
-            } else {
-              throw new Error('Failed to recover from conflict');
-            }
-          } else {
-            throw createError;
-          }
+        } else {
+          throw createError;
         }
       }
       setFlowState(prev => ({ ...prev, step: 'authorization', integrationId: integration.id, progress: 30 }));
       const initiateResponse = await api.post(`/oauth/tenants/${currentTenant}/integrations/${integration.id}/initiate`, { redirectUri: pkceMetadata.redirect_uri });
-      const initiateResult = handleApiResponse(initiateResponse);
-      if (!initiateResult.success) throw new Error(initiateResult.error?.message || 'Initiation failed');
+      const initiateResult = handleApiResponse<{authorizationUrl: string}>(initiateResponse);
+      if (!initiateResult.success || !initiateResult.data?.authorizationUrl) throw new Error(initiateResult.error || 'Initiation failed');
       const authUrl = initiateResult.data.authorizationUrl;
       setFlowState(prev => ({ ...prev, progress: 50 }));
       return { success: true, authUrl };
@@ -115,7 +96,7 @@ export const useOAuthFlow = () => {
       setFlowState({ step: 'error', error: { error: 'server_error', error_description: error.message }, isLoading: false, progress: 0 });
       return { success: false, error: error.message };
     }
-  }, [currentTenant, user?.sub, cloudProviders, createIntegration, api]);
+  }, [currentTenant, user?.sub, cloudProviders, createIntegration, updateIntegration, api]);
 
   const resetFlow = useCallback(() => {
     setFlowState({ step: 'initialization', isLoading: false, progress: 0 });

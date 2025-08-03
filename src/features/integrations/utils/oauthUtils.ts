@@ -268,9 +268,9 @@ export function validateOAuthCallback(searchParams: URLSearchParams): {
  */
 export function getOAuthCallbackUri(): string {
   const mode = import.meta.env.MODE as 'production' | 'staging' | 'development';
-  const domain = OAUTH_DOMAINS[mode] || OAUTH_DOMAINS.development;
-  const protocol = OAUTH_PROTOCOLS[mode] || OAUTH_PROTOCOLS.development;
-  const port = mode === 'development' ? `:${BACKEND_DEV_PORT}` : '';
+  const domain = mode === 'development' ? 'mwapss.shibari.photo' : OAUTH_DOMAINS[mode] || OAUTH_DOMAINS.development;
+  const protocol = 'https';
+  const port = '';
   return `${protocol}://${domain}${port}${OAUTH_CONFIG.CALLBACK_PATH}`;
 }
 

@@ -25,7 +25,7 @@ import {
   IconCloud
 } from '@tabler/icons-react';
 import { CloudProvider } from '../../cloud-providers/types';
-import { useOAuthFlow } from '../hooks';
+import { useOAuthFlow, verifyIntegration } from '../hooks';
 import { buildAuthorizationUrl } from '../utils/oauthUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
@@ -64,7 +64,6 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     isLoading,
     getErrorMessage,
     resetFlow,
-    verifyIntegration
   } = useOAuthFlow();
   const queryClient = useQueryClient();
   const { currentTenant } = useAuth();
@@ -79,6 +78,10 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     const handleMessage = async (event: MessageEvent) => {
       if (!allowedOrigins.includes(event.origin)) return;
       if (event.data.type === 'oauth_success') {
+        if (!currentTenant) {
+          notifications.show({ title: 'Error', message: 'No current tenant', color: 'red' });
+          return;
+        }
         const verification = await verifyIntegration(currentTenant, event.data.integrationId);
         if (verification.success && verification.data.status === 'active') {
           queryClient.invalidateQueries({ queryKey: ['integrations', currentTenant] });
@@ -102,7 +105,9 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     if (isLoading) return;  // Prevent multiple clicks
     try {
       const result = await initiateOAuth(provider.id, metadata);
+      console.log('OAuth initiation result:', result);
       if (result.success && result.authUrl) {
+        console.log('Attempting to open popup with URL:', result.authUrl);
         const popupWidth = 600;
         const popupHeight = 600;
         const left = (window.screen.width / 2) - (popupWidth / 2);
@@ -123,6 +128,7 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
           }
         }, maxWait);
       } else {
+        console.error('Initiation failed:', result.error);
         notifications.show({ title: 'Error', message: result.error || 'Failed to initiate', color: 'red' });
       }
     } catch (error: any) {
