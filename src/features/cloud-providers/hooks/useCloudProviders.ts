@@ -38,7 +38,7 @@ export const useCloudProviders = () => {
         }
       }
       
-      return transformedData;
+      return transformedData.data || [];
     },
     enabled: isReady, // Wait for authentication to be complete
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -117,11 +117,8 @@ export const useCloudProviders = () => {
         console.log('Transformed cloud provider data:', transformedData);
         
         // Validate the returned data has a valid ID
-        if (!transformedData.id) {
-          console.error('useCloudProvider - Fetched provider missing ID:', transformedData);
-        }
-        
-        return transformedData;
+        if (!transformedData.success || !transformedData.data) throw new Error('Provider not found');
+        return transformedData.data;
       },
       enabled: !!id && id !== 'undefined' && isReady, // Wait for auth and require valid ID
       staleTime: 5 * 60 * 1000, // 5 minutes
