@@ -1,15 +1,15 @@
 // Shared utilities exports
 export { default as api, testNetworkConnectivity } from './api';
 
-// API Response handling utilities
-export * from './apiResponseHandler';
+// Unified API Response handling (consolidates apiResponseHandler and dataTransform)
+export * from './apiResponse';
 
-// Data transformation utilities
+// Legacy exports for backwards compatibility (deprecated - use apiResponse instead)
 export { 
-  transformIdField, 
-  transformIdFields,
   handleApiResponse as handleApiResponseWithTransform,
-  handleDeleteResponse 
+  handleDeleteResponse,
+  transformIdField,
+  transformIdFields
 } from './dataTransform';
 
 // Notification utilities
@@ -17,3 +17,9 @@ export * from './notificationUtils';
 
 // OAuth utilities
 export * from './oauth';
+
+// Format utilities
+export * from './format';
+
+// Performance monitoring utilities
+export * from './performance';
