@@ -1,0 +1,118 @@
+# Cursor Rules for MWAP Client (React + TypeScript)
+
+## Purpose
+- Establish world-class, enforceable rules for Cursor in this repository
+- Optimize for correctness, security, type safety, and maintainability
+- Ensure AI assistance aligns with our architecture, docs, and coding standards
+
+## Do-First Principles
+- Always read `DOCUMENTATION_INDEX.md` before implementing changes
+- Prefer existing patterns in `src/features/*` and `src/shared/*`
+- Keep changes minimal, focused, and type-safe
+- Never modify `vite.config.ts` proxy configuration
+- Never hardcode API URLs; always use the configured API client
+
+## Documentation Map (nn-folders)
+- Architecture: `docs/02-Architecture/README.md`
+- Backend/API: `docs/04-Backend/README.md` (immutable; do not edit)
+- Security: `docs/05-Security/README.md`
+- Frontend/Features: `docs/03-Frontend/README.md`
+- Guidelines: `docs/06-Guidelines/development-guide.md`
+- Components: `docs/06-Guidelines/components.md`
+- Getting Started: `docs/01-Getting-Started/getting-started.md`
+- Troubleshooting: `docs/06-Guidelines/troubleshooting.md`
+- Contribution: `docs/08-Contribution/contributing.md`
+
+## Source-of-Truth Configuration
+- API client: `src/shared/utils/api.ts` with base `/api` (Vite proxy targets `https://mwapss.shibari.photo/api/v1`)
+- Auth & routing primitives: `src/core/context/*`, `src/core/router/*`
+- OAuth utilities: `src/features/integrations/utils/*`
+
+## Coding Standards (React + TypeScript)
+- Functional components and hooks only
+- React Query for server state; no ad-hoc fetches in components
+- Zod for input and payload validation where applicable
+- Mantine v8 for UI; maintain consistent theming and accessibility
+- Explicit return types for all exported/public functions
+- Early returns; avoid deep nesting (>2–3 levels)
+- Centralized error handling with user notifications and typed results
+- No duplicate utilities/hooks; consolidate under `src/shared`
+- Strict TypeScript: no `any`, no unsafe casts; use precise interfaces and types
+
+## Feature Structure (must follow)
+- `types/`: public types and interfaces
+- `hooks/`: business logic in composable hooks
+- `pages/`: UI components and containers
+- `index.ts`: explicit, minimal exports
+
+## Security Requirements
+- Auth0 PKCE patterns strictly followed; see `docs/05-Security/README.md`
+- Protect routes using `ProtectedRoute` and RBAC
+- Never expose tokens; always use the configured API client (auth headers via context)
+- OAuth flow: PKCE generation client-side, parameters stored with integration, initiate via backend, backend handles callback, then verify status
+- Use HTTPS endpoints only; rely on proxy for development routing
+
+## OAuth/PKCE Frontend Rules
+- Generate PKCE verifier/challenge (S256) securely; length 43–128, URL-safe
+- Store PKCE params in integration metadata before initiation
+- Initiate via POST `/api/v1/oauth/tenants/{tenantId}/integrations/{integrationId}/initiate`
+- Callback: frontend should land on client route `/oauth/callback` when required for popup flow; backend `/api/v1/oauth/callback` remains authoritative
+- After callback processing, verify with GET `/api/v1/tenants/{tenantId}/integrations/{integrationId}`
+- Use popup with `postMessage` for UX; include timeout and fallbacks
+- Refresh JWT silently before critical API calls when needed
+
+## Performance
+- Memoize expensive calculations (`useMemo`, `useCallback`)
+- Use stable dependency arrays and derived variables
+- Lazy-load large pages and modules where appropriate
+- Avoid unnecessary re-renders; keep component trees shallow
+
+## File Hygiene / Repo Hygiene
+- Keep `.cursor` config files committed; ignore sessions/cache/tmp
+- `.cursor` volatile files to ignore: `workspace.json`, `sessions/`, `cache/`, `tmp/`
+- Keep docs links aligned with nn-folder structure
+- Do not commit secrets or environment files; follow `.gitignore`
+
+## Prohibited Changes
+- Do not modify `vite.config.ts` proxy
+- Do not hardcode environment-specific API URLs
+- Do not duplicate existing functions, types, or hooks
+- Do not weaken TypeScript strictness or bypass lint rules
+
+## AI Assistance Guidelines (Cursor)
+- Reference docs before edits; cite exact file paths when relevant
+- Prefer minimal, targeted edits over broad refactors
+- Maintain existing code style and formatting in touched files
+- When editing code:
+  - Add required imports explicitly
+  - Maintain type safety and explicit return types
+  - Handle errors with user notifications and typed results
+  - Keep logic in hooks; keep components lean
+- After edits, ensure no linter or TypeScript errors
+
+## Commit & Review Standards
+- Conventional commit messages preferred
+- Group related changes; avoid mixing unrelated edits
+- Reflect documentation updates when changing behavior
+
+## Quick Checklist (before submitting changes)
+- Linked docs read and followed (see Documentation Map)
+- Patterns reused from `src/features/*` and `src/shared/*`
+- TypeScript strict compliance (no `any`, no unsafe casts)
+- API calls via `src/shared/utils/api.ts` only
+- Security rules enforced (Auth0 PKCE, RBAC, route protection)
+- Performance considerations applied (memoization, lazy load)
+- UI consistent with Mantine v8 and accessibility guidelines
+- Docs links updated (nn-folder structure)
+
+## Pinned References
+- Index: `DOCUMENTATION_INDEX.md`
+- Architecture: `docs/02-Architecture/README.md`
+- API (immutable): `docs/04-Backend/README.md`
+- Security: `docs/05-Security/README.md`
+- Guidelines: `docs/06-Guidelines/development-guide.md`
+- Components: `docs/06-Guidelines/components.md`
+- Features: `docs/03-Frontend/README.md`
+- Troubleshooting: `docs/06-Guidelines/troubleshooting.md`
+- Getting Started: `docs/01-Getting-Started/getting-started.md`
+- Contributing: `docs/08-Contribution/contributing.md`

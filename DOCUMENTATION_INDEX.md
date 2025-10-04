@@ -1,203 +1,235 @@
-# MWAP Client - Complete Documentation Index
+# MWAP Client Documentation Index
 
-## 📚 Consolidated Documentation Structure
+**Last Updated:** 2025-10-04  
+**Version:** 2.0
 
-The MWAP Client documentation has been completely reorganized and consolidated to provide developers, architects, and testers with comprehensive, actionable information. All redundant and operational documentation has been removed, and the content has been structured according to the requirements.
+This document serves as the central index for all MWAP Client documentation. Use this as your starting point to navigate the complete documentation suite.
 
-## 🎯 Documentation Categories
-
-### 1. Architecture & Solution Design
-**Location**: [`docs/architecture/README.md`](./docs/architecture/README.md)
-- System architecture overview
-- Technical stack and design principles
-- Data flow and state management
-- API integration architecture
-- Performance and security architecture
-- Deployment considerations
-
-### 2. Developer Guidelines & Coding Standards
-**Location**: [`docs/development/README.md`](./docs/development/README.md)
-- TypeScript and React coding standards
-- Component development patterns
-- Testing guidelines and examples
-- Performance optimization techniques
-- Security best practices
-- Git workflow and code quality tools
-
-### 3. API Integration Documentation
-**Location**: [`docs/api/README.md`](./docs/api/README.md)
-- **Critical Vite configuration** (DO NOT MODIFY)
-- Complete API endpoint specifications
-- Request/response examples
-- Authentication integration
-- Error handling patterns
-- Special cases and troubleshooting
-
-### 4. Security & Authentication
-**Location**: [`docs/security/README.md`](./docs/security/README.md)
-- Auth0 integration and PKCE flow
-- Role-based access control (RBAC) implementation
-- Security measures and protection
-- Authentication race condition prevention
-- Token management and security testing
-
-### 5. Features Documentation
-**Location**: [`docs/features/README.md`](./docs/features/README.md)
-- Complete feature specifications
-- User flows and technical implementation
-- Role-based feature access
-- API endpoints for each feature
-- Feature status and roadmap
-
-### 6. Components & UI Patterns
-**Location**: [`docs/components/README.md`](./docs/components/README.md)
-- Atomic design component structure
-- File organization and naming conventions
-- UI patterns and design system
-- Component testing patterns
-- Performance optimization and accessibility
-
-### 7. Changelog & Feature Status
-**Location**: [`docs/changelog/README.md`](./docs/changelog/README.md)
-- Current application status
-- Feature completion tracking
-- Migration history and breaking changes
-- Bug fixes and technical improvements
-- Future roadmap and planned features
-
-## 🚀 Quick Start Documentation
-
-### Getting Started
-**Location**: [`docs/getting-started.md`](./docs/getting-started.md)
-- Prerequisites and setup instructions
-- Development workflow
-- Key concepts overview
-- Common issues and next steps
-
-### Troubleshooting
-**Location**: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
-- Common issues and solutions
-- Authentication and API troubleshooting
-- Development server and build issues
-- Debugging tools and techniques
-
-### Contributing
-**Location**: [`docs/contributing.md`](./docs/contributing.md)
-- Development guidelines for contributors
-- Code review process
-- Testing requirements
-- Community guidelines
-
-## 📋 Documentation Cleanup Summary
-
-### Removed Files (Operational/Redundant)
-The following operational and redundant documentation files have been consolidated:
-
-#### Root-level operational files:
-- `API_RESPONSE_FORMAT_FIX.md` → Consolidated into API documentation
-- `API_RESPONSE_WRAPPER_FIX.md` → Consolidated into API documentation
-- `API_V3_MIGRATION_SUMMARY.md` → Consolidated into changelog
-- `CLOUD_PROVIDER_FIXES.md` → Consolidated into features documentation
-- `DEVELOPMENT_SUMMARY.md` → Consolidated into changelog
-- `PHASE_1_COMPLETION_REPORT.md` → Consolidated into changelog
-- `PHASE_2_COMPLETION_REPORT.md` → Consolidated into changelog
-- `PROJECT_TYPE_FEATURE_COMPLETION.md` → Consolidated into changelog
-- `REFACTOR_PROGRESS_REPORT.md` → Consolidated into changelog
-- `ROLE_PROCESSING_FIX.md` → Consolidated into security documentation
-
-#### Docs directory cleanup:
-- `docs/CODE_REVIEW_IMPROVEMENTS.md` → Consolidated into development guidelines
-- `docs/ID_TRANSFORMATION_COMPLETE.md` → Consolidated into changelog
-- `docs/ID_TRANSFORMATION_FIX.md` → Consolidated into changelog
-- `docs/CLOUD_PROVIDER_INTEGRATION_IMPLEMENTATION.md` → Consolidated into features
-- `docs/troubleshooting-authentication.md` → Consolidated into main troubleshooting
-- `docs/frontend.md` → Consolidated into architecture documentation
-
-#### Refactor directory:
-- All files in `docs/refactor/` → Consolidated into changelog and development docs
-
-### Preserved and Enhanced Files
-- `README.md` → Enhanced with consolidated overview
-- `repo.md` → Preserved as repository guide for OpenHands
-- `docs/architecture.md` → Enhanced and restructured
-- `docs/authentication.md` → Enhanced and moved to security section
-- `docs/component-structure.md` → Enhanced and moved to components section
-- `docs/development-guide.md` → Enhanced and restructured
-- `docs/rbac.md` → Enhanced and moved to security section
-- `docs/v3-api.md` → Enhanced and moved to API section
-- `docs/API_CONFIGURATION.md` → Enhanced and moved to API section
-
-## 🔍 Key Improvements
-
-### 1. Clear Information Architecture
-- Organized by user needs (developers, architects, testers)
-- Logical flow from architecture to implementation
-- Eliminated redundancy and operational clutter
-
-### 2. Actionable Content
-- All documentation provides clear, implementable guidance
-- Code examples and practical patterns throughout
-- Troubleshooting with specific solutions
-
-### 3. Comprehensive Coverage
-- **Architecture**: Complete system design and technical decisions
-- **Development**: Coding standards, patterns, and best practices
-- **API**: Critical configuration and complete endpoint documentation
-- **Security**: Authentication flows and RBAC implementation
-- **Features**: Detailed specifications and user flows
-- **Components**: UI patterns and file structure
-- **Status**: Current state and historical changes
-
-### 4. Maintainable Structure
-- Consistent formatting and organization
-- Cross-references between related sections
-- Version-controlled and easily updatable
-
-## 📖 How to Use This Documentation
+## 📚 Quick Navigation
 
 ### For New Developers
-1. Start with [Getting Started](./docs/getting-started.md)
-2. Review [Architecture Overview](./docs/architecture/README.md)
-3. Study [Developer Guidelines](./docs/development/README.md)
-4. Understand [Security Implementation](./docs/security/README.md)
+1. **[Getting Started Guide](./docs/01-Getting-Started/getting-started.md)** - Setup, installation, and first steps
+2. **[Architecture Overview](./docs/02-Architecture/README.md)** - System design and technical stack
+3. **[Development Guidelines](./docs/06-Guidelines/development-guide.md)** - Coding standards and best practices
 
-### For Architects
-1. Review [Architecture & Solution Design](./docs/architecture/README.md)
-2. Understand [API Integration](./docs/api/README.md)
-3. Study [Security Architecture](./docs/security/README.md)
-4. Check [Feature Specifications](./docs/features/README.md)
+### For Feature Development
+1. **[Features Documentation](./docs/03-Frontend/README.md)** - Complete feature descriptions and implementation
+2. **[Component Guidelines](./docs/06-Guidelines/components.md)** - Component structure and patterns
+3. **[API Integration](./docs/04-Backend/README.md)** - Backend API documentation
 
-### For Testers
-1. Review [Feature Documentation](./docs/features/README.md)
-2. Understand [Security & Authentication](./docs/security/README.md)
-3. Study [API Endpoints](./docs/api/README.md)
-4. Check [Component Patterns](./docs/components/README.md)
+### For Security & Auth
+1. **[Security Overview](./docs/05-Security/README.md)** - Authentication and authorization
+2. **[OAuth/PKCE Guide](./docs/04-Backend/oauth-frontend-complete-guide.md)** - Complete OAuth implementation
+3. **[RBAC Documentation](./docs/05-Security/rbac.md)** - Role-based access control
 
-### For Maintenance
-1. Check [Changelog & Status](./docs/changelog/README.md)
-2. Review [Troubleshooting Guide](./docs/troubleshooting.md)
-3. Follow [Contributing Guidelines](./docs/contributing.md)
+### For Troubleshooting
+1. **[Troubleshooting Guide](./docs/06-Guidelines/troubleshooting.md)** - Common issues and solutions
+2. **[Authentication Issues](./docs/05-Security/troubleshooting-authentication.md)** - Auth-specific debugging
+3. **[Project Status](./docs/09-Reports-and-History/project-status.md)** - Current status and known issues
 
-## ✅ Documentation Quality Assurance
+## 📋 Complete Documentation Structure
 
-### Factual Accuracy
-- All information verified against actual implementation
-- Code examples tested and working
-- API documentation matches current endpoints
-- Architecture reflects actual system design
+### 01-Getting-Started
+- **[getting-started.md](./docs/01-Getting-Started/getting-started.md)** - Installation, setup, and first run
 
-### Completeness
-- All required categories covered comprehensively
-- No gaps in critical information
-- Cross-references maintain consistency
-- Examples provided for complex concepts
+### 02-Architecture
+- **[README.md](./docs/02-Architecture/README.md)** - Architecture overview and patterns
+- **[architecture.md](./docs/02-Architecture/architecture.md)** - Detailed architecture documentation
+- **[frontend.md](./docs/02-Architecture/frontend.md)** - Frontend-specific architecture
+- **[component-structure.md](./docs/02-Architecture/component-structure.md)** - Component organization
+- **[UserFlowSpecification.md](./docs/02-Architecture/UserFlowSpecification.md)** - Complete user flow documentation
+- **[v3-domainmap.md](./docs/02-Architecture/v3-domainmap.md)** - Domain model mapping
 
-### Maintainability
-- Clear structure for easy updates
-- Version-controlled documentation
-- Consistent formatting and style
-- Modular organization for targeted updates
+### 03-Frontend
+- **[README.md](./docs/03-Frontend/README.md)** - Frontend features overview
+- **[integration-management.md](./docs/03-Frontend/integration-management.md)** - Cloud provider integration feature
+
+### 04-Backend
+- **[README.md](./docs/04-Backend/README.md)** - Backend API overview
+- **[api-reference.md](./docs/04-Backend/api-reference.md)** - Complete API endpoint documentation
+- **[api-quickreference.md](./docs/04-Backend/api-quickreference.md)** - Quick API reference
+- **[oauth-frontend-complete-guide.md](./docs/04-Backend/oauth-frontend-complete-guide.md)** - Complete OAuth implementation guide
+- **[oauth-integration-guide.md](./docs/04-Backend/oauth-integration-guide.md)** - OAuth integration mechanics
+- **[oauth-security.md](./docs/04-Backend/oauth-security.md)** - OAuth security best practices
+- **[pkce-implementation-guide.md](./docs/04-Backend/pkce-implementation-guide.md)** - PKCE implementation details
+- **[public-route-security-model.md](./docs/04-Backend/public-route-security-model.md)** - Public route security
+
+### 05-Security
+- **[README.md](./docs/05-Security/README.md)** - Security overview
+- **[authentication.md](./docs/05-Security/authentication.md)** - Authentication implementation
+- **[rbac.md](./docs/05-Security/rbac.md)** - Role-based access control
+- **[troubleshooting-authentication.md](./docs/05-Security/troubleshooting-authentication.md)** - Auth troubleshooting
+
+### 06-Guidelines
+- **[development-guide.md](./docs/06-Guidelines/development-guide.md)** - Development standards and patterns
+- **[components.md](./docs/06-Guidelines/components.md)** - Component guidelines
+- **[troubleshooting.md](./docs/06-Guidelines/troubleshooting.md)** - General troubleshooting
+
+### 08-Contribution
+- **[contributing.md](./docs/08-Contribution/contributing.md)** - Contribution guidelines
+
+### 09-Reports-and-History
+- **[project-status.md](./docs/09-Reports-and-History/project-status.md)** - Current status and roadmap
+
+## 🎯 Documentation by Role
+
+### SuperAdmin
+**Key Documents:**
+1. [Getting Started](./docs/01-Getting-Started/getting-started.md)
+2. [Architecture Overview](./docs/02-Architecture/README.md)
+3. [Security Overview](./docs/05-Security/README.md)
+4. [Project Status](./docs/09-Reports-and-History/project-status.md)
+
+**Relevant Features:**
+- Cloud Provider Management (SuperAdmin only)
+- Project Type Management (SuperAdmin only)
+- Tenant Management (view all tenants)
+- System Administration
+
+### Tenant Owner
+**Key Documents:**
+1. [Getting Started](./docs/01-Getting-Started/getting-started.md)
+2. [Integration Management](./docs/03-Frontend/integration-management.md)
+3. [OAuth Complete Guide](./docs/04-Backend/oauth-frontend-complete-guide.md)
+4. [Troubleshooting](./docs/06-Guidelines/troubleshooting.md)
+
+**Relevant Features:**
+- Tenant Settings Management
+- Cloud Provider Integration (OAuth/PKCE)
+- Project Creation and Management
+- Member Management
+
+### Project Member/Developer
+**Key Documents:**
+1. [Getting Started](./docs/01-Getting-Started/getting-started.md)
+2. [Development Guidelines](./docs/06-Guidelines/development-guide.md)
+3. [Component Guidelines](./docs/06-Guidelines/components.md)
+4. [API Reference](./docs/04-Backend/api-reference.md)
+5. [Troubleshooting](./docs/06-Guidelines/troubleshooting.md)
+
+**Relevant Features:**
+- Project Access (based on role)
+- File Management
+- Resource Viewing
+
+## 🔍 Quick Reference Guides
+
+### API Endpoints
+See **[API Quick Reference](./docs/04-Backend/api-quickreference.md)**
+
+Key endpoints:
+- `GET /api/v1/users/me/roles` - Get user roles
+- `GET /api/v1/tenants/me` - Get current tenant
+- `GET /api/v1/projects` - List projects
+- `POST /api/v1/oauth/tenants/{tenantId}/integrations/{integrationId}/initiate` - Start OAuth flow
+
+### Authentication Flow
+```
+1. User logs in via Auth0 → JWT token obtained
+2. Frontend fetches roles: GET /api/v1/users/me/roles
+3. Roles cached and used for RBAC
+4. Protected routes check roles before rendering
+```
+
+See **[Authentication Documentation](./docs/05-Security/authentication.md)** for details.
+
+### OAuth/PKCE Flow
+```
+1. Generate PKCE challenge/verifier
+2. Create integration with PKCE metadata
+3. Initiate OAuth flow → Get authorization URL
+4. Open popup with authorization URL
+5. User authorizes
+6. Backend processes callback
+7. Frontend receives success/error via postMessage
+```
+
+See **[OAuth Complete Guide](./docs/04-Backend/oauth-frontend-complete-guide.md)** for full implementation.
+
+### Component Structure
+```
+/src/features/{feature-name}
+  /components     # Feature-specific UI components
+  /hooks          # Custom hooks for data fetching and logic
+  /pages          # Page components
+  /types          # TypeScript types
+  /utils          # Feature-specific utilities
+  index.ts        # Public API exports
+```
+
+See **[Component Guidelines](./docs/06-Guidelines/components.md)** for details.
+
+## 🐛 Common Issues
+
+### Authentication Issues
+- **Problem**: Roles not loading
+- **Solution**: Check browser console for API errors, verify Auth0 token
+- **Doc**: [Authentication Troubleshooting](./docs/05-Security/troubleshooting-authentication.md)
+
+### OAuth Integration Issues
+- **Problem**: OAuth popup not closing
+- **Solution**: Check postMessage listener and callback URL configuration
+- **Doc**: [OAuth Complete Guide](./docs/04-Backend/oauth-frontend-complete-guide.md)
+
+### API Response Issues
+- **Problem**: Unexpected response format
+- **Solution**: Use `handleApiResponse` utility for consistent transformation
+- **Doc**: [API Reference](./docs/04-Backend/api-reference.md)
+
+## 📊 Current Project Status
+
+**Completion:** ~80%  
+**Status:** Late Alpha - Ready for optimization and testing  
+**Next Steps:** See [Project Status](./docs/09-Reports-and-History/project-status.md)
+
+**Critical Tasks:**
+1. Optimize role caching (high priority)
+2. Implement code splitting (high priority)
+3. Add comprehensive testing (high priority)
+4. Complete file management UI (medium priority)
+
+## 🔗 External Resources
+
+- **Auth0 Documentation**: https://auth0.com/docs
+- **React Query Documentation**: https://tanstack.com/query/latest
+- **Mantine UI Documentation**: https://mantine.dev/
+- **Vite Documentation**: https://vitejs.dev/
+- **TypeScript Documentation**: https://www.typescriptlang.org/docs/
+
+## 📝 Documentation Conventions
+
+### File Naming
+- Use kebab-case for file names: `getting-started.md`
+- Use descriptive names that indicate content
+- Group related docs in numbered folders (nn-FolderName)
+
+### Content Structure
+- Start with overview/purpose
+- Include table of contents for long documents
+- Use code examples liberally
+- Link to related documentation
+- Include troubleshooting sections
+
+### Markdown Style
+- Use `#` for main title (only one per document)
+- Use `##` for major sections
+- Use `###` for subsections
+- Use code blocks with language specification
+- Use tables for structured data
+
+## 🚀 Contributing to Documentation
+
+See **[Contributing Guidelines](./docs/08-Contribution/contributing.md)** for how to contribute to documentation.
+
+**Quick tips:**
+- Keep documentation in sync with code
+- Update this index when adding new docs
+- Test all code examples before committing
+- Use consistent formatting and style
+- Include "Last Updated" dates
 
 ---
 
-**This consolidated documentation provides everything needed for effective MWAP Client development, testing, and maintenance. All operational clutter has been removed, and the focus is on actionable, comprehensive guidance for the development team.**
+**Maintained by:** MWAP Development Team  
+**Questions?** Check [Troubleshooting](./docs/06-Guidelines/troubleshooting.md) or create an issue
+

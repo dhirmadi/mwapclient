@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Group,
@@ -25,8 +25,12 @@ import {
   IconCloud
 } from '@tabler/icons-react';
 import { CloudProvider } from '../../cloud-providers/types';
-import { useOAuthFlow } from '../hooks';
+import { useOAuthFlow, verifyIntegration } from '../hooks';
 import { buildAuthorizationUrl } from '../utils/oauthUtils';
+import { useQueryClient } from '@tanstack/react-query';
+import { notifications } from '@mantine/notifications';
+import { useAuth } from '../../../core/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface OAuthButtonProps {
   provider: CloudProvider;
@@ -59,24 +63,88 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     initiateOAuth,
     isLoading,
     getErrorMessage,
-    resetFlow
+    resetFlow,
   } = useOAuthFlow();
+  const queryClient = useQueryClient();
+  const { currentTenant } = useAuth();
+  const navigate = useNavigate();
 
-  const handleOAuthClick = async () => {
+  useEffect(() => {
+    const allowedOrigins = [
+      'https://mwapps.shibari.photo',
+      'https://mwapss.shibari.photo',
+      'http://localhost:3001'  // Adjust if backend dev port differs
+    ];
+    const handleMessage = async (event: MessageEvent) => {
+      if (!allowedOrigins.includes(event.origin)) return;
+      if (event.data.type === 'oauth_success') {
+        if (!currentTenant) {
+          notifications.show({ title: 'Error', message: 'No current tenant', color: 'red' });
+          return;
+        }
+        const verification = await verifyIntegration(currentTenant, event.data.integrationId);
+        if (verification.success && verification.data.status === 'active') {
+          queryClient.invalidateQueries({ queryKey: ['integrations', currentTenant] });
+          notifications.show({ title: 'Integration Verified', message: `Successfully connected to ${provider.name}`, color: 'green' });
+          onSuccess?.(event.data.integrationId);
+          navigate('/integrations');
+        } else {
+          notifications.show({ title: 'Verification Failed', message: 'Integration status not active.', color: 'red' });
+          onError?.('Verification failed');
+        }
+      } else if (event.data.type === 'oauth_error') {
+        notifications.show({ title: 'Integration Failed', message: event.data.description || 'OAuth failed', color: 'red' });
+        onError?.(event.data.description);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [queryClient, currentTenant, provider.name, onSuccess, onError, navigate, verifyIntegration]);
+
+    const handleOAuthClick = async () => {
+      if (isLoading) return;  // Prevent multiple clicks
     try {
       const result = await initiateOAuth(provider.id, metadata);
-      
+      console.log('OAuth initiation result:', result);
       if (result.success && result.authUrl) {
-        // Redirect to OAuth provider
-        window.location.href = result.authUrl;
+        console.log('Attempting to open popup with URL:', result.authUrl);
+        const popupWidth = 600;
+        const popupHeight = 600;
+        const left = (window.screen.width / 2) - (popupWidth / 2);
+        const top = (window.screen.height / 2) - (popupHeight / 2);
+        const popup = window.open(result.authUrl, 'oauthPopup', `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`);
+        if (!popup) {
+          // Fallback to full redirect on popup block
+          notifications.show({ title: 'Popup Blocked', message: 'Redirecting in new tab.', color: 'yellow' });
+          window.location.href = result.authUrl;
+          return;
+        }
+        // Add timeout for auto-close failure
+        const maxWait = 30000; // 30s
+        const timer = setTimeout(() => {
+          if (!popup.closed) {
+            notifications.show({ title: 'OAuth Timeout', message: 'Closing popup.', color: 'orange' });
+            popup.close();
+          }
+        }, maxWait);
       } else {
-        onError?.(result.error || 'Failed to initiate OAuth flow');
+        console.error('Initiation failed:', result.error);
+        notifications.show({ title: 'Error', message: result.error || 'Failed to initiate', color: 'red' });
       }
     } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to start OAuth process';
-      onError?.(errorMessage);
+      notifications.show({ title: 'Error', message: error.message || 'Failed to start', color: 'red' });
     }
   };
+
+  // Simple debounce function
+  const debounce = (func: Function, delay: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), delay);
+    };
+  };
+  const debouncedHandleOAuthClick = debounce(handleOAuthClick, 1000);
 
   const getButtonContent = () => {
     const providerIcon = provider.metadata?.iconUrl ? (
@@ -249,10 +317,10 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
             size={size}
             variant={variant}
             fullWidth={fullWidth}
-            disabled={isButtonDisabled}
+            disabled={isButtonDisabled || isLoading}
             loading={buttonContent.loading}
             leftSection={!buttonContent.loading ? buttonContent.icon : undefined}
-            onClick={showSecurityInfo ? () => setShowSecurityModal(true) : handleOAuthClick}
+            onClick={showSecurityInfo ? () => setShowSecurityModal(true) : debouncedHandleOAuthClick}
             color={flowState.step === 'error' ? 'red' : 
                    flowState.step === 'completion' ? 'green' : undefined}
           >

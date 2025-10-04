@@ -14,11 +14,11 @@
   "cursor.ai.enableProjectContext": true,
   "cursor.ai.contextFiles": [
     "DOCUMENTATION_INDEX.md",
-    "docs/architecture/README.md",
-    "docs/development/README.md",
-    "docs/api/README.md",
-    "docs/security/README.md",
-    "docs/features/README.md",
+    "docs/02-Architecture/README.md",
+    "docs/06-Guidelines/development-guide.md",
+    "docs/04-Backend/README.md",
+    "docs/05-Security/README.md",
+    "docs/03-Frontend/README.md",
     "package.json",
     "tsconfig.app.json",
     "vite.config.ts"

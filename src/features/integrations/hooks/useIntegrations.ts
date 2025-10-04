@@ -72,7 +72,7 @@ export const useIntegrations = (filters?: IntegrationListFilters) => {
           console.groupEnd();
         }
         
-        return transformedData;
+        return transformedData.data || [];
       } catch (error) {
         if (import.meta.env.DEV) {
           console.error('❌ Failed to fetch integrations:', error);

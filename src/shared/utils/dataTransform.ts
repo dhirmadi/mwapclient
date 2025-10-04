@@ -62,36 +62,24 @@ export const transformIdFields = <T extends Record<string, any>>(data: T[] | nul
 export const handleApiResponse = <T = any>(
   response: any,
   isArray: boolean = false
-): T => {
-  let rawData: any = null;
-
-  // Handle wrapped response format: { success: true, data: ... }
-  if (response.data && response.data.success && response.data.data !== undefined) {
-    rawData = response.data.data;
+): { success: boolean; data: T | null; error?: string } => {
+  if (!response?.data) {
+    return { success: false, data: null, error: 'Invalid response format' };
   }
-  // Handle error response format: { success: false, message: ... }
-  else if (response.data && response.data.success === false) {
-    throw new Error(response.data.message || 'API request failed');
+  const apiData = response.data;
+  if (apiData.success === false) {
+    return { success: false, data: null, error: apiData.message || 'API request failed' };
   }
-  // Handle direct response format
-  else if (response.data !== undefined) {
-    rawData = response.data;
+  let rawData = apiData.success && apiData.data !== undefined ? apiData.data : apiData;
+  // Only transform if it's an object or array with potential IDs
+  if (rawData && (typeof rawData === 'object' || Array.isArray(rawData))) {
+    if (Array.isArray(rawData)) {
+      rawData = transformIdFields(rawData);
+    } else if ('_id' in rawData || 'id' in rawData) {
+      rawData = transformIdField(rawData);
+    }
   }
-  else {
-    throw new Error('Invalid API response format');
-  }
-
-  // Transform IDs based on expected data type
-  if (isArray && Array.isArray(rawData)) {
-    return transformIdFields(rawData) as T;
-  } else if (!isArray && rawData && typeof rawData === 'object') {
-    return transformIdField(rawData) as T;
-  } else if (isArray && !Array.isArray(rawData)) {
-    // Expected array but got single object or null
-    return (rawData === null ? [] : [transformIdField(rawData)]) as T;
-  }
-
-  return rawData as T;
+  return { success: true, data: rawData as T };
 };
 
 /**

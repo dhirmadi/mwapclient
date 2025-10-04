@@ -102,7 +102,7 @@ cp .env.example .env
 - **Vite Proxy:** Current setup in `vite.config.ts` is correct
 - **Backend Target:** `https://mwapss.shibari.photo/api/v1`
 
-The Vite proxy automatically handles routing from `/api/*` to the backend server. See `docs/API_CONFIGURATION.md` for detailed information.
+The Vite proxy automatically handles routing from `/api/*` to the backend server. See `docs/04-Backend/api-quickreference.md` for detailed information.
 
 ### Development
 
@@ -172,18 +172,18 @@ src/
 Comprehensive documentation is available in the `docs/` directory, organized for developers, architects, and testers:
 
 ### 🎯 Core Documentation
-- **[Architecture & Solution Design](./docs/architecture/README.md)** - System architecture, design patterns, and technical decisions
-- **[Developer Guidelines](./docs/development/README.md)** - Coding standards, conventions, and best practices
-- **[API Integration](./docs/api/README.md)** - Complete API documentation including critical Vite configuration
-- **[Security & Authentication](./docs/security/README.md)** - Authentication flows, security measures, and RBAC
-- **[Features](./docs/features/README.md)** - Detailed description of each application feature
-- **[Components & UI Patterns](./docs/components/README.md)** - Component structure, UI patterns, and file organization
-- **[Changelog & Status](./docs/changelog/README.md)** - Feature status, migration history, and release notes
+- **[Architecture & Solution Design](./docs/02-Architecture/README.md)** - System architecture, design patterns, and technical decisions
+- **[Developer Guidelines](./docs/06-Guidelines/development-guide.md)** - Coding standards, conventions, and best practices
+- **[API Integration](./docs/04-Backend/README.md)** - Complete API documentation including critical Vite configuration
+- **[Security & Authentication](./docs/05-Security/README.md)** - Authentication flows, security measures, and RBAC
+- **[Features](./docs/03-Frontend/README.md)** - Detailed description of each application feature
+- **[Components & UI Patterns](./docs/06-Guidelines/components.md)** - Component structure, UI patterns, and file organization
+- **[Changelog & Status](./docs/00-Changelog/README.md)** - Feature status, migration history, and release notes
 
 ### 🚀 Quick Reference
-- **[Getting Started](./docs/getting-started.md)** - Setup and initial development guide
-- **[Troubleshooting](./docs/troubleshooting.md)** - Common issues and solutions
-- **[Contributing](./docs/contributing.md)** - Guidelines for contributing to the project
+- **[Getting Started](./docs/01-Getting-Started/getting-started.md)** - Setup and initial development guide
+- **[Troubleshooting](./docs/06-Guidelines/troubleshooting.md)** - Common issues and solutions
+- **[Contributing](./docs/08-Contribution/contributing.md)** - Guidelines for contributing to the project
 
 ### 📋 Complete Documentation Index
 See **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** for a complete overview of the consolidated documentation structure.

@@ -1,26 +1,25 @@
 import { useState, useCallback } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useCloudProviders } from '../../cloud-providers/hooks';
 import { useCreateIntegration, useUpdateIntegration } from './';
+import { useIntegrations } from './useIntegrations';
 import { 
   OAuthFlowState, 
   OAuthFlowStep, 
   OAuthError, 
   Integration,
-  IntegrationCreateRequest 
+  IntegrationCreateRequest,
 } from '../types';
 import { 
-  buildOAuthUrl, 
-  buildAuthorizationUrl, 
-  validateOAuthCallback,
   getOAuthCallbackUri,
-  createTokenExchangePayload,
-  validateScopes
+  validatePKCEParameters,
+  generatePKCEChallenge
 } from '../utils/oauthUtils';
 import { notifications } from '@mantine/notifications';
 import api from '../../../shared/utils/api';
 import { handleApiResponse } from '../../../shared/utils/dataTransform';
+import { CloudProvider } from '../../cloud-providers/types';
 
 /**
  * Hook for managing complete OAuth flow lifecycle
@@ -31,6 +30,7 @@ export const useOAuthFlow = () => {
   const { data: cloudProviders } = useCloudProviders();
   const createIntegration = useCreateIntegration();
   const updateIntegration = useUpdateIntegration();
+  const { data: integrations } = useIntegrations();
 
   const [flowState, setFlowState] = useState<OAuthFlowState>({
     step: 'initialization',
@@ -41,264 +41,76 @@ export const useOAuthFlow = () => {
   /**
    * Initiate OAuth flow for a cloud provider
    */
-  const initiateOAuth = useCallback(async (
-    providerId: string,
-    metadata?: Record<string, unknown>
-  ): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
-    if (!currentTenant) {
-      return { success: false, error: 'No current tenant available' };
-    }
-
-    if (!user?.sub) {
-      return { success: false, error: 'User not authenticated' };
-    }
-
-    const provider = cloudProviders?.find(p => p.id === providerId);
-    if (!provider) {
-      return { success: false, error: 'Cloud provider not found' };
-    }
-
+  const initiateOAuth = useCallback(async (providerId: string, metadata?: Record<string, unknown>): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
+    if (!currentTenant || !user?.sub) return { success: false, error: 'Invalid tenant or user' };
+    const provider: CloudProvider | undefined = (cloudProviders as CloudProvider[] | undefined)?.find((p: CloudProvider) => p.id === providerId);
+    if (!provider) return { success: false, error: 'Provider not found' };
     try {
-      setFlowState({
-        step: 'initialization',
-        isLoading: true,
-        progress: 10,
-      });
-
-      if (import.meta.env.DEV) {
-        console.group('🔗 OAUTH FLOW: Initiating OAuth flow');
-        console.log('📊 Flow Data:', {
-          providerId,
-          tenantId: currentTenant,
-          userId: user.sub,
-          metadata,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Create integration placeholder
+      setFlowState({ step: 'initialization', isLoading: true, progress: 10 });
+      // Generate PKCE
+      const pkce = await generatePKCEChallenge();
+      const pkceMetadata = {
+        oauth_code: null,
+        redirect_uri: getOAuthCallbackUri(),
+        code_verifier: pkce.codeVerifier,
+        code_challenge: pkce.codeChallenge,
+        code_challenge_method: pkce.codeChallengeMethod,
+      };
+      const validation = validatePKCEParameters(pkceMetadata);
+      if (!validation.isValid) throw new Error(`PKCE invalid: ${validation.errors.join(', ')}`);
+      // Query existing
+      let integration: Integration;
       const integrationRequest: IntegrationCreateRequest = {
         providerId,
         metadata: {
-          displayName: (metadata as any)?.displayName || `${provider.name} Integration`,
-          description: (metadata as any)?.description || `Integration with ${provider.name}`,
+          displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
+          description: (metadata?.description as string) || `Integration with ${provider.name}`,
           ...metadata,
+          ...pkceMetadata
         },
       };
-
-      const integration = await createIntegration.mutateAsync(integrationRequest);
-
-      setFlowState(prev => ({
-        ...prev,
-        step: 'authorization',
-        integrationId: integration.id,
-        progress: 30,
-      }));
-
-      // Build OAuth URL with PKCE
-      const redirectUri = getOAuthCallbackUri();
-      const oauthConfig = await buildOAuthUrl(
-        provider,
-        integration.id,
-        currentTenant,
-        redirectUri,
-        user.sub
-      );
-
-      const authUrl = buildAuthorizationUrl(oauthConfig);
-
-      setFlowState(prev => ({
-        ...prev,
-        progress: 50,
-      }));
-
-      if (import.meta.env.DEV) {
-        console.log('✅ OAuth URL generated:', authUrl);
-        console.groupEnd();
+      try {
+        integration = await createIntegration.mutateAsync(integrationRequest);
+      } catch (createError: any) {
+        if (createError.response?.status === 409) {
+          const existingResponse = await api.get(`/tenants/${currentTenant}/integrations?providerId=${providerId}`);
+          const existingList = handleApiResponse<Integration[]>(existingResponse, true);
+          if (existingList.success && existingList.data && existingList.data.length > 0) {
+            integration = existingList.data[0];
+            await updateIntegration.mutateAsync({ integrationId: integration.id, data: { metadata: { ...integration.metadata, ...pkceMetadata } } });
+          } else {
+            throw new Error('Failed to recover');
+          }
+        } else {
+          throw createError;
+        }
       }
-
+      setFlowState(prev => ({ ...prev, step: 'authorization', integrationId: integration.id, progress: 30 }));
+      const initiateResponse = await api.post(`/oauth/tenants/${currentTenant}/integrations/${integration.id}/initiate`, { redirectUri: pkceMetadata.redirect_uri });
+      const initiateResult = handleApiResponse<{authorizationUrl: string}>(initiateResponse);
+      if (!initiateResult.success || !initiateResult.data?.authorizationUrl) throw new Error(initiateResult.error || 'Initiation failed');
+      const authUrl = initiateResult.data.authorizationUrl;
+      setFlowState(prev => ({ ...prev, progress: 50 }));
       return { success: true, authUrl };
-
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.error?.message || 
-                          error?.message || 
-                          'Failed to initiate OAuth flow';
-
-      setFlowState({
-        step: 'error',
-        error: {
-          error: 'server_error',
-          error_description: errorMessage,
-        },
-        isLoading: false,
-        progress: 0,
-      });
-
-      if (import.meta.env.DEV) {
-        console.error('❌ OAuth flow initiation failed:', error);
-        console.groupEnd();
-      }
-
-      return { success: false, error: errorMessage };
+      setFlowState({ step: 'error', error: { error: 'server_error', error_description: error.message }, isLoading: false, progress: 0 });
+      return { success: false, error: error.message };
     }
-  }, [currentTenant, user?.sub, cloudProviders, createIntegration]);
+  }, [currentTenant, user?.sub, cloudProviders, createIntegration, updateIntegration, api]);
 
-  /**
-   * Handle OAuth callback and complete token exchange
-   */
-  const handleCallback = useMutation({
-    mutationFn: async (searchParams: URLSearchParams): Promise<Integration> => {
-      if (!currentTenant) {
-        throw new Error('No current tenant available');
-      }
-
-      setFlowState({
-        step: 'callback',
-        isLoading: true,
-        progress: 60,
-      });
-
-      if (import.meta.env.DEV) {
-        console.group('🔗 OAUTH CALLBACK: Processing OAuth callback');
-        console.log('📊 Callback Data:', {
-          tenantId: currentTenant,
-          searchParams: Object.fromEntries(searchParams.entries()),
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Validate callback parameters
-      const validation = validateOAuthCallback(searchParams);
-      if (!validation.isValid) {
-        throw new Error(validation.errorMessage || 'Invalid OAuth callback');
-      }
-
-      const { code, state } = validation;
-      if (!code || !state) {
-        throw new Error('Missing required callback parameters');
-      }
-
-      setFlowState(prev => ({
-        ...prev,
-        step: 'token_exchange',
-        integrationId: state.integrationId,
-        progress: 80,
-      }));
-
-      // Exchange authorization code for tokens
-      const response = await api.post(
-        `/tenants/${currentTenant}/integrations/${state.integrationId}/oauth/callback`,
-        {
-          code,
-          codeVerifier: state.codeVerifier,
-          redirectUri: getOAuthCallbackUri(),
-        }
-      );
-
-      const updatedIntegration = handleApiResponse(response, false);
-
-      setFlowState({
-        step: 'completion',
-        integrationId: state.integrationId,
-        isLoading: false,
-        progress: 100,
-      });
-
-      if (import.meta.env.DEV) {
-        console.log('✅ OAuth callback processed successfully:', updatedIntegration);
-        console.groupEnd();
-      }
-
-      return updatedIntegration;
-    },
-    onSuccess: (integration) => {
-      // Update integration in cache
-      queryClient.setQueryData(
-        ['integration', integration.id],
-        integration
-      );
-      
-      // Update integrations list
-      queryClient.setQueryData(
-        ['integrations', currentTenant],
-        (oldData: Integration[] | undefined) => {
-          if (!oldData) return [integration];
-          return oldData.map(item => 
-            item.id === integration.id ? integration : item
-          );
-        }
-      );
-
-      // Show success notification
-      notifications.show({
-        title: 'Integration Connected',
-        message: `Successfully connected ${integration.provider?.name || 'cloud provider'}`,
-        color: 'green',
-      });
-
-      if (import.meta.env.DEV) {
-        console.log('✅ OAuth flow completed successfully');
-      }
-    },
-    onError: (error: any) => {
-      const errorMessage = error?.response?.data?.error?.message || 
-                          error?.message || 
-                          'Failed to complete OAuth flow';
-
-      setFlowState({
-        step: 'error',
-        error: {
-          error: 'server_error',
-          error_description: errorMessage,
-        },
-        isLoading: false,
-        progress: 0,
-      });
-
-      // Show error notification
-      notifications.show({
-        title: 'Integration Failed',
-        message: errorMessage,
-        color: 'red',
-      });
-
-      if (import.meta.env.DEV) {
-        console.error('❌ OAuth callback processing failed:', error);
-      }
-    },
-  });
-
-  /**
-   * Reset OAuth flow state
-   */
   const resetFlow = useCallback(() => {
-    setFlowState({
-      step: 'initialization',
-      isLoading: false,
-      progress: 0,
-    });
+    setFlowState({ step: 'initialization', isLoading: false, progress: 0 });
   }, []);
 
-  /**
-   * Cancel ongoing OAuth flow
-   */
   const cancelFlow = useCallback(async () => {
     if (flowState.integrationId && flowState.step !== 'completion') {
       try {
-        // Delete the placeholder integration if flow is cancelled
-        await api.delete(
-          `/tenants/${currentTenant}/integrations/${flowState.integrationId}`
-        );
-        
-        // Invalidate integrations cache
-        queryClient.invalidateQueries({ 
-          queryKey: ['integrations', currentTenant] 
-        });
+        await api.delete(`/tenants/${currentTenant}/integrations/${flowState.integrationId}`);
+        queryClient.invalidateQueries({ queryKey: ['integrations', currentTenant] });
       } catch (error) {
         console.error('Failed to cleanup cancelled OAuth flow:', error);
       }
     }
-    
     resetFlow();
   }, [flowState.integrationId, flowState.step, currentTenant, queryClient, resetFlow]);
 
@@ -329,25 +141,32 @@ export const useOAuthFlow = () => {
   }, []);
 
   return {
-    // State
     flowState,
-    isLoading: flowState.isLoading || createIntegration.isPending || handleCallback.isPending,
-    
-    // Actions
+    isLoading: flowState.isLoading || createIntegration.isPending || updateIntegration.isPending,
     initiateOAuth,
-    handleCallback: handleCallback.mutateAsync,
     resetFlow,
     cancelFlow,
-    
-    // Utilities
     getErrorMessage,
-    
-    // Status checks
     isInitializing: flowState.step === 'initialization',
     isAuthorizing: flowState.step === 'authorization',
-    isProcessingCallback: flowState.step === 'callback',
-    isExchangingToken: flowState.step === 'token_exchange',
     isCompleted: flowState.step === 'completion',
     hasError: flowState.step === 'error',
   };
+};
+
+// Add verification
+export const verifyIntegration = async (tenantId: string, integrationId: string) => {
+  const response = await api.get(`/tenants/${tenantId}/integrations/${integrationId}`);
+  return handleApiResponse(response);
+};
+
+// Add health query
+export const useOAuthHealth = () => {
+  return useQuery({
+    queryKey: ['oauthHealth'],
+    queryFn: async () => {
+      const response = await api.get('/oauth/health');  // Assume endpoint exists
+      return handleApiResponse(response);
+    },
+  });
 };
