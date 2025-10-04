@@ -3,6 +3,7 @@ export { default as AuthLoadingSpinner } from './AuthLoadingSpinner';
 export { default as ConfirmDialog } from './ConfirmDialog';
 export { DataTable } from './DataTable';
 export { default as EmptyState } from './EmptyState';
+export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as ErrorDisplay } from './ErrorDisplay';
 export { default as IntegrationStatusWidget } from './IntegrationStatusWidget';
 export { default as LoadingSpinner } from './LoadingSpinner';

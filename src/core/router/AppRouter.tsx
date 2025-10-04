@@ -7,6 +7,7 @@ import AuthProvider from '../context/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import RedirectRoute from './RedirectRoute';
 import MainLayout from '../layouts/MainLayout';
+import { ErrorBoundary } from '../../shared/components';
 
 // Loading component for Suspense fallback
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
@@ -78,7 +79,8 @@ const AppRouter: React.FC = () => {
       >
         <AuthProvider>
           <Notifications position="top-right" />
-          <Routes>
+          <ErrorBoundary level="page">
+            <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={
@@ -290,7 +292,8 @@ const AppRouter: React.FC = () => {
 
               {/* Not Found Route */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+          </ErrorBoundary>
         </AuthProvider>
       </Auth0Provider>
     </BrowserRouter>
