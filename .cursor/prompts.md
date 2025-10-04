@@ -26,10 +26,10 @@ Before any task, reference the relevant documentation in docs/ directory.
 I'm working on a new feature for the MWAP Client. Please help me:
 
 1. First, analyze the existing feature structure in src/features/
-2. Reference docs/features/README.md for feature patterns
-3. Follow the established architecture in docs/architecture/README.md
-4. Apply coding standards from docs/development/README.md
-5. Implement security patterns from docs/security/README.md
+2. Reference docs/03-Frontend/README.md for feature patterns
+3. Follow the established architecture in docs/02-Architecture/README.md
+4. Apply coding standards from docs/06-Guidelines/development-guide.md
+5. Implement security patterns from docs/05-Security/README.md
 
 The feature should follow the pattern:
 - types/index.ts for TypeScript definitions
@@ -49,7 +49,7 @@ Analyze this React component in the MWAP Client codebase:
 [PASTE COMPONENT CODE]
 
 Please review for:
-1. Adherence to patterns in docs/development/README.md
+1. Adherence to patterns in docs/06-Guidelines/development-guide.md
 2. Proper TypeScript usage and type safety
 3. Mantine UI v8 component usage
 4. React Query integration patterns
@@ -67,7 +67,7 @@ Review this API integration code for the MWAP Client:
 
 [PASTE API CODE]
 
-Check against docs/api/README.md for:
+Check against docs/04-Backend/README.md for:
 1. Proper use of configured API client
 2. Correct endpoint patterns (/api/v1/...)
 3. React Query hook implementation
@@ -89,7 +89,7 @@ I'm experiencing this issue in the MWAP Client:
 [DESCRIBE ISSUE]
 
 Please help me debug by:
-1. Checking docs/troubleshooting.md for common issues
+1. Checking docs/06-Guidelines/troubleshooting.md for common issues
 2. Analyzing the error in context of the architecture
 3. Reviewing relevant code patterns in the affected feature
 4. Suggesting fixes that maintain established patterns
@@ -106,7 +106,7 @@ I need to optimize performance for this part of the MWAP Client:
 [DESCRIBE PERFORMANCE ISSUE]
 
 Please analyze and suggest optimizations:
-1. Review current implementation against docs/development/README.md
+1. Review current implementation against docs/06-Guidelines/development-guide.md
 2. Identify performance bottlenecks
 3. Suggest React optimization patterns (memoization, lazy loading)
 4. Recommend bundle size optimizations
@@ -123,7 +123,7 @@ Please review this code for security compliance with MWAP Client standards:
 
 [PASTE CODE]
 
-Check against docs/security/README.md for:
+Check against docs/05-Security/README.md for:
 1. Proper Auth0 integration patterns
 2. Role-based access control implementation
 3. Input validation with Zod schemas
@@ -144,7 +144,7 @@ I need to create a new UI component for the MWAP Client with these requirements:
 [DESCRIBE REQUIREMENTS]
 
 Please help me create a component that:
-1. Follows patterns in docs/components/README.md
+1. Follows patterns in docs/06-Guidelines/components.md
 2. Uses Mantine UI v8 components consistently
 3. Implements proper TypeScript interfaces
 4. Includes responsive design with Tailwind CSS
@@ -184,7 +184,7 @@ I want to refactor this code in the MWAP Client to improve maintainability:
 [PASTE CODE TO REFACTOR]
 
 Please refactor following these principles:
-1. Maintain established patterns from docs/development/README.md
+1. Maintain established patterns from docs/06-Guidelines/development-guide.md
 2. Improve TypeScript type safety
 3. Extract reusable logic into custom hooks
 4. Optimize performance with proper memoization
@@ -224,7 +224,7 @@ I need to write tests for this MWAP Client component/hook:
 [PASTE CODE TO TEST]
 
 Please create tests that:
-1. Follow testing patterns in docs/development/README.md
+1. Follow testing patterns in docs/06-Guidelines/development-guide.md
 2. Use Vitest and React Testing Library
 3. Test component behavior and rendering
 4. Mock API calls appropriately
@@ -293,7 +293,7 @@ Create documentation that includes:
 7. Testing approach
 8. Future enhancements
 
-Follow the format in docs/features/README.md.
+Follow the format in docs/03-Frontend/README.md.
 ```
 
 ## 🎯 Specialized Prompts
@@ -305,7 +305,7 @@ I need help with Auth0 integration in the MWAP Client:
 [DESCRIBE AUTH REQUIREMENT]
 
 Please provide implementation that:
-1. Follows patterns in docs/security/README.md
+1. Follows patterns in docs/05-Security/README.md
 2. Uses established Auth0 PKCE flow
 3. Implements proper role-based access control
 4. Handles token refresh automatically
@@ -417,9 +417,9 @@ Create complete feature implementation.
 ### Review Template
 ```
 Review: [CODE TYPE] in MWAP Client
-Standards: docs/development/README.md
-Security: docs/security/README.md
-Architecture: docs/architecture/README.md
+Standards: docs/06-Guidelines/development-guide.md
+Security: docs/05-Security/README.md
+Architecture: docs/02-Architecture/README.md
 Code: [PASTE CODE]
 
 Provide comprehensive review with improvement suggestions.

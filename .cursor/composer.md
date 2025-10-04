@@ -8,11 +8,11 @@ You are working on the **MWAP Client**, a production-ready React TypeScript appl
 
 ### Primary Documentation
 - [`DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md) - Complete project overview
-- [`docs/architecture/README.md`](../docs/architecture/README.md) - System architecture
-- [`docs/development/README.md`](../docs/development/README.md) - Coding standards
-- [`docs/api/README.md`](../docs/api/README.md) - API integration patterns
-- [`docs/security/README.md`](../docs/security/README.md) - Security implementation
-- [`docs/features/README.md`](../docs/features/README.md) - Feature specifications
+- [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) - System architecture
+- [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) - Coding standards
+- [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) - API integration patterns
+- [`docs/05-Security/README.md`](../docs/05-Security/README.md) - Security implementation
+- [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) - Feature specifications
 
 ### Key Configuration Files
 - `package.json` - Dependencies and scripts

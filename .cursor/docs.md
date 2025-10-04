@@ -26,7 +26,7 @@ The MWAP Client follows a **documentation-first approach** where:
 - Essential reading order for new developers
 
 ### 2. Architecture & Solution Design
-**Location**: [`docs/architecture/README.md`](../docs/architecture/README.md)
+**Location**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md)
 **Purpose**: System design and technical architecture
 **Contains**:
 - High-level system architecture
@@ -37,7 +37,7 @@ The MWAP Client follows a **documentation-first approach** where:
 - Deployment architecture and considerations
 
 ### 3. Developer Guidelines & Standards
-**Location**: [`docs/development/README.md`](../docs/development/README.md)
+**Location**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md)
 **Purpose**: Comprehensive coding standards and conventions
 **Contains**:
 - TypeScript and React coding standards
@@ -49,7 +49,7 @@ The MWAP Client follows a **documentation-first approach** where:
 - ESLint and Prettier configurations
 
 ### 4. API Integration Documentation
-**Location**: [`docs/api/README.md`](../docs/api/README.md)
+**Location**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md)
 **Purpose**: Complete API integration guide
 **Contains**:
 - **CRITICAL**: Vite proxy configuration (DO NOT MODIFY)
@@ -61,11 +61,11 @@ The MWAP Client follows a **documentation-first approach** where:
 - API versioning and migration guides
 
 **Additional API Files**:
-- [`docs/api/v3-openAPI-schema.md`](../docs/api/v3-openAPI-schema.md) - OpenAPI schema
-- [`docs/api/cloud-providers.md`](../docs/api/cloud-providers.md) - Cloud provider APIs
+- [`docs/04-Backend/api-reference.md`](../docs/04-Backend/api-reference.md) - API reference
+- [`docs/04-Backend/api-quickreference.md`](../docs/04-Backend/api-quickreference.md) - Quick reference
 
 ### 5. Security & Authentication
-**Location**: [`docs/security/README.md`](../docs/security/README.md)
+**Location**: [`docs/05-Security/README.md`](../docs/05-Security/README.md)
 **Purpose**: Security implementation and best practices
 **Contains**:
 - Auth0 integration and PKCE flow implementation
@@ -76,7 +76,7 @@ The MWAP Client follows a **documentation-first approach** where:
 - Security testing and validation approaches
 
 ### 6. Features Documentation
-**Location**: [`docs/features/README.md`](../docs/features/README.md)
+**Location**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)
 **Purpose**: Complete feature specifications and implementation
 **Contains**:
 - Detailed feature specifications for all modules
@@ -87,7 +87,7 @@ The MWAP Client follows a **documentation-first approach** where:
 - Integration points between features
 
 ### 7. Components & UI Patterns
-**Location**: [`docs/components/README.md`](../docs/components/README.md)
+**Location**: [`docs/06-Guidelines/components.md`](../docs/06-Guidelines/components.md)
 **Purpose**: UI component library and design patterns
 **Contains**:
 - Component architecture and organization
@@ -98,7 +98,7 @@ The MWAP Client follows a **documentation-first approach** where:
 - Component testing strategies
 
 ### 8. Changelog & Feature Status
-**Location**: [`docs/changelog/README.md`](../docs/changelog/README.md)
+**Location**: [`docs/00-Changelog/README.md`](../docs/00-Changelog/README.md)
 **Purpose**: Project evolution and feature tracking
 **Contains**:
 - Feature development status and progress
@@ -142,7 +142,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### Authentication Module
 **Location**: `src/features/auth/`
-**Documentation**: Covered in [`docs/security/README.md`](../docs/security/README.md)
+**Documentation**: Covered in [`docs/05-Security/README.md`](../docs/05-Security/README.md)
 **Key Concepts**:
 - Auth0 PKCE flow implementation
 - User role management and RBAC
@@ -151,7 +151,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### Tenant Management
 **Location**: `src/features/tenants/`
-**Documentation**: Covered in [`docs/features/README.md`](../docs/features/README.md)
+**Documentation**: Covered in [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)
 **Key Concepts**:
 - Multi-tenant architecture patterns
 - Tenant-specific data isolation
@@ -160,7 +160,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### Project Management
 **Location**: `src/features/projects/`
-**Documentation**: Covered in [`docs/features/README.md`](../docs/features/README.md)
+**Documentation**: Covered in [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)
 **Key Concepts**:
 - Project lifecycle management
 - Project type integration
@@ -169,7 +169,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### Cloud Provider Integration
 **Location**: `src/features/cloud-providers/`
-**Documentation**: Covered in [`docs/api/cloud-providers.md`](../docs/api/cloud-providers.md)
+**Documentation**: Covered in [`docs/04-Backend/api-reference.md`](../docs/04-Backend/api-reference.md)
 **Key Concepts**:
 - OAuth integration patterns
 - Cloud storage API integration
@@ -180,7 +180,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### TypeScript Configuration
 **Files**: `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`
-**Documentation**: Covered in [`docs/development/README.md`](../docs/development/README.md)
+**Documentation**: Covered in [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md)
 **Key Concepts**:
 - Strict TypeScript configuration
 - Path aliases and module resolution
@@ -189,7 +189,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### Build Configuration
 **Files**: `vite.config.ts`, `package.json`
-**Documentation**: Covered in [`docs/api/README.md`](../docs/api/README.md) (proxy config)
+**Documentation**: Covered in [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) (proxy config)
 **Key Concepts**:
 - Vite build optimization
 - Development server proxy configuration
@@ -198,7 +198,7 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### Styling Configuration
 **Files**: `tailwind.config.js`, `postcss.config.js`
-**Documentation**: Covered in [`docs/components/README.md`](../docs/components/README.md)
+**Documentation**: Covered in [`docs/06-Guidelines/components.md`](../docs/06-Guidelines/components.md)
 **Key Concepts**:
 - Tailwind CSS configuration
 - Mantine UI theme integration
@@ -208,29 +208,29 @@ The MWAP Client follows a **documentation-first approach** where:
 ## 📋 Documentation Usage Patterns
 
 ### For New Features
-1. **Start**: [`docs/features/README.md`](../docs/features/README.md) - Understand existing patterns
-2. **Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) - Follow system design
-3. **Development**: [`docs/development/README.md`](../docs/development/README.md) - Apply coding standards
-4. **API**: [`docs/api/README.md`](../docs/api/README.md) - Implement API integration
-5. **Security**: [`docs/security/README.md`](../docs/security/README.md) - Add security measures
+1. **Start**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) - Understand existing patterns
+2. **Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) - Follow system design
+3. **Development**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) - Apply coding standards
+4. **API**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) - Implement API integration
+5. **Security**: [`docs/05-Security/README.md`](../docs/05-Security/README.md) - Add security measures
 
 ### For Bug Fixes
 1. **Troubleshooting**: [`docs/troubleshooting.md`](../docs/troubleshooting.md) - Check common issues
-2. **Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) - Understand system design
-3. **Development**: [`docs/development/README.md`](../docs/development/README.md) - Follow debugging patterns
-4. **API**: [`docs/api/README.md`](../docs/api/README.md) - Check API integration issues
+2. **Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) - Understand system design
+3. **Development**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) - Follow debugging patterns
+4. **API**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) - Check API integration issues
 
 ### For Refactoring
-1. **Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) - Understand current design
-2. **Development**: [`docs/development/README.md`](../docs/development/README.md) - Follow refactoring guidelines
-3. **Components**: [`docs/components/README.md`](../docs/components/README.md) - Update component patterns
-4. **Features**: [`docs/features/README.md`](../docs/features/README.md) - Maintain feature integrity
+1. **Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) - Understand current design
+2. **Development**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) - Follow refactoring guidelines
+3. **Components**: [`docs/06-Guidelines/components.md`](../docs/06-Guidelines/components.md) - Update component patterns
+4. **Features**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) - Maintain feature integrity
 
 ### For Performance Optimization
-1. **Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) - Performance architecture
-2. **Development**: [`docs/development/README.md`](../docs/development/README.md) - Optimization techniques
-3. **Components**: [`docs/components/README.md`](../docs/components/README.md) - Component optimization
-4. **API**: [`docs/api/README.md`](../docs/api/README.md) - API optimization patterns
+1. **Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) - Performance architecture
+2. **Development**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) - Optimization techniques
+3. **Components**: [`docs/06-Guidelines/components.md`](../docs/06-Guidelines/components.md) - Component optimization
+4. **API**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) - API optimization patterns
 
 ## 🎯 Documentation Quality Standards
 
@@ -274,16 +274,16 @@ The MWAP Client follows a **documentation-first approach** where:
 
 ### For Cursor AI
 1. **Always Start**: [`DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md) for context
-2. **Understand Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) for system design
-3. **Follow Standards**: [`docs/development/README.md`](../docs/development/README.md) for coding patterns
-4. **Check API Patterns**: [`docs/api/README.md`](../docs/api/README.md) for integration
-5. **Implement Security**: [`docs/security/README.md`](../docs/security/README.md) for auth patterns
-6. **Reference Features**: [`docs/features/README.md`](../docs/features/README.md) for specifications
+2. **Understand Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) for system design
+3. **Follow Standards**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) for coding patterns
+4. **Check API Patterns**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) for integration
+5. **Implement Security**: [`docs/05-Security/README.md`](../docs/05-Security/README.md) for auth patterns
+6. **Reference Features**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) for specifications
 
 ### For Developers
 1. **Getting Started**: [`docs/getting-started.md`](../docs/getting-started.md) for setup
-2. **Development Guide**: [`docs/development/README.md`](../docs/development/README.md) for standards
-3. **Feature Specs**: [`docs/features/README.md`](../docs/features/README.md) for requirements
+2. **Development Guide**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) for standards
+3. **Feature Specs**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) for requirements
 4. **Troubleshooting**: [`docs/troubleshooting.md`](../docs/troubleshooting.md) for issues
 5. **Contributing**: [`docs/contributing.md`](../docs/contributing.md) for workflow
 

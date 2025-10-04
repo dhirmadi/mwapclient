@@ -267,11 +267,7 @@ export function validateOAuthCallback(searchParams: URLSearchParams): {
  * Get OAuth callback redirect URI for the current environment
  */
 export function getOAuthCallbackUri(): string {
-  const mode = import.meta.env.MODE as 'production' | 'staging' | 'development';
-  const domain = mode === 'development' ? 'mwapss.shibari.photo' : OAUTH_DOMAINS[mode] || OAUTH_DOMAINS.development;
-  const protocol = 'https';
-  const port = '';
-  return `${protocol}://${domain}${port}${OAUTH_CONFIG.CALLBACK_PATH}`;
+  return `${window.location.origin}/oauth/callback`;
 }
 
 /**

@@ -18,11 +18,11 @@ The Modular Web Application Platform (MWAP) Client is a comprehensive React Type
 
 ### Documentation First Approach
 - **Start with**: [`DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md) for complete project understanding
-- **Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) for system design
-- **Development**: [`docs/development/README.md`](../docs/development/README.md) for coding standards
-- **API Integration**: [`docs/api/README.md`](../docs/api/README.md) for API patterns
-- **Security**: [`docs/security/README.md`](../docs/security/README.md) for auth patterns
-- **Features**: [`docs/features/README.md`](../docs/features/README.md) for feature specs
+- **Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) for system design
+- **Development**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) for coding standards
+- **API Integration**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) for API patterns
+- **Security**: [`docs/05-Security/README.md`](../docs/05-Security/README.md) for auth patterns
+- **Features**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) for feature specs
 
 ## 🏗️ Architecture Patterns
 
@@ -305,12 +305,12 @@ export default useFeature;
 ## 📚 Quick Reference Links
 
 - **Project Documentation**: [`DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md)
-- **Architecture Guide**: [`docs/architecture/README.md`](../docs/architecture/README.md)
-- **Development Standards**: [`docs/development/README.md`](../docs/development/README.md)
-- **API Documentation**: [`docs/api/README.md`](../docs/api/README.md)
-- **Security Guide**: [`docs/security/README.md`](../docs/security/README.md)
-- **Feature Specifications**: [`docs/features/README.md`](../docs/features/README.md)
-- **Component Library**: [`docs/components/README.md`](../docs/components/README.md)
+- **Architecture Guide**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md)
+- **Development Standards**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md)
+- **API Documentation**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md)
+- **Security Guide**: [`docs/05-Security/README.md`](../docs/05-Security/README.md)
+- **Feature Specifications**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)
+- **Component Library**: [`docs/06-Guidelines/components.md`](../docs/06-Guidelines/components.md)
 - **Troubleshooting**: [`docs/troubleshooting.md`](../docs/troubleshooting.md)
 
 ## 🎯 Remember

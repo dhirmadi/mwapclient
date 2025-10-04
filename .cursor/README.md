@@ -1,3 +1,12 @@
+---
+title: Cursor Configuration Overview
+slug: cursor/readme
+version: 1.0.0
+lastUpdated: 2025-10-04
+type: configuration
+for: cursor
+summary: Overview and navigation for MWAP Client Cursor configuration
+---
 # MWAP Client - Cursor AI Configuration
 
 ## 🎯 Welcome to MWAP Client Cursor Configuration
@@ -61,17 +70,17 @@ src/features/[module]/
 ## 📚 Essential Documentation
 
 ### Primary Documentation (Always Reference First)
-- **[`../DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md)** - Complete project overview
-- **[`../docs/architecture/README.md`](../docs/architecture/README.md)** - System architecture
-- **[`../docs/development/README.md`](../docs/development/README.md)** - Coding standards
-- **[`../docs/api/README.md`](../docs/api/README.md)** - API integration (CRITICAL)
-- **[`../docs/security/README.md`](../docs/security/README.md)** - Security patterns
-- **[`../docs/features/README.md`](../docs/features/README.md)** - Feature specifications
+- **[`../docs/README.md`](../docs/README.md)** - Complete project overview
+- **[`../docs/02-Architecture/README.md`](../docs/02-Architecture/README.md)** - System architecture
+- **[`../docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md)** - Coding standards
+- **[`../docs/04-Backend/README.md`](../docs/04-Backend/README.md)** - API integration (CRITICAL)
+- **[`../docs/05-Security/README.md`](../docs/05-Security/README.md)** - Security patterns
+- **[`../docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)** - Feature specifications
 
 ### Quick Reference
-- **[`../docs/troubleshooting.md`](../docs/troubleshooting.md)** - Common issues
-- **[`../docs/getting-started.md`](../docs/getting-started.md)** - Setup guide
-- **[`../docs/contributing.md`](../docs/contributing.md)** - Contribution guidelines
+- **[`../docs/06-Guidelines/troubleshooting.md`](../docs/06-Guidelines/troubleshooting.md)** - Common issues
+- **[`../docs/01-Getting-Started/getting-started.md`](../docs/01-Getting-Started/getting-started.md)** - Setup guide
+- **[`../docs/08-Contribution/contributing.md`](../docs/08-Contribution/contributing.md)** - Contribution guidelines
 
 ## 🔧 Development Standards
 
@@ -132,7 +141,7 @@ src/features/[module]/
 ## 🔄 Common Workflows
 
 ### Adding New Feature
-1. **Plan**: Review [`../docs/features/README.md`](../docs/features/README.md)
+1. **Plan**: Review [`../docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)
 2. **Structure**: Create feature directory in `src/features/`
 3. **Types**: Define TypeScript interfaces
 4. **Hooks**: Implement business logic
@@ -142,7 +151,7 @@ src/features/[module]/
 8. **Documentation**: Update relevant docs
 
 ### Bug Fixing
-1. **Analyze**: Check [`../docs/troubleshooting.md`](../docs/troubleshooting.md)
+1. **Analyze**: Check [`../docs/06-Guidelines/troubleshooting.md`](../docs/06-Guidelines/troubleshooting.md)
 2. **Understand**: Review architecture and patterns
 3. **Fix**: Implement solution following standards
 4. **Test**: Verify fix doesn't break other functionality
@@ -240,7 +249,7 @@ Your development is successful when:
 4. **Community**: Follow contribution guidelines
 
 ### Contributing
-1. **Read**: [`../docs/contributing.md`](../docs/contributing.md)
+1. **Read**: [`../docs/08-Contribution/contributing.md`](../docs/08-Contribution/contributing.md)
 2. **Follow**: Established patterns and standards
 3. **Test**: Verify all functionality works
 4. **Document**: Update relevant documentation

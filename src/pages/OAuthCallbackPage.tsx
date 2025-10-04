@@ -7,6 +7,7 @@ import { validateOAuthCallback } from '../features/integrations/utils/oauthUtils
 import api from '../shared/utils/api';
 import { notifications } from '@mantine/notifications';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../core/context/AuthContext';
 
 const OAuthCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -15,9 +16,47 @@ const OAuthCallbackPage: React.FC = () => {
   const { pathname } = location;
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState<string>('Processing...');
+  const { getAccessTokenSilently } = useAuth(); // If Auth0, for refresh
 
   useEffect(() => {
-    if (pathname === '/oauth/success') {
+    if (searchParams.get('code')) {
+      const handleCodeExchange = async () => {
+        // Optional: Refresh token
+        // await getAccessTokenSilently();
+        const validation = validateOAuthCallback(searchParams);
+        if (validation.isValid && validation.state) {
+          try {
+            const response = await api.post(`/oauth/tenants/${validation.state.tenantId}/integrations/${validation.state.integrationId}/complete`, { code: validation.code });
+            const result = handleApiResponse(response);
+            if (result.success) {
+              setStatus('success');
+              setMessage('Integration connected successfully!');
+              notifications.show({ title: 'Success', message: 'Tokens exchanged', color: 'green' });
+              if (window.opener) {
+                window.opener.postMessage({ type: 'oauth_success', integrationId: validation.state.integrationId }, window.location.origin);
+                setTimeout(() => window.close(), 3000);
+              } else {
+                setTimeout(() => navigate('/integrations'), 2000);
+              }
+            } else {
+              throw new Error(result.error || 'Exchange failed');
+            }
+          } catch (error) {
+            setStatus('error');
+            setMessage(error.message || 'Failed to complete OAuth');
+            notifications.show({ title: 'Error', message: 'Exchange failed', color: 'red' });
+            if (window.opener) {
+              window.opener.postMessage({ type: 'oauth_error', description: error.message }, window.location.origin);
+              setTimeout(() => window.close(), 5000);
+            }
+          }
+        } else {
+          setStatus('error');
+          setMessage(validation.errorMessage || 'Invalid callback parameters');
+        }
+      };
+      handleCodeExchange();
+    } else if (pathname === '/oauth/success') {
       handleOAuthSuccess(searchParams);
     } else if (pathname === '/oauth/error') {
       handleOAuthError(searchParams);

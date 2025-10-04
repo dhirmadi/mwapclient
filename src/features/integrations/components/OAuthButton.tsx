@@ -101,8 +101,8 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     return () => window.removeEventListener('message', handleMessage);
   }, [queryClient, currentTenant, provider.name, onSuccess, onError, navigate, verifyIntegration]);
 
-  const handleOAuthClick = async () => {
-    if (isLoading) return;  // Prevent multiple clicks
+    const handleOAuthClick = async () => {
+      if (isLoading) return;  // Prevent multiple clicks
     try {
       const result = await initiateOAuth(provider.id, metadata);
       console.log('OAuth initiation result:', result);
@@ -144,7 +144,7 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
       timeout = setTimeout(() => func(...args), delay);
     };
   };
-  const debouncedHandleOAuthClick = debounce(handleOAuthClick, 300);
+  const debouncedHandleOAuthClick = debounce(handleOAuthClick, 1000);
 
   const getButtonContent = () => {
     const providerIcon = provider.metadata?.iconUrl ? (

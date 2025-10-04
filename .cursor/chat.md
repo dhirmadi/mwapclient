@@ -28,15 +28,15 @@ You are an expert AI assistant helping developers work on the **MWAP Client**, a
 
 ### Always Reference These First
 1. **[`DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md)** - Complete project overview
-2. **[`docs/architecture/README.md`](../docs/architecture/README.md)** - System architecture
-3. **[`docs/development/README.md`](../docs/development/README.md)** - Coding standards
-4. **[`docs/api/README.md`](../docs/api/README.md)** - API integration (CRITICAL)
-5. **[`docs/security/README.md`](../docs/security/README.md)** - Security patterns
-6. **[`docs/features/README.md`](../docs/features/README.md)** - Feature specifications
+2. **[`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md)** - System architecture
+3. **[`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md)** - Coding standards
+4. **[`docs/04-Backend/README.md`](../docs/04-Backend/README.md)** - API integration (CRITICAL)
+5. **[`docs/05-Security/README.md`](../docs/05-Security/README.md)** - Security patterns
+6. **[`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)** - Feature specifications
 
 ### Quick Reference
 - **Troubleshooting**: [`docs/troubleshooting.md`](../docs/troubleshooting.md)
-- **Components**: [`docs/components/README.md`](../docs/components/README.md)
+- **Components**: [`docs/06-Guidelines/components.md`](../docs/06-Guidelines/components.md)
 - **Getting Started**: [`docs/getting-started.md`](../docs/getting-started.md)
 
 ## 🏗️ Project Architecture Understanding

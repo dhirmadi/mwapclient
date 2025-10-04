@@ -79,6 +79,13 @@ tsconfig.tsbuildinfo
 .settings/
 *.sublime-workspace
 
+# Cursor IDE (commit config, ignore volatile state)
+.cursor/workspace.json
+.cursor/sessions/
+.cursor/cache/
+.cursor/tmp/
+.specstory/
+
 # Debug
 .chrome/
 .vscode-test/

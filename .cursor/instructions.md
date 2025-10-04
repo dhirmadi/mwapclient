@@ -7,11 +7,11 @@ You are working on the **Modular Web Application Platform (MWAP) Client**, a pro
 ## 📚 Essential Reading Order
 
 1. **Start Here**: [`DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md) - Complete project overview
-2. **Architecture**: [`docs/architecture/README.md`](../docs/architecture/README.md) - System design patterns
-3. **Development**: [`docs/development/README.md`](../docs/development/README.md) - Coding standards
-4. **API Integration**: [`docs/api/README.md`](../docs/api/README.md) - Critical API configuration
-5. **Security**: [`docs/security/README.md`](../docs/security/README.md) - Auth patterns
-6. **Features**: [`docs/features/README.md`](../docs/features/README.md) - Feature specifications
+2. **Architecture**: [`docs/02-Architecture/README.md`](../docs/02-Architecture/README.md) - System design patterns
+3. **Development**: [`docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md) - Coding standards
+4. **API Integration**: [`docs/04-Backend/README.md`](../docs/04-Backend/README.md) - Critical API configuration
+5. **Security**: [`docs/05-Security/README.md`](../docs/05-Security/README.md) - Auth patterns
+6. **Features**: [`docs/03-Frontend/README.md`](../docs/03-Frontend/README.md) - Feature specifications
 
 ## 🧠 Core Development Mindset
 

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.tmp/
+.temp/
+.cache/
+.vscode/
+.git/
+*.log
+*.lock
+.env*
+.cursor/sessions/
+.cursor/cache/
+.cursor/tmp/

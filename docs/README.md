@@ -2,28 +2,30 @@
 
 Welcome to the comprehensive documentation for the Modular Web Application Platform (MWAP) Client. This documentation provides developers, architects, and testers with all the information needed to understand, develop, and maintain the MWAP frontend application.
 
+> 📖 **Quick Navigation**: See [DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md) in the root directory for a complete table of contents and quick reference guide.
+
 ## 📚 Documentation Structure
 
 ### Core Documentation
-- **[Architecture & Solution Design](./architecture/README.md)** - System architecture, design patterns, and technical decisions
-- **[Developer Guidelines](./development/README.md)** - Coding standards, conventions, and best practices
-- **[API Integration](./api/README.md)** - Complete API documentation including Vite configuration
-- **[Security & Authentication](./security/README.md)** - Authentication flows, security measures, and RBAC
-- **[Features](./features/README.md)** - Detailed description of each application feature
-- **[Components & UI Patterns](./components/README.md)** - Component structure, UI patterns, and file organization
-- **[Changelog & Status](./changelog/README.md)** - Feature status, migration history, and release notes
+- **[Architecture & Solution Design](./02-Architecture/README.md)** - System architecture, design patterns, and technical decisions
+- **[Developer Guidelines](./06-Guidelines/development-guide.md)** - Coding standards, conventions, and best practices
+- **[API Integration](./04-Backend/README.md)** - Complete API documentation including Vite configuration
+- **[Security & Authentication](./05-Security/README.md)** - Authentication flows, security measures, and RBAC
+- **[Features](./03-Frontend/README.md)** - Detailed description of each application feature
+- **[Components & UI Patterns](./06-Guidelines/components.md)** - Component structure, UI patterns, and file organization
+- **[Changelog & Status](./00-Changelog/README.md)** - Feature status, migration history, and release notes
 
 ### Quick Reference
-- **[Getting Started](./getting-started.md)** - Setup and initial development guide
-- **[Troubleshooting](./troubleshooting.md)** - Common issues and solutions
-- **[Contributing](./contributing.md)** - Guidelines for contributing to the project
+- **[Getting Started](./01-Getting-Started/getting-started.md)** - Setup and initial development guide
+- **[Troubleshooting](./06-Guidelines/troubleshooting.md)** - Common issues and solutions
+- **[Contributing](./08-Contribution/contributing.md)** - Guidelines for contributing to the project
 
 ## 🚀 Quick Start
 
-1. **New Developers**: Start with [Getting Started](./getting-started.md) and [Architecture Overview](./architecture/README.md)
-2. **API Integration**: Review [API Configuration](./api/configuration.md) for critical setup requirements
-3. **Feature Development**: Check [Developer Guidelines](./development/README.md) and [Component Patterns](./components/README.md)
-4. **Security Implementation**: Understand [Authentication Flow](./security/authentication.md) and [RBAC](./security/rbac.md)
+1. **New Developers**: Start with [Getting Started](./01-Getting-Started/getting-started.md) and [Architecture Overview](./02-Architecture/README.md)
+2. **API Integration**: Review [API Quick Reference](./04-Backend/api-quickreference.md) for critical setup requirements
+3. **Feature Development**: Check [Developer Guidelines](./06-Guidelines/development-guide.md) and [Component Patterns](./06-Guidelines/components.md)
+4. **Security Implementation**: Understand [Authentication Flow](./05-Security/authentication.md) and [RBAC](./05-Security/rbac.md)
 
 ## 🎯 Target Audiences
 
@@ -62,6 +64,6 @@ This documentation is actively maintained and updated with each significant chan
 
 ---
 
-**Last Updated**: 2025-07-15  
-**Version**: 1.0.0  
+**Last Updated**: 2025-10-04  
+**Version**: 2.0.0 (Sprint 2 Documentation Alignment)  
 **Maintainer**: MWAP Development Team

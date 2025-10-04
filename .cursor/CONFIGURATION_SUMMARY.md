@@ -84,11 +84,11 @@ This directory contains a comprehensive Cursor AI IDE configuration for the **MW
 The configuration seamlessly integrates with the project's comprehensive documentation:
 
 - **[`../DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md)** - Central documentation hub
-- **[`../docs/architecture/README.md`](../docs/architecture/README.md)** - System architecture
-- **[`../docs/development/README.md`](../docs/development/README.md)** - Coding standards
-- **[`../docs/api/README.md`](../docs/api/README.md)** - API integration (CRITICAL)
-- **[`../docs/security/README.md`](../docs/security/README.md)** - Security patterns
-- **[`../docs/features/README.md`](../docs/features/README.md)** - Feature specifications
+- **[`../docs/02-Architecture/README.md`](../docs/02-Architecture/README.md)** - System architecture
+- **[`../docs/06-Guidelines/development-guide.md`](../docs/06-Guidelines/development-guide.md)** - Coding standards
+- **[`../docs/04-Backend/README.md`](../docs/04-Backend/README.md)** - API integration (CRITICAL)
+- **[`../docs/05-Security/README.md`](../docs/05-Security/README.md)** - Security patterns
+- **[`../docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)** - Feature specifications
 
 ### Documentation-First Approach
 Every configuration file references and builds upon the existing documentation, ensuring:
@@ -100,7 +100,7 @@ Every configuration file references and builds upon the existing documentation, 
 ## 🎯 Usage Patterns
 
 ### For New Features
-1. **Plan**: Review [`../docs/features/README.md`](../docs/features/README.md)
+1. **Plan**: Review [`../docs/03-Frontend/README.md`](../docs/03-Frontend/README.md)
 2. **Template**: Use [`templates.md`](./templates.md) for structure
 3. **Implement**: Follow [`instructions.md`](./instructions.md)
 4. **Validate**: Check against [`cursor-rules.md`](./cursor-rules.md)
