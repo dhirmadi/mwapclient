@@ -10,6 +10,10 @@ MWAP Client is built to support multi-tenant organizations with complex project 
 - **Tenant Owners**: Manage their organization's projects, cloud integrations, and team members
 - **Project Members**: Access and work with project resources based on their assigned roles
 
+**Current Status:** ✅ **Production Ready** (Version 1.0.0 - October 2025)
+
+All core features are implemented, tested, and optimized for production deployment. See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
+
 ## 🔑 Key Features
 
 ### Authentication & Authorization
@@ -66,8 +70,9 @@ MWAP Client is built to support multi-tenant organizations with complex project 
 
 ### Prerequisites
 
-- Node.js (v16+)
-- npm or yarn
+- **Node.js:** v18+ (LTS recommended)
+- **npm:** v9+ (or yarn/pnpm)
+- **Auth0 Account:** For authentication setup
 
 ### Installation
 
@@ -92,7 +97,15 @@ yarn install
 cp .env.example .env
 ```
 
-4. Update the `.env` file with your Auth0 credentials and API URL.
+4. Update the `.env` file with your Auth0 credentials:
+
+```bash
+VITE_AUTH0_DOMAIN=your-domain.auth0.com
+VITE_AUTH0_CLIENT_ID=your-client-id
+VITE_AUTH0_AUDIENCE=https://your-api-audience
+```
+
+See [Environment Configuration](./docs/07-Deployment/deployment-guide.md#environment-configuration) for detailed setup.
 
 ### ⚠️ Critical API Configuration
 
@@ -114,6 +127,16 @@ npm run dev
 yarn dev
 ```
 
+### Testing
+
+Run the test suite:
+
+```bash
+npm test              # Run tests in watch mode
+npm run test:run      # Run tests once
+npm run test:coverage # Run with coverage report
+```
+
 ### Building for Production
 
 Build the application for production:
@@ -123,6 +146,8 @@ npm run build
 # or
 yarn build
 ```
+
+See [Deployment Guide](./docs/07-Deployment/deployment-guide.md) for production deployment instructions.
 
 ## 📂 Project Structure
 
