@@ -196,7 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Fetch user roles from API
       const response = await api.get('/users/me/roles');
-      const userRoles = handleApiResponse<UserRolesResponse>(response, false) as UserRolesResponse;
+      const result = handleApiResponse<UserRolesResponse>(response, false);
+      const userRoles = result.data as UserRolesResponse;
       
       // Check if request was aborted
       if (abortController.current?.signal.aborted) {

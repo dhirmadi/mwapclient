@@ -5,6 +5,7 @@ import { IconCheck, IconX, IconAlertCircle, IconRefresh } from '@tabler/icons-re
 import { parseOAuthState, getOAuthSuccessUri, getOAuthErrorUri } from '../shared/utils';
 import { validateOAuthCallback } from '../features/integrations/utils/oauthUtils';
 import api from '../shared/utils/api';
+import { handleApiResponseSafe } from '../shared/utils/apiResponse';
 import { notifications } from '@mantine/notifications';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../core/context/AuthContext';
@@ -16,7 +17,6 @@ const OAuthCallbackPage: React.FC = () => {
   const { pathname } = location;
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState<string>('Processing...');
-  const { getAccessTokenSilently } = useAuth(); // If Auth0, for refresh
 
   useEffect(() => {
     if (searchParams.get('code')) {
@@ -27,7 +27,7 @@ const OAuthCallbackPage: React.FC = () => {
         if (validation.isValid && validation.state) {
           try {
             const response = await api.post(`/oauth/tenants/${validation.state.tenantId}/integrations/${validation.state.integrationId}/complete`, { code: validation.code });
-            const result = handleApiResponse(response);
+            const result = handleApiResponseSafe(response);
             if (result.success) {
               setStatus('success');
               setMessage('Integration connected successfully!');
@@ -42,11 +42,12 @@ const OAuthCallbackPage: React.FC = () => {
               throw new Error(result.error || 'Exchange failed');
             }
           } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to complete OAuth';
             setStatus('error');
-            setMessage(error.message || 'Failed to complete OAuth');
+            setMessage(errorMessage);
             notifications.show({ title: 'Error', message: 'Exchange failed', color: 'red' });
             if (window.opener) {
-              window.opener.postMessage({ type: 'oauth_error', description: error.message }, window.location.origin);
+              window.opener.postMessage({ type: 'oauth_error', description: errorMessage }, window.location.origin);
               setTimeout(() => window.close(), 5000);
             }
           }

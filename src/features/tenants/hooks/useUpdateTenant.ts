@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { handleApiResponse } from '../../../shared/utils/dataTransform';
+import { handleApiResponse } from '../../../shared/utils/apiResponse';
 import { Tenant } from '../types';
 
 /**

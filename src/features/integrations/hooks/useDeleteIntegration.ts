@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { handleDeleteResponse, handleApiResponse } from '../../../shared/utils/dataTransform';
+import { handleDeleteResponse, handleApiResponse } from '../../../shared/utils/apiResponse';
 import { useAuth } from '../../../core/context/AuthContext';
 import { Integration } from '../types';
 import { notifications } from '@mantine/notifications';

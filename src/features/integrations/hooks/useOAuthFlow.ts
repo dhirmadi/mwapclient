@@ -18,7 +18,7 @@ import {
 } from '../utils/oauthUtils';
 import { notifications } from '@mantine/notifications';
 import api from '../../../shared/utils/api';
-import { handleApiResponse } from '../../../shared/utils/dataTransform';
+import { handleApiResponse } from '../../../shared/utils/apiResponse';
 import { CloudProvider } from '../../cloud-providers/types';
 
 /**
@@ -75,8 +75,8 @@ export const useOAuthFlow = () => {
         if (createError.response?.status === 409) {
           const existingResponse = await api.get(`/tenants/${currentTenant}/integrations?providerId=${providerId}`);
           const existingList = handleApiResponse<Integration[]>(existingResponse, true);
-          if (existingList.success && existingList.data && existingList.data.length > 0) {
-            integration = existingList.data[0];
+          if (existingList && existingList.length > 0) {
+            integration = existingList[0];
             await updateIntegration.mutateAsync({ integrationId: integration.id, data: { metadata: { ...integration.metadata, ...pkceMetadata } } });
           } else {
             throw new Error('Failed to recover');
@@ -88,8 +88,8 @@ export const useOAuthFlow = () => {
       setFlowState(prev => ({ ...prev, step: 'authorization', integrationId: integration.id, progress: 30 }));
       const initiateResponse = await api.post(`/oauth/tenants/${currentTenant}/integrations/${integration.id}/initiate`, { redirectUri: pkceMetadata.redirect_uri });
       const initiateResult = handleApiResponse<{authorizationUrl: string}>(initiateResponse);
-      if (!initiateResult.success || !initiateResult.data?.authorizationUrl) throw new Error(initiateResult.error || 'Initiation failed');
-      const authUrl = initiateResult.data.authorizationUrl;
+      if (!initiateResult?.authorizationUrl) throw new Error('Initiation failed');
+      const authUrl = initiateResult.authorizationUrl;
       setFlowState(prev => ({ ...prev, progress: 50 }));
       return { success: true, authUrl };
     } catch (error: any) {

@@ -216,11 +216,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   // Handle errors separately (onError is deprecated in React Query v5)
-  if (error) {
-    console.error('Failed to fetch user roles:', error);
+  if (rolesError) {
+    console.error('Failed to fetch user roles:', rolesError);
     if (import.meta.env.DEV) {
       console.group('🚨 Role Fetch Error');
-      console.error(error);
+      console.error(rolesError);
       console.groupEnd();
     }
   }

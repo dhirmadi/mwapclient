@@ -17,7 +17,7 @@ import {
 import { HEALTH_CHECK_CONFIG } from '../utils/constants';
 import { notifications } from '@mantine/notifications';
 import api from '../../../shared/utils/api';
-import { handleApiResponse } from '../../../shared/utils/dataTransform';
+import { handleApiResponse } from '../../../shared/utils/apiResponse';
 
 /**
  * Hook for comprehensive token management and health monitoring
