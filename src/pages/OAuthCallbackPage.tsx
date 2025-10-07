@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Container, Paper, Text, Loader, Alert, Stack, Button, Progress, Group } from '@mantine/core';
 import { IconCheck, IconX, IconAlertCircle, IconRefresh } from '@tabler/icons-react';
-import { parseOAuthState, getOAuthSuccessUri, getOAuthErrorUri } from '../shared/utils';
-import { validateOAuthCallback } from '../features/integrations/utils/oauthUtils';
+import { parseOAuthState } from '../shared/utils';
 import api from '../shared/utils/api';
 import { handleApiResponseSafe } from '../shared/utils/apiResponse';
 import { notifications } from '@mantine/notifications';
@@ -17,47 +16,10 @@ const OAuthCallbackPage: React.FC = () => {
   const { pathname } = location;
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState<string>('Processing...');
+  const [cleanupBusy, setCleanupBusy] = useState<boolean>(false);
 
   useEffect(() => {
-    if (searchParams.get('code')) {
-      const handleCodeExchange = async () => {
-        // Optional: Refresh token
-        // await getAccessTokenSilently();
-        const validation = validateOAuthCallback(searchParams);
-        if (validation.isValid && validation.state) {
-          try {
-            const response = await api.post(`/oauth/tenants/${validation.state.tenantId}/integrations/${validation.state.integrationId}/complete`, { code: validation.code });
-            const result = handleApiResponseSafe(response);
-            if (result.success) {
-              setStatus('success');
-              setMessage('Integration connected successfully!');
-              notifications.show({ title: 'Success', message: 'Tokens exchanged', color: 'green' });
-              if (window.opener) {
-                window.opener.postMessage({ type: 'oauth_success', integrationId: validation.state.integrationId }, window.location.origin);
-                setTimeout(() => window.close(), 3000);
-              } else {
-                setTimeout(() => navigate('/integrations'), 2000);
-              }
-            } else {
-              throw new Error(result.error || 'Exchange failed');
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to complete OAuth';
-            setStatus('error');
-            setMessage(errorMessage);
-            notifications.show({ title: 'Error', message: 'Exchange failed', color: 'red' });
-            if (window.opener) {
-              window.opener.postMessage({ type: 'oauth_error', description: errorMessage }, window.location.origin);
-              setTimeout(() => window.close(), 5000);
-            }
-          }
-        } else {
-          setStatus('error');
-          setMessage(validation.errorMessage || 'Invalid callback parameters');
-        }
-      };
-      handleCodeExchange();
-    } else if (pathname === '/oauth/success') {
+    if (pathname === '/oauth/success') {
       handleOAuthSuccess(searchParams);
     } else if (pathname === '/oauth/error') {
       handleOAuthError(searchParams);
@@ -80,7 +42,7 @@ const OAuthCallbackPage: React.FC = () => {
     notifications.show({ title: 'Success', message: 'Integration connected', color: 'green' });
     if (window.opener) {
       window.opener.postMessage({ type: 'oauth_success', integrationId }, window.location.origin);
-      setTimeout(() => window.close(), 3000);
+      setTimeout(() => window.close(), 2000);
     } else {
       setTimeout(() => navigate('/integrations'), 2000);
     }
@@ -99,6 +61,53 @@ const OAuthCallbackPage: React.FC = () => {
     }
   };
 
+  const handleCleanupStale = async () => {
+    if (cleanupBusy) return;
+    setCleanupBusy(true);
+    try {
+      // Prefer state from URL; fallback to localStorage pending context
+      const stateParam = searchParams.get('state');
+      let tenantId: string | null = null;
+      let integrationId: string | null = null;
+      if (stateParam) {
+        const state = parseOAuthState(stateParam);
+        tenantId = state?.tenantId || null;
+        integrationId = state?.integrationId || null;
+      }
+      if (!tenantId || !integrationId) {
+        try {
+          const pendingRaw = localStorage.getItem('mwap_oauth_pending');
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            tenantId = tenantId || pending?.tenantId || null;
+            integrationId = integrationId || pending?.integrationId || null;
+          }
+        } catch {}
+      }
+      if (!tenantId || !integrationId) {
+        notifications.show({ title: 'Cleanup Failed', message: 'Missing tenant or integration ID', color: 'red' });
+        setCleanupBusy(false);
+        return;
+      }
+      const resp = await api.delete(`/tenants/${tenantId}/integrations/${integrationId}`);
+      const res = handleApiResponseSafe(resp);
+      if (res.success) {
+        try { localStorage.removeItem('mwap_oauth_pending'); } catch {}
+        notifications.show({ title: 'Removed', message: 'Stale integration removed', color: 'green' });
+        if (window.opener) {
+          window.opener.postMessage({ type: 'oauth_cleanup', integrationId }, window.location.origin);
+        }
+        setTimeout(() => window.close(), 1000);
+      } else {
+        notifications.show({ title: 'Cleanup Failed', message: res.error || 'Unable to remove', color: 'red' });
+      }
+    } catch (e: any) {
+      notifications.show({ title: 'Cleanup Failed', message: e?.message || 'Unable to remove', color: 'red' });
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
+
   return (
     <Container size="sm" py="xl">
       <Paper withBorder p="xl" radius="md">
@@ -109,7 +118,10 @@ const OAuthCallbackPage: React.FC = () => {
           <Text size="lg" fw={500}>{status === 'success' ? 'Success' : status === 'error' ? 'Error' : 'Processing'}</Text>
           <Text c="dimmed">{message}</Text>
           {status !== 'processing' && (
-            <Button onClick={() => navigate('/integrations')}>Go to Integrations</Button>
+            <Group>
+              <Button onClick={() => navigate('/integrations')}>Go to Integrations</Button>
+              {/* Backend-driven flow: cleanup handled in opener UI */}
+            </Group>
           )}
         </Stack>
       </Paper>

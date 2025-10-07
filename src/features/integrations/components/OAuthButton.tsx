@@ -26,7 +26,6 @@ import {
 } from '@tabler/icons-react';
 import { CloudProvider } from '../../cloud-providers/types';
 import { useOAuthFlow, verifyIntegration } from '../hooks';
-import { buildAuthorizationUrl } from '../utils/oauthUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '../../../core/context/AuthContext';
@@ -58,6 +57,8 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
   showSecurityInfo = false,
 }) => {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showCleanupModal, setShowCleanupModal] = useState(false);
+  const [cleanupBusy, setCleanupBusy] = useState(false);
   const {
     flowState,
     initiateOAuth,
@@ -73,10 +74,26 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     const allowedOrigins = [
       'https://mwapps.shibari.photo',
       'https://mwapss.shibari.photo',
-      'http://localhost:3001'  // Adjust if backend dev port differs
+      'http://localhost:3001', // Backend dev proxy
+      'http://localhost:5173', // Frontend dev
+      'https://localhost:5173', // Frontend dev (https)
     ];
     const handleMessage = async (event: MessageEvent) => {
       if (!allowedOrigins.includes(event.origin)) return;
+      if (event.data.type === 'oauth_cleanup') {
+        // Opener requested to cleanup and refresh integrations
+        try {
+          const pendingRaw = localStorage.getItem('mwap_oauth_pending');
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            localStorage.removeItem('mwap_oauth_pending');
+            if (pending?.tenantId) {
+              queryClient.invalidateQueries({ queryKey: ['integrations', pending.tenantId] });
+            }
+          }
+        } catch {}
+        return;
+      }
       if (event.data.type === 'oauth_success') {
         if (!currentTenant) {
           notifications.show({ title: 'Error', message: 'No current tenant', color: 'red' });
@@ -95,6 +112,8 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
       } else if (event.data.type === 'oauth_error') {
         notifications.show({ title: 'Integration Failed', message: event.data.description || 'OAuth failed', color: 'red' });
         onError?.(event.data.description);
+        // Offer cleanup flow in opener when popup is cross-origin
+        setShowCleanupModal(true);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -119,6 +138,94 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
           window.location.href = result.authUrl;
           return;
         }
+        // Monitor the popup for same-origin error page and inject cleanup UI
+        const monitorIntervalMs = 300;
+        const monitor = setInterval(() => {
+          try {
+            if (popup.closed) {
+              clearInterval(monitor);
+              return;
+            }
+            const href = popup.location.href;
+            if (href && href.startsWith(window.location.origin + '/oauth/error')) {
+              clearInterval(monitor);
+              const url = new URL(href);
+              const msg = url.searchParams.get('message') || 'OAuth failed';
+              const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OAuth Error</title>
+    <style>
+      body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; background: #fff; color: #111; }
+      .card { max-width: 520px; margin: 10vh auto; border: 1px solid #eee; border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+      .title { font-size: 18px; font-weight: 600; margin: 0 0 8px; }
+      .desc { color: #666; margin: 0 0 16px; }
+      .row { display: flex; gap: 8px; }
+      .btn { cursor: pointer; border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 600; }
+      .btn-primary { background: #fa5252; color: #fff; }
+      .btn-secondary { background: #f1f3f5; color: #111; }
+      .note { font-size: 12px; color: #888; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p class="title">Authorization failed</p>
+      <p class="desc">${msg}</p>
+      <div class="row">
+        <button class="btn btn-primary" id="cleanupBtn">Remove stale integration</button>
+        <button class="btn btn-secondary" id="closeBtn">Close</button>
+      </div>
+      <p class="note">You can retry after cleanup.</p>
+    </div>
+    <script>
+      (function(){
+        const q = (k) => document.querySelector(k);
+        const showMsg = (t, c) => {
+          const el = document.createElement('div');
+          el.textContent = t;
+          el.style.marginTop = '12px';
+          el.style.color = c || '#111';
+          document.querySelector('.card').appendChild(el);
+        };
+        q('#closeBtn').onclick = function(){ window.close(); };
+        q('#cleanupBtn').onclick = async function(){
+          try {
+            const pendingRaw = localStorage.getItem('mwap_oauth_pending');
+            if (!pendingRaw) { showMsg('No pending integration found', '#c92a2a'); return; }
+            const pending = JSON.parse(pendingRaw);
+            if (!pending || !pending.tenantId || !pending.integrationId) { showMsg('Missing tenant or integration ID', '#c92a2a'); return; }
+            const token = localStorage.getItem('auth_token');
+            const res = await fetch('/api/tenants/' + pending.tenantId + '/integrations/' + pending.integrationId, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json', 'Authorization': token ? ('Bearer ' + token) : undefined }
+            });
+            if (!res.ok) { showMsg('Cleanup failed (' + res.status + ')', '#c92a2a'); return; }
+            try { localStorage.removeItem('mwap_oauth_pending'); } catch (e) {}
+            try { window.opener && window.opener.postMessage({ type: 'oauth_cleanup', integrationId: pending.integrationId }, window.location.origin); } catch (e) {}
+            showMsg('Removed. Closing...', '#2f9e44');
+            setTimeout(function(){ window.close(); }, 700);
+          } catch (e) {
+            showMsg('Cleanup error', '#c92a2a');
+          }
+        };
+      })();
+    </script>
+  </body>
+ </html>`;
+              try {
+                popup.document.open();
+                popup.document.write(html);
+                popup.document.close();
+              } catch (e) {
+                // If writing fails, just close the monitor and let user close popup
+              }
+            }
+          } catch {
+            // Ignore cross-origin errors until it returns to our origin
+          }
+        }, monitorIntervalMs);
         // Add timeout for auto-close failure
         const maxWait = 30000; // 30s
         const timer = setTimeout(() => {
@@ -309,6 +416,34 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     return descriptions[scope] || 'Access to your account';
   };
 
+  const handleCleanup = async () => {
+    if (cleanupBusy) return;
+    setCleanupBusy(true);
+    try {
+      const pendingRaw = localStorage.getItem('mwap_oauth_pending');
+      if (!pendingRaw) {
+        notifications.show({ title: 'Cleanup Failed', message: 'No pending integration found', color: 'red' });
+        setCleanupBusy(false);
+        return;
+      }
+      const pending = JSON.parse(pendingRaw);
+      if (!pending?.tenantId || !pending?.integrationId) {
+        notifications.show({ title: 'Cleanup Failed', message: 'Missing tenant or integration ID', color: 'red' });
+        setCleanupBusy(false);
+        return;
+      }
+      await api.delete(`/tenants/${pending.tenantId}/integrations/${pending.integrationId}`);
+      try { localStorage.removeItem('mwap_oauth_pending'); } catch {}
+      queryClient.invalidateQueries({ queryKey: ['integrations', pending.tenantId] });
+      notifications.show({ title: 'Removed', message: 'Stale integration removed', color: 'green' });
+      setShowCleanupModal(false);
+    } catch (e: any) {
+      notifications.show({ title: 'Cleanup Failed', message: e?.message || 'Unable to remove', color: 'red' });
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
+
   return (
     <>
       <Stack gap="xs">
@@ -402,6 +537,22 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
 
       {/* Security Information Modal */}
       {renderSecurityModal()}
+
+      {/* Cleanup Modal shown on oauth_error */}
+      <Modal opened={showCleanupModal} onClose={() => setShowCleanupModal(false)} title={
+        <Group gap="sm">
+          <IconAlertCircle size={20} color="var(--mantine-color-red-6)" />
+          <Text fw={500}>Authorization failed</Text>
+        </Group>
+      }>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">Remove the stale integration record and try again.</Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setShowCleanupModal(false)}>Cancel</Button>
+            <Button color="red" loading={cleanupBusy} onClick={handleCleanup}>Remove stale integration</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 };

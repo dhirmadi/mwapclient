@@ -11,11 +11,7 @@ import {
   Integration,
   IntegrationCreateRequest,
 } from '../types';
-import { 
-  getOAuthCallbackUri,
-  validatePKCEParameters,
-  generatePKCEChallenge
-} from '../utils/oauthUtils';
+// Backend-driven OAuth: no client-side PKCE or redirect handling
 import { notifications } from '@mantine/notifications';
 import api from '../../../shared/utils/api';
 import { handleApiResponse } from '../../../shared/utils/apiResponse';
@@ -47,46 +43,28 @@ export const useOAuthFlow = () => {
     if (!provider) return { success: false, error: 'Provider not found' };
     try {
       setFlowState({ step: 'initialization', isLoading: true, progress: 10 });
-      // Generate PKCE
-      const pkce = await generatePKCEChallenge();
-      const pkceMetadata = {
-        oauth_code: null,
-        redirect_uri: getOAuthCallbackUri(),
-        code_verifier: pkce.codeVerifier,
-        code_challenge: pkce.codeChallenge,
-        code_challenge_method: pkce.codeChallengeMethod,
-      };
-      const validation = validatePKCEParameters(pkceMetadata);
-      if (!validation.isValid) throw new Error(`PKCE invalid: ${validation.errors.join(', ')}`);
-      // Query existing
+      // Backend-driven: no PKCE generation or redirect_uri in metadata
+      // Create integration
       let integration: Integration;
       const integrationRequest: IntegrationCreateRequest = {
         providerId,
         metadata: {
           displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
           description: (metadata?.description as string) || `Integration with ${provider.name}`,
-          ...metadata,
-          ...pkceMetadata
+          ...metadata
         },
       };
       try {
         integration = await createIntegration.mutateAsync(integrationRequest);
       } catch (createError: any) {
         if (createError.response?.status === 409) {
-          const existingResponse = await api.get(`/tenants/${currentTenant}/integrations?providerId=${providerId}`);
-          const existingList = handleApiResponse<Integration[]>(existingResponse, true);
-          if (existingList && existingList.length > 0) {
-            integration = existingList[0];
-            await updateIntegration.mutateAsync({ integrationId: integration.id, data: { metadata: { ...integration.metadata, ...pkceMetadata } } });
-          } else {
-            throw new Error('Failed to recover');
-          }
-        } else {
-          throw createError;
+          throw new Error('Integration already exists for this provider');
         }
+        throw createError;
       }
+
       setFlowState(prev => ({ ...prev, step: 'authorization', integrationId: integration.id, progress: 30 }));
-      const initiateResponse = await api.post(`/oauth/tenants/${currentTenant}/integrations/${integration.id}/initiate`, { redirectUri: pkceMetadata.redirect_uri });
+      const initiateResponse = await api.post(`/oauth/tenants/${currentTenant}/integrations/${integration.id}/initiate`, {});
       const initiateResult = handleApiResponse<{authorizationUrl: string}>(initiateResponse);
       if (!initiateResult?.authorizationUrl) throw new Error('Initiation failed');
       const authUrl = initiateResult.authorizationUrl;
