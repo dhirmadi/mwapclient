@@ -34,6 +34,7 @@ import { useNavigate } from 'react-router-dom';
 interface OAuthButtonProps {
   provider: CloudProvider;
   metadata?: Record<string, unknown>;
+  integrationId?: string;
   onSuccess?: (integrationId: string) => void;
   onError?: (error: string) => void;
   disabled?: boolean;
@@ -47,6 +48,7 @@ interface OAuthButtonProps {
 export const OAuthButton: React.FC<OAuthButtonProps> = ({
   provider,
   metadata,
+  integrationId,
   onSuccess,
   onError,
   disabled = false,
@@ -123,7 +125,7 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     const handleOAuthClick = async () => {
       if (isLoading) return;  // Prevent multiple clicks
     try {
-      const result = await initiateOAuth(provider.id, metadata);
+      const result = await initiateOAuth(provider.id, metadata, integrationId);
       console.log('OAuth initiation result:', result);
       if (result.success && result.authUrl) {
         console.log('Attempting to open popup with URL:', result.authUrl);

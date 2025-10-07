@@ -37,30 +37,38 @@ export const useOAuthFlow = () => {
   /**
    * Initiate OAuth flow for a cloud provider
    */
-  const initiateOAuth = useCallback(async (providerId: string, metadata?: Record<string, unknown>): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
+  const initiateOAuth = useCallback(async (
+    providerId: string,
+    metadata?: Record<string, unknown>,
+    existingIntegrationId?: string
+  ): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
     if (!currentTenant || !user?.sub) return { success: false, error: 'Invalid tenant or user' };
     const provider: CloudProvider | undefined = (cloudProviders as CloudProvider[] | undefined)?.find((p: CloudProvider) => p.id === providerId);
     if (!provider) return { success: false, error: 'Provider not found' };
     try {
       setFlowState({ step: 'initialization', isLoading: true, progress: 10 });
-      // Backend-driven: no PKCE generation or redirect_uri in metadata
-      // Create integration
-      let integration: Integration;
-      const integrationRequest: IntegrationCreateRequest = {
-        providerId,
-        metadata: {
-          displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
-          description: (metadata?.description as string) || `Integration with ${provider.name}`,
-          ...metadata
-        },
-      };
-      try {
-        integration = await createIntegration.mutateAsync(integrationRequest);
-      } catch (createError: any) {
-        if (createError.response?.status === 409) {
-          throw new Error('Integration already exists for this provider');
+      // Backend-driven: if an integration already exists (created in previous step), reuse it
+      let integration: Integration | { id: string };
+      if (existingIntegrationId) {
+        integration = { id: existingIntegrationId } as { id: string };
+      } else {
+        // Create integration if not provided
+        const integrationRequest: IntegrationCreateRequest = {
+          providerId,
+          metadata: {
+            displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
+            description: (metadata?.description as string) || `Integration with ${provider.name}`,
+            ...metadata
+          },
+        };
+        try {
+          integration = await createIntegration.mutateAsync(integrationRequest);
+        } catch (createError: any) {
+          if (createError.response?.status === 409) {
+            throw new Error('Integration already exists for this provider');
+          }
+          throw createError;
         }
-        throw createError;
       }
 
       setFlowState(prev => ({ ...prev, step: 'authorization', integrationId: integration.id, progress: 30 }));

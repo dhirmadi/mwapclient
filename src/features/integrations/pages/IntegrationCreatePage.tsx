@@ -61,6 +61,7 @@ const IntegrationCreatePage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedProvider, setSelectedProvider] = useState<CloudProvider | null>(null);
   const [showOAuthInfo, setShowOAuthInfo] = useState(false);
+  const [createdIntegrationId, setCreatedIntegrationId] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
 
   // Hooks
@@ -170,6 +171,7 @@ const IntegrationCreatePage: React.FC = () => {
 
     createIntegration(integrationData, {
       onSuccess: (integration) => {
+        setCreatedIntegrationId(integration.id);
         // Move to OAuth step
         setActiveStep(2);
         notifications.show({
@@ -379,6 +381,7 @@ const IntegrationCreatePage: React.FC = () => {
                   <OAuthButton
                     provider={selectedProvider}
                     metadata={form.values}
+                    integrationId={createdIntegrationId || undefined}
                     onSuccess={handleOAuthSuccess}
                     onError={handleOAuthError}
                     showProgress={true}
