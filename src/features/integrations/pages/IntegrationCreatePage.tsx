@@ -37,7 +37,7 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useCloudProviders } from '../../cloud-providers/hooks';
-import { useCreateIntegration, useOAuthFlow } from '../hooks';
+import { useOAuthFlow } from '../hooks';
 import { ProviderSelector, OAuthButton } from '../components';
 import { CloudProvider } from '../../cloud-providers/types';
 import { IntegrationCreateRequest } from '../types';
@@ -65,7 +65,6 @@ const IntegrationCreatePage: React.FC = () => {
 
   // Hooks
   const { data: cloudProviders, isLoading: isLoadingProviders } = useCloudProviders();
-  const { mutate: createIntegration, isPending: isCreating } = useCreateIntegration();
   const { flowState, resetFlow } = useOAuthFlow();
 
   // Form management
@@ -157,35 +156,8 @@ const IntegrationCreatePage: React.FC = () => {
 
   const handleFormSubmit = (values: IntegrationFormData) => {
     if (!selectedProvider || !roles?.tenantId) return;
-
-    const integrationData: IntegrationCreateRequest = {
-
-      providerId: selectedProvider.id,
-      metadata: {
-        displayName: values.displayName,
-        description: values.description,
-        settings: values.settings,
-      },
-    };
-
-    createIntegration(integrationData, {
-      onSuccess: (integration) => {
-        // Move to OAuth step
-        setActiveStep(2);
-        notifications.show({
-          title: 'Integration Created',
-          message: 'Now authorize access to your cloud provider account.',
-          color: 'blue',
-        });
-      },
-      onError: (error) => {
-        notifications.show({
-          title: 'Failed to Create Integration',
-          message: error.message || 'Please try again.',
-          color: 'red',
-        });
-      },
-    });
+    // Defer integration creation to Step 3 (authorize). Only proceed to next step if form is valid.
+    setActiveStep(2);
   };
 
   const handleOAuthSuccess = (integrationId: string) => {
@@ -522,9 +494,8 @@ const IntegrationCreatePage: React.FC = () => {
             rightSection={<IconArrowRight size={16} />}
             onClick={activeStep === 1 ? () => form.onSubmit(handleFormSubmit)() : handleNextStep}
             disabled={!canProceed()}
-            loading={isCreating}
           >
-            {activeStep === 1 ? 'Create Integration' : 'Next'}
+            {activeStep === 1 ? 'Continue' : 'Next'}
           </Button>
         )}
       </Group>

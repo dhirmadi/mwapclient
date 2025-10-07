@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, handleApiResponseWithTransform as handleApiResponse, handleDeleteResponse } from '../../../shared/utils';
+import api from '../../../shared/utils/api';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/apiResponse';
 import { Project, ProjectCreate, ProjectUpdate, ProjectMember } from '../types';
 import { useAuth } from '../../../core/context/AuthContext';
 

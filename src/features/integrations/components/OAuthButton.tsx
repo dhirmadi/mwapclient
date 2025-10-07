@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Button,
   Group,
@@ -26,7 +26,6 @@ import {
 } from '@tabler/icons-react';
 import { CloudProvider } from '../../cloud-providers/types';
 import { useOAuthFlow, verifyIntegration } from '../hooks';
-import { buildAuthorizationUrl } from '../utils/oauthUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '../../../core/context/AuthContext';
@@ -35,6 +34,7 @@ import { useNavigate } from 'react-router-dom';
 interface OAuthButtonProps {
   provider: CloudProvider;
   metadata?: Record<string, unknown>;
+  integrationId?: string;
   onSuccess?: (integrationId: string) => void;
   onError?: (error: string) => void;
   disabled?: boolean;
@@ -48,6 +48,7 @@ interface OAuthButtonProps {
 export const OAuthButton: React.FC<OAuthButtonProps> = ({
   provider,
   metadata,
+  integrationId,
   onSuccess,
   onError,
   disabled = false,
@@ -58,6 +59,8 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
   showSecurityInfo = false,
 }) => {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showCleanupModal, setShowCleanupModal] = useState(false);
+  const [cleanupBusy, setCleanupBusy] = useState(false);
   const {
     flowState,
     initiateOAuth,
@@ -68,83 +71,179 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
   const queryClient = useQueryClient();
   const { currentTenant } = useAuth();
   const navigate = useNavigate();
+  const popupRef = useRef<Window | null>(null);
 
   useEffect(() => {
     const allowedOrigins = [
-      'https://mwapps.shibari.photo',
-      'https://mwapss.shibari.photo',
-      'http://localhost:3001'  // Adjust if backend dev port differs
+      window.location.origin, // Current origin (could be localhost or production)
+      'https://mwapps.shibari.photo', // Frontend production
+      'https://mwapss.shibari.photo', // Backend production
+      'http://localhost:3001', // Backend dev
+      'http://localhost:5173', // Frontend dev
+      'https://localhost:5173', // Frontend dev (https)
     ];
-    const handleMessage = async (event: MessageEvent) => {
-      if (!allowedOrigins.includes(event.origin)) return;
-      if (event.data.type === 'oauth_success') {
-        if (!currentTenant) {
-          notifications.show({ title: 'Error', message: 'No current tenant', color: 'red' });
-          return;
+    
+    // Poll localStorage for OAuth result (fallback for when postMessage fails)
+    const checkLocalStorageForResult = async () => {
+      try {
+        const resultRaw = localStorage.getItem('mwap_oauth_result');
+        if (!resultRaw) return;
+        
+        const result = JSON.parse(resultRaw);
+        console.log('[Opener] Found OAuth result in localStorage:', result);
+        
+        // Clear it immediately to prevent re-processing
+        localStorage.removeItem('mwap_oauth_result');
+        
+        // Process as if it came from postMessage
+        if (result.type === 'oauth_success') {
+          await handleOAuthSuccess(result.integrationId, result.tenantId);
+        } else if (result.type === 'oauth_error') {
+          handleOAuthError(result.description);
         }
-        const verification = await verifyIntegration(currentTenant, event.data.integrationId);
-        if (verification.success && verification.data.status === 'active') {
-          queryClient.invalidateQueries({ queryKey: ['integrations', currentTenant] });
-          notifications.show({ title: 'Integration Verified', message: `Successfully connected to ${provider.name}`, color: 'green' });
-          onSuccess?.(event.data.integrationId);
-          navigate('/integrations');
-        } else {
-          notifications.show({ title: 'Verification Failed', message: 'Integration status not active.', color: 'red' });
-          onError?.('Verification failed');
-        }
-      } else if (event.data.type === 'oauth_error') {
-        notifications.show({ title: 'Integration Failed', message: event.data.description || 'OAuth failed', color: 'red' });
-        onError?.(event.data.description);
+      } catch (e) {
+        console.error('[Opener] Error checking localStorage:', e);
       }
     };
+    
+    // Check localStorage on mount and periodically while flow is active
+    const interval = setInterval(() => {
+      if (isLoading) {
+        checkLocalStorageForResult();
+      }
+    }, 500); // Check every 500ms while loading
+    
+    // Also check immediately
+    checkLocalStorageForResult();
+    
+    const handleMessage = async (event: MessageEvent) => {
+      console.log('[Opener] Received postMessage:', { origin: event.origin, data: event.data });
+      // Temporarily accept all origins for debugging; TODO: re-enable strict validation
+      // if (!allowedOrigins.includes(event.origin)) {
+      //   console.warn('[Opener] Message from disallowed origin:', event.origin);
+      //   return;
+      // }
+      if (event.data.type === 'oauth_cleanup') {
+        // Opener requested to cleanup and refresh integrations
+        try {
+          const pendingRaw = localStorage.getItem('mwap_oauth_pending');
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            localStorage.removeItem('mwap_oauth_pending');
+            if (pending?.tenantId) {
+              queryClient.invalidateQueries({ queryKey: ['integrations', pending.tenantId] });
+            }
+          }
+        } catch {}
+        return;
+      }
+      if (event.data.type === 'oauth_success') {
+        await handleOAuthSuccess(event.data.integrationId, event.data.tenantId);
+      } else if (event.data.type === 'oauth_error') {
+        handleOAuthError(event.data.description);
+      }
+    };
+    // Cleanup function
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [queryClient, currentTenant, provider.name, onSuccess, onError, navigate, verifyIntegration]);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearInterval(interval);
+    };
+    
+    // Helper functions for handling success/error
+    async function handleOAuthSuccess(integrationId: string, tenantId: string) {
+      console.log('[Opener] ✅ Processing oauth_success');
+      try { if (popupRef.current && !popupRef.current.closed) { popupRef.current.close(); } } catch {}
+      popupRef.current = null;
+      
+      if (!currentTenant) {
+        console.error('[Opener] ❌ No current tenant');
+        notifications.show({ title: 'Error', message: 'No current tenant', color: 'red' });
+        resetFlow();
+        return;
+      }
+      
+      console.log('[Opener] Verifying integration:', integrationId);
+      const verification = await verifyIntegration(currentTenant, integrationId);
+      console.log('[Opener] Verification result:', verification);
+      console.log('[Opener] Verification result type:', typeof verification);
+      console.log('[Opener] Verification has .success?', 'success' in verification);
+      console.log('[Opener] Verification has .data?', 'data' in verification);
+      console.log('[Opener] Verification has .status?', 'status' in verification);
+      
+      // Check if verification returned the integration directly or wrapped in {success, data}
+      const integrationData = verification.success ? verification.data : verification;
+      const status = integrationData?.status;
+      
+      console.log('[Opener] Integration status:', status);
+      
+      if (status === 'active') {
+        console.log('[Opener] ✅ Integration verified and active');
+        queryClient.invalidateQueries({ queryKey: ['integrations', currentTenant] });
+        notifications.show({ title: 'Integration Verified', message: `Successfully connected to ${provider.name}`, color: 'green' });
+        resetFlow();
+        console.log('[Opener] Flow reset, calling onSuccess callback');
+        onSuccess?.(integrationId);
+        console.log('[Opener] Navigating to /integrations');
+        navigate('/integrations');
+      } else {
+        console.error('[Opener] ❌ Verification failed or status not active. Status:', status);
+        notifications.show({ title: 'Verification Failed', message: `Integration status: ${status || 'unknown'}`, color: 'red' });
+        onError?.('Verification failed');
+        resetFlow();
+        setShowCleanupModal(true);
+      }
+    }
+    
+    function handleOAuthError(description: string) {
+      console.log('[Opener] ❌ Processing oauth_error');
+      try { if (popupRef.current && !popupRef.current.closed) { popupRef.current.close(); } } catch {}
+      popupRef.current = null;
+      notifications.show({ title: 'Integration Failed', message: description || 'OAuth failed', color: 'red' });
+      onError?.(description);
+      resetFlow();
+      setShowCleanupModal(true);
+    }
+  }, [queryClient, currentTenant, provider.name, onSuccess, onError, navigate, verifyIntegration, resetFlow, isLoading]);
 
-    const handleOAuthClick = async () => {
-      if (isLoading) return;  // Prevent multiple clicks
+  const handleOAuthClick = async () => {
+    if (isLoading) return; // Prevent multiple clicks
+    
+    // Open a placeholder popup synchronously to avoid popup blockers
+    const popupWidth = 600;
+    const popupHeight = 600;
+    const left = (window.screen.width / 2) - (popupWidth / 2);
+    const top = (window.screen.height / 2) - (popupHeight / 2);
+    const popup = window.open('', 'oauthPopup', `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`);
+    if (popup) {
+      popupRef.current = popup;
+      try {
+        popup.document.write('<!doctype html><title>Connecting…</title><p style="font-family: system-ui; padding: 16px;">Opening provider authorization…</p>');
+        popup.document.close();
+      } catch {}
+    }
+    
+    // Now run the OAuth initiation
     try {
       const result = await initiateOAuth(provider.id, metadata);
-      console.log('OAuth initiation result:', result);
       if (result.success && result.authUrl) {
-        console.log('Attempting to open popup with URL:', result.authUrl);
-        const popupWidth = 600;
-        const popupHeight = 600;
-        const left = (window.screen.width / 2) - (popupWidth / 2);
-        const top = (window.screen.height / 2) - (popupHeight / 2);
-        const popup = window.open(result.authUrl, 'oauthPopup', `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`);
-        if (!popup) {
-          // Fallback to full redirect on popup block
-          notifications.show({ title: 'Popup Blocked', message: 'Redirecting in new tab.', color: 'yellow' });
+        if (popupRef.current && !popupRef.current.closed) {
+          popupRef.current.location.href = result.authUrl;
+        } else {
+          notifications.show({ title: 'Popup Blocked', message: 'Redirecting in this tab.', color: 'yellow' });
           window.location.href = result.authUrl;
-          return;
         }
-        // Add timeout for auto-close failure
-        const maxWait = 30000; // 30s
-        const timer = setTimeout(() => {
-          if (!popup.closed) {
-            notifications.show({ title: 'OAuth Timeout', message: 'Closing popup.', color: 'orange' });
-            popup.close();
-          }
-        }, maxWait);
       } else {
-        console.error('Initiation failed:', result.error);
+        try { if (popupRef.current && !popupRef.current.closed) { popupRef.current.close(); } } catch {}
+        popupRef.current = null;
         notifications.show({ title: 'Error', message: result.error || 'Failed to initiate', color: 'red' });
       }
     } catch (error: any) {
-      notifications.show({ title: 'Error', message: error.message || 'Failed to start', color: 'red' });
+      try { if (popupRef.current && !popupRef.current.closed) { popupRef.current.close(); } } catch {}
+      popupRef.current = null;
+      notifications.show({ title: 'Error', message: error?.message || 'Failed to start', color: 'red' });
     }
   };
-
-  // Simple debounce function
-  const debounce = (func: Function, delay: number) => {
-    let timeout: NodeJS.Timeout;
-    return (...args: any[]) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), delay);
-    };
-  };
-  const debouncedHandleOAuthClick = debounce(handleOAuthClick, 1000);
 
   const getButtonContent = () => {
     const providerIcon = provider.metadata?.iconUrl ? (
@@ -309,6 +408,34 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
     return descriptions[scope] || 'Access to your account';
   };
 
+  const handleCleanup = async () => {
+    if (cleanupBusy) return;
+    setCleanupBusy(true);
+    try {
+      const pendingRaw = localStorage.getItem('mwap_oauth_pending');
+      if (!pendingRaw) {
+        notifications.show({ title: 'Cleanup Failed', message: 'No pending integration found', color: 'red' });
+        setCleanupBusy(false);
+        return;
+      }
+      const pending = JSON.parse(pendingRaw);
+      if (!pending?.tenantId || !pending?.integrationId) {
+        notifications.show({ title: 'Cleanup Failed', message: 'Missing tenant or integration ID', color: 'red' });
+        setCleanupBusy(false);
+        return;
+      }
+      await api.delete(`/tenants/${pending.tenantId}/integrations/${pending.integrationId}`);
+      try { localStorage.removeItem('mwap_oauth_pending'); } catch {}
+      queryClient.invalidateQueries({ queryKey: ['integrations', pending.tenantId] });
+      notifications.show({ title: 'Removed', message: 'Stale integration removed', color: 'green' });
+      setShowCleanupModal(false);
+    } catch (e: any) {
+      notifications.show({ title: 'Cleanup Failed', message: e?.message || 'Unable to remove', color: 'red' });
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
+
   return (
     <>
       <Stack gap="xs">
@@ -320,7 +447,7 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
             disabled={isButtonDisabled || isLoading}
             loading={buttonContent.loading}
             leftSection={!buttonContent.loading ? buttonContent.icon : undefined}
-            onClick={showSecurityInfo ? () => setShowSecurityModal(true) : debouncedHandleOAuthClick}
+            onClick={showSecurityInfo ? () => setShowSecurityModal(true) : handleOAuthClick}
             color={flowState.step === 'error' ? 'red' : 
                    flowState.step === 'completion' ? 'green' : undefined}
           >
@@ -402,6 +529,22 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
 
       {/* Security Information Modal */}
       {renderSecurityModal()}
+
+      {/* Cleanup Modal shown on oauth_error */}
+      <Modal opened={showCleanupModal} onClose={() => setShowCleanupModal(false)} title={
+        <Group gap="sm">
+          <IconAlertCircle size={20} color="var(--mantine-color-red-6)" />
+          <Text fw={500}>Authorization failed</Text>
+        </Group>
+      }>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">Remove the stale integration record and try again.</Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setShowCleanupModal(false)}>Cancel</Button>
+            <Button color="red" loading={cleanupBusy} onClick={handleCleanup}>Remove stale integration</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 };

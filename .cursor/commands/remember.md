@@ -1,0 +1,1 @@
+udpate the .cursorule with the infomration received

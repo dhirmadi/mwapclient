@@ -1,4 +1,4 @@
-import { transformIdField, transformIdFields, handleApiResponse } from '../dataTransform';
+import { transformIdField, transformIdFields, handleApiResponse } from '../apiResponse';
 
 describe('dataTransform', () => {
   describe('transformIdField', () => {

@@ -19,13 +19,7 @@ export default defineConfig({
   build: {
     // Production build optimizations
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.logs in production
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild', // Use esbuild (faster, built-in) instead of terser
     rollupOptions: {
       output: {
         // Manual chunk splitting for better caching
@@ -35,7 +29,7 @@ export default defineConfig({
           'auth-vendor': ['@auth0/auth0-react'],
           'query-vendor': ['@tanstack/react-query'],
           'mantine-core': ['@mantine/core', '@mantine/hooks'],
-          'mantine-extended': ['@mantine/notifications', '@mantine/dates'],
+          'mantine-extended': ['@mantine/notifications'],
           // Feature chunks
           'features-auth': [
             './src/features/auth/index.ts',

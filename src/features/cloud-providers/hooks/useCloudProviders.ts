@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../shared/utils/api';
-import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/dataTransform';
+import { handleApiResponse, handleDeleteResponse } from '../../../shared/utils/apiResponse';
 import { 
   CloudProvider,
   CloudProviderCreate, 
@@ -38,7 +38,7 @@ export const useCloudProviders = () => {
         }
       }
       
-      return transformedData.data || [];
+      return transformedData || [];
     },
     enabled: isReady, // Wait for authentication to be complete
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -117,8 +117,8 @@ export const useCloudProviders = () => {
         console.log('Transformed cloud provider data:', transformedData);
         
         // Validate the returned data has a valid ID
-        if (!transformedData.success || !transformedData.data) throw new Error('Provider not found');
-        return transformedData.data;
+        if (!transformedData) throw new Error('Provider not found');
+        return transformedData;
       },
       enabled: !!id && id !== 'undefined' && isReady, // Wait for auth and require valid ID
       staleTime: 5 * 60 * 1000, // 5 minutes

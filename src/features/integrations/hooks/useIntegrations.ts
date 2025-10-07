@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { api, handleApiResponseWithTransform as handleApiResponse } from '../../../shared/utils';
+import api from '../../../shared/utils/api';
+import { handleApiResponse } from '../../../shared/utils/apiResponse';
 import { useAuth } from '../../../core/context/AuthContext';
 import { Integration, IntegrationListFilters } from '../types';
 
@@ -65,14 +66,15 @@ export const useIntegrations = (filters?: IntegrationListFilters) => {
           console.log('✅ Integrations fetched successfully:', response.data);
         }
         
-        const transformedData = handleApiResponse(response, true);
+        // handleApiResponse returns the data directly (not wrapped in {success, data})
+        const transformedData = handleApiResponse<Integration[]>(response, true);
         
         if (import.meta.env.DEV) {
           console.log('✅ Transformed integrations data:', transformedData);
           console.groupEnd();
         }
         
-        return transformedData.data || [];
+        return transformedData || [];
       } catch (error) {
         if (import.meta.env.DEV) {
           console.error('❌ Failed to fetch integrations:', error);

@@ -1,0 +1,113 @@
+
+> mwapclient@0.0.0 build
+> tsc -b && vite build
+
+src/core/context/AuthContext.backup.tsx(199,25): error TS2352: Conversion of type '{ success: boolean; data: UserRolesResponse | null; error?: string | undefined; }' to type 'UserRolesResponse' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ success: boolean; data: UserRolesResponse | null; error?: string | undefined; }' is missing the following properties from type 'UserRolesResponse': userId, isSuperAdmin, isTenantOwner, tenantId, projectRoles
+src/core/context/AuthContext.optimized.tsx(219,7): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+src/core/context/AuthContext.optimized.tsx(220,50): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+src/core/context/AuthContext.optimized.tsx(223,21): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+src/core/context/AuthContext.tsx(219,7): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+src/core/context/AuthContext.tsx(220,50): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+src/core/context/AuthContext.tsx(223,21): error TS2552: Cannot find name 'error'. Did you mean 'Error'?
+src/features/cloud-providers/hooks/useCloudProviders.ts(50,5): error TS2322: Type '(data: CloudProviderCreate) => Promise<{ success: boolean; data: CloudProvider | null; error?: string; }>' is not assignable to type 'MutationFunction<CloudProvider, CloudProviderCreate>'.
+  Type 'Promise<{ success: boolean; data: CloudProvider | null; error?: string | undefined; }>' is not assignable to type 'Promise<CloudProvider>'.
+    Type '{ success: boolean; data: CloudProvider | null; error?: string | undefined; }' is missing the following properties from type 'CloudProvider': id, name, slug, scopes, and 10 more.
+src/features/cloud-providers/hooks/useCloudProviders.ts(65,5): error TS2322: Type '({ id, data }: { id: string; data: CloudProviderUpdate; }) => Promise<{ success: boolean; data: CloudProvider | null; error?: string; }>' is not assignable to type 'MutationFunction<CloudProvider, { id: string; data: CloudProviderUpdate; }>'.
+  Type 'Promise<{ success: boolean; data: CloudProvider | null; error?: string | undefined; }>' is not assignable to type 'Promise<CloudProvider>'.
+    Type '{ success: boolean; data: CloudProvider | null; error?: string | undefined; }' is missing the following properties from type 'CloudProvider': id, name, slug, scopes, and 10 more.
+src/features/integrations/hooks/useCreateIntegration.ts(45,9): error TS2740: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'Integration': id, tenantId, providerId, status, and 3 more.
+src/features/integrations/hooks/useDeleteIntegration.ts(188,9): error TS2740: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'Integration': id, tenantId, providerId, status, and 3 more.
+src/features/integrations/hooks/useIntegrations.ts(133,9): error TS2740: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'Integration': id, tenantId, providerId, status, and 3 more.
+src/features/integrations/hooks/useTokenManagement.ts(69,9): error TS2739: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'IntegrationHealth': integrationId, status, lastChecked
+src/features/integrations/hooks/useTokenManagement.ts(123,9): error TS2740: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'Integration': id, tenantId, providerId, status, and 3 more.
+src/features/integrations/hooks/useTokenManagement.ts(228,9): error TS2741: Property 'details' is missing in type '{ success: boolean; data: any; error?: string | undefined; }' but required in type '{ success: boolean; details: { tokenValid: boolean; apiReachable: boolean; scopesValid: boolean; responseTime?: number | undefined; }; error?: string | undefined; }'.
+src/features/integrations/hooks/useUpdateIntegration.ts(55,9): error TS2740: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'Integration': id, tenantId, providerId, status, and 3 more.
+src/features/integrations/hooks/useUpdateIntegration.ts(156,9): error TS2740: Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'Integration': id, tenantId, providerId, status, and 3 more.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(78,27): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(79,34): error TS2339: Property 'description' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(80,35): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(81,31): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(85,48): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(94,27): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(95,34): error TS2339: Property 'description' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(96,35): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(97,31): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(144,57): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(146,54): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(155,27): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(156,34): error TS2339: Property 'description' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(157,35): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(158,31): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(160,48): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(181,41): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(182,48): error TS2339: Property 'description' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(183,45): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(184,80): error TS2339: Property 'configSchema' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(277,34): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(280,28): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(410,38): error TS2339: Property '_id' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(415,57): error TS2339: Property 'createdAt' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(420,57): error TS2339: Property 'updatedAt' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(425,48): error TS2339: Property 'createdBy' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(431,40): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeEditPage.tsx(434,34): error TS2339: Property 'isActive' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeListPage.tsx(94,39): error TS2339: Property 'length' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/project-types/pages/ProjectTypeListPage.tsx(105,29): error TS2339: Property 'map' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/projects/pages/ProjectFilesPage.tsx(35,9): error TS2322: Type 'never[] | { success: boolean; data: any; error?: string | undefined; }' is not assignable to type 'File[]'.
+  Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'File[]': length, pop, push, concat, and 28 more.
+src/features/tenants/hooks/useUpdateTenant.ts(21,29): error TS2339: Property '_id' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/hooks/useUpdateTenant.ts(21,41): error TS2339: Property 'id' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(75,22): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(77,39): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(78,31): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(91,22): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(93,39): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(94,31): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(112,22): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(114,39): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(115,31): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(130,36): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(131,61): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(132,53): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(223,29): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(226,23): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(344,33): error TS2339: Property 'id' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(349,33): error TS2339: Property 'ownerId' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(354,52): error TS2339: Property 'createdAt' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(359,52): error TS2339: Property 'updatedAt' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(365,35): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantEditPage.tsx(368,29): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantListPage.tsx(155,38): error TS2339: Property 'length' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantListPage.tsx(164,29): error TS2339: Property 'length' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantListPage.tsx(177,24): error TS2339: Property 'map' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(66,29): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(68,46): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(69,38): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(82,29): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(84,46): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(85,38): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(103,29): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(105,46): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(106,38): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(120,41): error TS2339: Property 'name' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(124,66): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(125,58): error TS2339: Property 'settings' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(135,46): error TS2339: Property 'id' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(193,36): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(196,30): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(304,40): error TS2339: Property 'id' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(309,40): error TS2339: Property 'ownerId' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(314,59): error TS2339: Property 'createdAt' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(319,59): error TS2339: Property 'updatedAt' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(325,42): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/features/tenants/pages/TenantSettingsPage.tsx(328,36): error TS2339: Property 'archived' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/pages/Home.tsx(38,31): error TS2339: Property 'length' does not exist on type '{ success: boolean; data: any; error?: string | undefined; }'.
+src/pages/OAuthCallbackPage.tsx(19,11): error TS2339: Property 'getAccessTokenSilently' does not exist on type 'AuthContextType'.
+src/pages/OAuthCallbackPage.tsx(30,28): error TS2304: Cannot find name 'handleApiResponse'.
+src/pages/OAuthCallbackPage.tsx(46,24): error TS18046: 'error' is of type 'unknown'.
+src/pages/OAuthCallbackPage.tsx(49,77): error TS18046: 'error' is of type 'unknown'.
+src/shared/utils/__tests__/dataTransform.test.ts(106,15): error TS2352: Conversion of type '{ success: boolean; data: any; error?: string | undefined; }' to type 'any[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 28 more.
+src/shared/utils/__tests__/dataTransform.test.ts(140,15): error TS2352: Conversion of type '{ success: boolean; data: any; error?: string | undefined; }' to type 'any[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ success: boolean; data: any; error?: string | undefined; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 28 more.

@@ -11,6 +11,7 @@
 - Keep changes minimal, focused, and type-safe
 - Never modify `vite.config.ts` proxy configuration
 - Never hardcode API URLs; always use the configured API client
+- **IGNORE** all contents in `/docs/99-archive/` folder tree (deprecated/archived documentation)
 
 ## Documentation Map (nn-folders)
 - Architecture: `docs/02-Architecture/README.md`
