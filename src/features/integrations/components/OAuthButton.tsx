@@ -74,11 +74,12 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
 
   useEffect(() => {
     const allowedOrigins = [
+      window.location.origin,
       'https://mwapps.shibari.photo',
       'https://mwapss.shibari.photo',
-      'http://localhost:3001', // Backend dev proxy
-      'http://localhost:5173', // Frontend dev
-      'https://localhost:5173', // Frontend dev (https)
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'https://localhost:5173',
     ];
     const handleMessage = async (event: MessageEvent) => {
       if (!allowedOrigins.includes(event.origin)) return;
@@ -114,6 +115,8 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
       } else if (event.data.type === 'oauth_error') {
         notifications.show({ title: 'Integration Failed', message: event.data.description || 'OAuth failed', color: 'red' });
         onError?.(event.data.description);
+        // Reset local flow to stop loading/progress states
+        try { resetFlow(); } catch {}
         // Offer cleanup flow in opener when popup is cross-origin
         setShowCleanupModal(true);
       }
@@ -457,7 +460,38 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({
             disabled={isButtonDisabled || isLoading}
             loading={buttonContent.loading}
             leftSection={!buttonContent.loading ? buttonContent.icon : undefined}
-            onClick={showSecurityInfo ? () => setShowSecurityModal(true) : debouncedHandleOAuthClick}
+            onClick={showSecurityInfo ? () => setShowSecurityModal(true) : async () => {
+              // Open a placeholder popup synchronously to avoid popup blockers
+              const popupWidth = 600;
+              const popupHeight = 600;
+              const left = (window.screen.width / 2) - (popupWidth / 2);
+              const top = (window.screen.height / 2) - (popupHeight / 2);
+              const popup = window.open('', 'oauthPopup', `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`);
+              if (popup) {
+                try {
+                  popup.document.write('<!doctype html><title>Connecting…</title><p style="font-family: system-ui; padding: 16px;">Opening provider authorization…</p>');
+                  popup.document.close();
+                } catch {}
+              }
+              // Now run the original handler
+              try {
+                const result = await initiateOAuth(provider.id, metadata);
+                if (result.success && result.authUrl) {
+                  if (popup && !popup.closed) {
+                    popup.location.href = result.authUrl;
+                  } else {
+                    notifications.show({ title: 'Popup Blocked', message: 'Redirecting in this tab.', color: 'yellow' });
+                    window.location.href = result.authUrl;
+                  }
+                } else {
+                  if (popup && !popup.closed) popup.close();
+                  notifications.show({ title: 'Error', message: result.error || 'Failed to initiate', color: 'red' });
+                }
+              } catch (error: any) {
+                if (popup && !popup.closed) popup.close();
+                notifications.show({ title: 'Error', message: error?.message || 'Failed to start', color: 'red' });
+              }
+            }}
             color={flowState.step === 'error' ? 'red' : 
                    flowState.step === 'completion' ? 'green' : undefined}
           >

@@ -2,8 +2,7 @@ import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useCloudProviders } from '../../cloud-providers/hooks';
-import { useCreateIntegration, useUpdateIntegration } from './';
-import { useIntegrations } from './useIntegrations';
+import { useCreateIntegration } from './';
 import { 
   OAuthFlowState, 
   OAuthFlowStep, 
@@ -25,8 +24,6 @@ export const useOAuthFlow = () => {
   const queryClient = useQueryClient();
   const { data: cloudProviders } = useCloudProviders();
   const createIntegration = useCreateIntegration();
-  const updateIntegration = useUpdateIntegration();
-  const { data: integrations } = useIntegrations();
 
   const [flowState, setFlowState] = useState<OAuthFlowState>({
     step: 'initialization',
@@ -39,36 +36,30 @@ export const useOAuthFlow = () => {
    */
   const initiateOAuth = useCallback(async (
     providerId: string,
-    metadata?: Record<string, unknown>,
-    existingIntegrationId?: string
+    metadata?: Record<string, unknown>
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> => {
     if (!currentTenant || !user?.sub) return { success: false, error: 'Invalid tenant or user' };
     const provider: CloudProvider | undefined = (cloudProviders as CloudProvider[] | undefined)?.find((p: CloudProvider) => p.id === providerId);
     if (!provider) return { success: false, error: 'Provider not found' };
     try {
       setFlowState({ step: 'initialization', isLoading: true, progress: 10 });
-      // Backend-driven: if an integration already exists (created in previous step), reuse it
-      let integration: Integration | { id: string };
-      if (existingIntegrationId) {
-        integration = { id: existingIntegrationId } as { id: string };
-      } else {
-        // Create integration if not provided
-        const integrationRequest: IntegrationCreateRequest = {
-          providerId,
-          metadata: {
-            displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
-            description: (metadata?.description as string) || `Integration with ${provider.name}`,
-            ...metadata
-          },
-        };
-        try {
-          integration = await createIntegration.mutateAsync(integrationRequest);
-        } catch (createError: any) {
-          if (createError.response?.status === 409) {
-            throw new Error('Integration already exists for this provider');
-          }
-          throw createError;
+      // Create integration just-in-time (Step 3)
+      const integrationRequest: IntegrationCreateRequest = {
+        providerId,
+        metadata: {
+          displayName: (metadata?.displayName as string) || `${provider.name} Integration`,
+          description: (metadata?.description as string) || `Integration with ${provider.name}`,
+          ...(metadata || {}),
+        },
+      };
+      let integration: Integration;
+      try {
+        integration = await createIntegration.mutateAsync(integrationRequest);
+      } catch (createError: any) {
+        if (createError.response?.status === 409) {
+          return { success: false, error: 'Integration already exists for this provider' };
         }
+        throw createError;
       }
 
       setFlowState(prev => ({ ...prev, step: 'authorization', integrationId: integration.id, progress: 30 }));
@@ -82,7 +73,7 @@ export const useOAuthFlow = () => {
       setFlowState({ step: 'error', error: { error: 'server_error', error_description: error.message }, isLoading: false, progress: 0 });
       return { success: false, error: error.message };
     }
-  }, [currentTenant, user?.sub, cloudProviders, createIntegration, updateIntegration, api]);
+  }, [currentTenant, user?.sub, cloudProviders, createIntegration, api]);
 
   const resetFlow = useCallback(() => {
     setFlowState({ step: 'initialization', isLoading: false, progress: 0 });
@@ -128,7 +119,7 @@ export const useOAuthFlow = () => {
 
   return {
     flowState,
-    isLoading: flowState.isLoading || createIntegration.isPending || updateIntegration.isPending,
+    isLoading: flowState.isLoading || createIntegration.isPending,
     initiateOAuth,
     resetFlow,
     cancelFlow,

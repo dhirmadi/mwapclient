@@ -40,12 +40,17 @@ const OAuthCallbackPage: React.FC = () => {
     setStatus('success');
     setMessage('OAuth integration successful!');
     notifications.show({ title: 'Success', message: 'Integration connected', color: 'green' });
-    if (window.opener) {
-      window.opener.postMessage({ type: 'oauth_success', integrationId }, window.location.origin);
-      setTimeout(() => window.close(), 2000);
-    } else {
-      setTimeout(() => navigate('/integrations'), 2000);
-    }
+    try {
+      if (window.opener) {
+        // Use wildcard target; opener will validate origin
+        window.opener.postMessage({ type: 'oauth_success', integrationId }, '*');
+      }
+    } catch {}
+    // Always attempt to close shortly after
+    setTimeout(() => {
+      try { window.close(); } catch {}
+      navigate('/integrations');
+    }, 2000);
   };
 
   const handleOAuthError = (params: URLSearchParams) => {
@@ -53,12 +58,15 @@ const OAuthCallbackPage: React.FC = () => {
     setStatus('error');
     setMessage(message || 'OAuth authentication failed');
     notifications.show({ title: 'Error', message: message || 'OAuth failed', color: 'red' });
-    if (window.opener) {
-      window.opener.postMessage({ type: 'oauth_error', description: message }, window.location.origin);
-      setTimeout(() => window.close(), 5000);
-    } else {
-      setTimeout(() => navigate('/integrations'), 3000);
-    }
+    try {
+      if (window.opener) {
+        window.opener.postMessage({ type: 'oauth_error', description: message }, '*');
+      }
+    } catch {}
+    setTimeout(() => {
+      try { window.close(); } catch {}
+      navigate('/integrations');
+    }, 3000);
   };
 
   const handleCleanupStale = async () => {
