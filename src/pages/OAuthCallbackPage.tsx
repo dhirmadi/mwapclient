@@ -19,6 +19,8 @@ const OAuthCallbackPage: React.FC = () => {
   const [cleanupBusy, setCleanupBusy] = useState<boolean>(false);
 
   useEffect(() => {
+    console.log('[Callback] OAuthCallbackPage mounted', { pathname, search: window.location.search });
+    
     if (pathname === '/oauth/success') {
       handleOAuthSuccess(searchParams);
     } else if (pathname === '/oauth/error') {
@@ -28,29 +30,86 @@ const OAuthCallbackPage: React.FC = () => {
       setMessage('Invalid OAuth path');
     }
   }, [pathname, searchParams]);
+  
+  // Separate effect to handle immediate postMessage (CSP-safe)
+  useEffect(() => {
+    console.log('[Callback] Status effect triggered', { status, hasOpener: !!window.opener });
+    
+    if (status === 'success') {
+      const tenantId = searchParams.get('tenantId');
+      const integrationId = searchParams.get('integrationId');
+      console.log('[Callback] Success status, params:', { tenantId, integrationId, hasOpener: !!window.opener });
+      
+      if (window.opener && tenantId && integrationId) {
+        console.log('[Callback] Posting success message to opener NOW');
+        try {
+          window.opener.postMessage({ type: 'oauth_success', integrationId, tenantId }, '*');
+          console.log('[Callback] ✅ Message posted successfully');
+        } catch (e) {
+          console.error('[Callback] ❌ postMessage failed:', e);
+        }
+      } else {
+        console.warn('[Callback] Cannot post message:', { hasOpener: !!window.opener, tenantId, integrationId });
+      }
+    } else if (status === 'error') {
+      const message = searchParams.get('message') || searchParams.get('error_description');
+      if (window.opener) {
+        console.log('[Callback] Posting error message immediately from effect');
+        try {
+          window.opener.postMessage({ type: 'oauth_error', description: message }, '*');
+        } catch (e) {
+          console.error('[Callback] postMessage failed:', e);
+        }
+      }
+    }
+  }, [status, searchParams]);
 
   const handleOAuthSuccess = (params: URLSearchParams) => {
     const tenantId = params.get('tenantId');
     const integrationId = params.get('integrationId');
     if (!tenantId || !integrationId) {
       setStatus('error');
-      setMessage('Invalid OAuth response');
+      setMessage('Invalid OAuth response: Missing tenantId or integrationId');
       return;
     }
     setStatus('success');
     setMessage('OAuth integration successful!');
     notifications.show({ title: 'Success', message: 'Integration connected', color: 'green' });
-    try {
-      if (window.opener) {
-        // Use wildcard target; opener will validate origin
-        window.opener.postMessage({ type: 'oauth_success', integrationId }, '*');
+    
+    console.log('[Callback] window.opener exists?', !!window.opener);
+    console.log('[Callback] window.opener value:', window.opener);
+    
+    // Try postMessage first
+    if (window.opener && !window.opener.closed) {
+      try {
+        console.log('[Callback] Sending oauth_success to opener via postMessage:', { integrationId, tenantId });
+        window.opener.postMessage({ type: 'oauth_success', integrationId, tenantId }, '*');
+        console.log('[Callback] ✅ postMessage sent successfully');
+      } catch (e) {
+        console.error('[Callback] Failed to post message:', e);
       }
-    } catch {}
-    // Always attempt to close shortly after
-    setTimeout(() => {
-      try { window.close(); } catch {}
-      navigate('/integrations');
-    }, 2000);
+    } else {
+      console.warn('[Callback] No opener or opener closed, using localStorage fallback');
+    }
+    
+    // ALSO use localStorage as fallback (in case opener is lost due to redirects)
+    try {
+      const oauthResult = {
+        type: 'oauth_success',
+        integrationId,
+        tenantId,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('mwap_oauth_result', JSON.stringify(oauthResult));
+      console.log('[Callback] ✅ Stored result in localStorage:', oauthResult);
+      
+      // Trigger storage event (doesn't fire in same window, but opener will detect on focus)
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {
+      console.error('[Callback] Failed to store in localStorage:', e);
+    }
+    
+    // Don't auto-close - let user close manually to see console logs
   };
 
   const handleOAuthError = (params: URLSearchParams) => {
@@ -58,15 +117,18 @@ const OAuthCallbackPage: React.FC = () => {
     setStatus('error');
     setMessage(message || 'OAuth authentication failed');
     notifications.show({ title: 'Error', message: message || 'OAuth failed', color: 'red' });
-    try {
-      if (window.opener) {
+    
+    // Post error message to opener FIRST
+    if (window.opener) {
+      try {
+        console.log('[Callback] Sending oauth_error to opener:', { message });
         window.opener.postMessage({ type: 'oauth_error', description: message }, '*');
+      } catch (e) {
+        console.error('[Callback] Failed to post error message:', e);
       }
-    } catch {}
-    setTimeout(() => {
-      try { window.close(); } catch {}
-      navigate('/integrations');
-    }, 3000);
+    }
+    
+    // Don't auto-close - let user close manually to see console logs
   };
 
   const handleCleanupStale = async () => {
@@ -116,6 +178,16 @@ const OAuthCallbackPage: React.FC = () => {
     }
   };
 
+  const handleManualClose = () => {
+    console.log('[Callback] Manual close button clicked');
+    try {
+      window.close();
+    } catch (e) {
+      console.log('[Callback] window.close() failed, navigating instead');
+      navigate('/integrations');
+    }
+  };
+
   return (
     <Container size="sm" py="xl">
       <Paper withBorder p="xl" radius="md">
@@ -127,9 +199,14 @@ const OAuthCallbackPage: React.FC = () => {
           <Text c="dimmed">{message}</Text>
           {status !== 'processing' && (
             <Group>
-              <Button onClick={() => navigate('/integrations')}>Go to Integrations</Button>
-              {/* Backend-driven flow: cleanup handled in opener UI */}
+              <Button onClick={handleManualClose} variant="filled">Close Window</Button>
+              <Button onClick={() => navigate('/integrations')} variant="subtle">Go to Integrations</Button>
             </Group>
+          )}
+          {status === 'success' && (
+            <Alert color="blue" variant="light" mt="md">
+              <Text size="sm">✓ Message sent to main window. Check console logs before closing.</Text>
+            </Alert>
           )}
         </Stack>
       </Paper>

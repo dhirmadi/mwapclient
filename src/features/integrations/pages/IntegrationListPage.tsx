@@ -71,6 +71,11 @@ const IntegrationListPage: React.FC = () => {
   
   const { data: cloudProviders } = useCloudProviders();
   const { mutate: deleteIntegration, isPending: isDeleting } = useDeleteIntegration();
+  
+  // Debug: Log integrations data
+  console.log('[IntegrationListPage] Integrations data:', integrations);
+  console.log('[IntegrationListPage] Is loading:', isLoading);
+  console.log('[IntegrationListPage] Error:', error);
 
   // Filter and sort integrations
   const filteredAndSortedIntegrations = useMemo(() => {
