@@ -277,8 +277,79 @@ interface Integration {
 - **Automated Testing**: Comprehensive test automation
 - **Documentation**: Enhanced user and developer documentation
 
+## Recent Enhancements (October 8, 2025)
+
+### Integration Details Page Improvements
+
+#### Provider Information Display
+- **Comprehensive Details**: Full provider configuration display including OAuth URLs, scopes, and metadata
+- **Visual Presentation**: Clean card layout with badges for scopes and formatted URLs
+- **Fallback Handling**: Graceful alert when provider data is unavailable
+- **Separate Data Fetch**: Provider data fetched independently and merged with integration data
+
+#### Connection Testing
+- **Real-time Validation**: "Test Now" button triggers comprehensive connection test
+- **Detailed Results Display**:
+  - Token validity check with pass/fail indicators
+  - API reachability verification
+  - Scopes validation status
+  - Response time measurement in milliseconds
+- **Visual Feedback**: Color-coded alerts (green for healthy, red for issues)
+- **Empty State**: Clear call-to-action when no test has been run
+- **Result Persistence**: Test results persist across tab switches with timestamp
+
+#### Expiration Date Formatting
+- **Human-readable Format**: Replaced confusing negative seconds with months/days
+- **Proper Handling**: Correctly displays both expired and future dates
+- **Examples**:
+  - "Expired 3 days ago"
+  - "In 2 months and 15 days"
+  - "In 5 days"
+  - "In 12 hours"
+
+#### Bug Fixes
+- **Token Refresh Data Preservation**: Fixed critical bug where refreshing tokens caused data loss
+  - Root Cause: Query cache was being replaced instead of merged
+  - Solution: Implemented smart cache merging in `useTokenManagement`
+  - Impact: All fields (provider info, metadata, timestamps) now properly preserved
+- **Integration List Display**: Corrected data transformation bug preventing integrations from appearing
+- **NaN Timestamps**: Fixed date calculation issues causing "NaN days ago" displays
+
+### Technical Implementation Details
+
+#### Data Fetching Strategy
+```typescript
+// Fetch integration and provider separately
+const { data: integration } = useIntegration(id);
+const { useCloudProvider } = useCloudProviders();
+const { data: provider } = useCloudProvider(integration?.providerId);
+```
+
+#### Cache Merging
+```typescript
+// Merge updated data with existing cache to preserve enriched fields
+queryClient.setQueryData(['integration', integrationId], (oldData) => {
+  return oldData ? { ...oldData, ...updatedIntegration } : updatedIntegration;
+});
+```
+
+#### Connection Test State Management
+```typescript
+const [lastTestResult, setLastTestResult] = useState<{
+  success: boolean;
+  details: {
+    tokenValid: boolean;
+    apiReachable: boolean;
+    scopesValid: boolean;
+    responseTime?: number;
+  };
+  error?: string;
+  timestamp?: string;
+} | null>(null);
+```
+
 ## Conclusion
 
-The Integration Management feature provides a robust, secure, and user-friendly system for managing cloud provider integrations. With its clean architecture, comprehensive security implementation, and intuitive user interface, it serves as a solid foundation for the MWAP platform's integration capabilities.
+The Integration Management feature provides a robust, secure, and user-friendly system for managing cloud provider integrations. With its clean architecture, comprehensive security implementation, intuitive user interface, and enhanced details page, it serves as a solid foundation for the MWAP platform's integration capabilities. Recent improvements have significantly enhanced the user experience with better data display, real-time testing, and bug-free token management.
 
 The extraction from the tenant feature has resulted in better separation of concerns, enhanced security, and improved maintainability, while maintaining full backward compatibility and preserving the user experience.

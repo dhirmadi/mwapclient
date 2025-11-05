@@ -130,20 +130,28 @@ export const useTokenManagement = (integrationId?: string) => {
       }
     },
     onSuccess: (updatedIntegration, integrationId) => {
-      // Update integration in cache
+      // Update integration in cache - merge with existing data to preserve provider info
       queryClient.setQueryData(
         ['integration', integrationId],
-        updatedIntegration
+        (oldData: Integration | undefined) => {
+          // Merge the updated data with existing data to preserve fields like 'provider'
+          // that may not be returned by the refresh endpoint
+          return oldData ? { ...oldData, ...updatedIntegration } : updatedIntegration;
+        }
       );
       
-      // Update integrations list
+      // Update integrations list - also merge to preserve provider info
       queryClient.setQueryData(
         ['integrations', currentTenant],
         (oldData: Integration[] | undefined) => {
           if (!oldData) return [updatedIntegration];
-          return oldData.map(item => 
-            item.id === integrationId ? updatedIntegration : item
-          );
+          return oldData.map(item => {
+            if (item.id === integrationId) {
+              // Merge to preserve provider field
+              return { ...item, ...updatedIntegration };
+            }
+            return item;
+          });
         }
       );
 
@@ -218,7 +226,18 @@ export const useTokenManagement = (integrationId?: string) => {
           `/tenants/${currentTenant}/integrations/${integrationId}/test`
         );
         
-        const testResult = handleApiResponse(response, false);
+        // IMPORTANT: The test endpoint returns functional outcomes with success true/false.
+        // Do NOT use handleApiResponse here because it throws on success:false.
+        const testResult = response.data as {
+          success: boolean;
+          details: {
+            tokenValid: boolean;
+            apiReachable: boolean;
+            scopesValid: boolean;
+            responseTime?: number;
+          };
+          error?: string;
+        };
         
         if (import.meta.env.DEV) {
           console.log('✅ Connection test completed:', testResult);

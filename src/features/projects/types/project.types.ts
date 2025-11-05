@@ -12,9 +12,9 @@ export interface Project {
   cloudIntegrationId: string;
   folderpath: string;
   name: string;
-  description: string;
+  description?: string;
   archived: boolean;
-  members: ProjectMember[];
+  members?: ProjectMember[];
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -27,7 +27,8 @@ export interface ProjectCreate {
   folderpath: string;
   name: string;
   description?: string;
-  members: ProjectMember[];
+  archived?: boolean;
+  members?: ProjectMember[];
 }
 
 export interface ProjectUpdate {

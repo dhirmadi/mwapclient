@@ -4,15 +4,62 @@
 
 This document provides a comprehensive changelog of all major changes, feature implementations, and migration activities in the MWAP Client. It serves as a historical record and current status reference for developers, architects, and testers.
 
-## Current Status (2025-07-15)
+## Latest Updates
+
+### 2025-10-08 - Integration Details Enhancements & Bug Fixes
+
+#### 🐛 Bug Fixes
+- **Fixed token refresh data loss**: Resolved critical issue where refreshing tokens in integration details page was causing data loss (showing "Unnamed Integration", "Unknown", "NaN days ago")
+  - Root cause: Query cache was being replaced instead of merged
+  - Solution: Updated `useTokenManagement` to merge updated data with existing cache
+  - Impact: All integration fields (provider info, metadata, timestamps) now properly preserved after refresh
+- **Fixed integration list display**: Corrected bug where integrations were not appearing in list view due to incorrect data transformation in `useIntegrations` hook
+
+#### ✨ New Features
+- **Provider Information Display**: Added comprehensive provider information section in integration details
+  - Shows provider name, type, slug, and OAuth configuration
+  - Displays granted scopes as badges
+  - Shows OAuth URLs (auth, token, API base)
+  - Includes provider creation/update timestamps
+  - Fallback alert when provider data unavailable
+- **Connection Testing**: Replaced placeholder with functional connection status section
+  - Real-time connection testing with "Test Now" button
+  - Detailed test results display:
+    - Token validity check (Pass/Fail with icons)
+    - API reachability check
+    - Scopes validation check
+    - Response time measurement in milliseconds
+  - Visual status alerts (green for healthy, red for issues)
+  - Empty state with clear call-to-action
+  - Test timestamp tracking ("Tested X minutes ago")
+- **Improved Expiration Display**: Replaced confusing negative seconds with human-readable format
+  - Shows expiration in months and days (e.g., "Expired 3 days ago", "In 2 months and 15 days")
+  - Handles both past (expired) and future dates correctly
+  - Includes proper pluralization
+  - Falls back to hours for short timeframes
+
+#### 🔧 Technical Improvements
+- **Enhanced data fetching**: Integration details page now fetches provider data separately and merges with integration
+- **State management**: Added `lastTestResult` state to persist connection test results across tab switches
+- **Better error handling**: Improved error capture and display for connection tests and token refresh
+- **Cache optimization**: Implemented smart cache merging in `useTokenManagement` to preserve enriched data
+- **Type safety**: All new features include proper TypeScript types and interfaces
+
+#### 📝 Documentation
+- Created `TOKEN_REFRESH_ISSUE_ANALYSIS.md` with comprehensive analysis of backend token refresh issues
+- Includes investigation checklist, backend action items, and frontend UX recommendations
+- Documents all possible error scenarios and recommended fixes
+
+## Current Status (2025-10-08)
 
 ### Application State
-- **Version**: 1.0.0
+- **Version**: 1.0.1
 - **Architecture**: Feature-based with atomic design components
 - **API Compatibility**: v1 (migrated from legacy endpoints)
 - **Authentication**: Auth0 with PKCE flow
-- **UI Framework**: Mantine UI with Tailwind CSS
+- **UI Framework**: Mantine UI v8 with Tailwind CSS
 - **Build Tool**: Vite with TypeScript
+- **Last Updated**: October 8, 2025
 
 ### Feature Completion Status
 

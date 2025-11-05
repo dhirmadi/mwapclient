@@ -128,6 +128,11 @@ export const handleApiResponse = <T = any>(
     }
   }
 
+  // If array was expected but backend returned null, normalize to []
+  if (isArray && (rawData === null || rawData === undefined)) {
+    return [] as unknown as T;
+  }
+
   return rawData as T;
 };
 

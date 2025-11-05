@@ -37,6 +37,54 @@ Authorization: Bearer <jwt_token>
 - `GET /api/v1/oauth/error` - OAuth error page with user-friendly messages
 
 ### Backend-driven OAuth Flow
+### Cloud Integrations: Folder Browsing
+
+Browse folders for a connected provider in a provider-agnostic way. Returns only folders (no files) with normalized fields and pagination.
+
+Endpoint: `GET /api/v1/tenants/:tenantId/integrations/:integrationId/folders`
+
+Query Parameters:
+- `containerId` (optional string): Provider container (e.g., driveId, bucket, siteId). If omitted and provider requires a container, the response lists available containers as folders with `isContainer: true`.
+- `folderId` (optional string): Folder id to list by id-first capability; preferred when supported.
+- `path` (optional string, default `/`): Absolute display path for path-addressing providers. Ignored if `folderId` is provided.
+- `cursor` (optional string): Provider pagination cursor.
+
+AuthZ:
+- Requires valid JWT
+- Enforces tenant RBAC
+- Verifies integration belongs to tenant
+
+Behavior:
+- Resolves integration and provider; decrypts token; refreshes once on 401 and retries
+- Resolves starting scope based on `containerId`/`folderId`/`path` and provider capabilities
+- Returns only folders; normalizes `id`, `name`, `path`, `isFolder`, `isContainer`
+- Includes `capabilities` { supportsPath, supportsId, supportsContainers, maxPageSize }
+
+Response 200:
+```
+{
+  "success": true,
+  "data": [
+    { "id": "string", "name": "Folder Name", "path": "/Display/Path", "isFolder": true, "isContainer": false }
+  ],
+  "nextCursor": "string|null",
+  "hasMore": true,
+  "capabilities": {
+    "supportsPath": true,
+    "supportsId": false,
+    "supportsContainers": false,
+    "maxPageSize": null
+  }
+}
+```
+
+Errors:
+- 400 `capability/not-supported` | `validation/invalid-params`
+- 401/403: Authorization/token errors; refresh failed
+- 404: `integration/not-found` | `container/not-found` | `folder/not-found`
+- 429: Rate-limited; may include `retryAfter`
+- 5xx: Provider/upstream error mapped to 502/504
+
 
 - `POST /api/v1/oauth/tenants/{tenantId}/integrations/{integrationId}/initiate`
   - Generates HMAC-signed state, server-side PKCE verifier, persists ephemeral flow context, and returns provider `authorizationUrl`.
@@ -301,15 +349,25 @@ Create a new project.
 **Authentication:** Required  
 **Authorization:** Tenant owner
 
-**Request Schema:**
+**Request Schema (current implementation):**
 ```typescript
 {
-  name: string;             // Project name
-  description?: string;     // Optional description
-  projectTypeId: string;    // Project type ID
-  config?: object;          // Project configuration (validated against project type schema)
+  tenantId: string;             // Tenant ID (ObjectId)
+  projectTypeId: string;        // Project type ID (ObjectId)
+  cloudIntegrationId: string;   // Cloud integration ID (ObjectId)
+  folderpath: string;           // Absolute display path (e.g., "/Projects/Photos")
+  name: string;                 // Project name (1–100)
+  description?: string;         // Optional description (≤500)
+  archived?: boolean;           // Default false
+  members?: Array<{             // Optional; OWNER auto-added if missing
+    userId: string;
+    role: 'OWNER' | 'DEPUTY' | 'MEMBER'
+  }>
 }
 ```
+Notes:
+- The backend validates the caller is the tenant owner, that the project type exists, and that the cloud integration belongs to the tenant.
+- The backend ensures at least one OWNER (adds the caller as OWNER if not present).
 
 ### Update Project
 Update project information.
@@ -318,12 +376,11 @@ Update project information.
 **Authentication:** Required  
 **Authorization:** Project DEPUTY or higher
 
-**Request Schema:**
+**Request Schema (current implementation):**
 ```typescript
 {
-  name?: string;            // Updated name
-  description?: string;     // Updated description
-  config?: object;          // Updated configuration
+  name?: string;            // Updated name (1–100)
+  description?: string;     // Updated description (≤500)
   archived?: boolean;       // Archive status
 }
 ```
@@ -587,6 +644,43 @@ Check the health status of a cloud integration.
 **Authentication:** Required  
 **Authorization:** Tenant owner
 
+### Test Integration Connectivity
+Validate connectivity and token validity to the provider (with a one-time refresh retry on 401/403 if a refresh token is present).
+
+**Endpoint:** `POST /api/v1/tenants/:tenantId/integrations/:integrationId/test`  
+**Authentication:** Required  
+**Authorization:** Tenant owner  
+**Rate Limit:** 10 requests/minute per integration
+
+**Response (examples):**
+
+Successful test:
+```json
+{
+  "success": true,
+  "data": {
+    "tokenValid": true,
+    "apiReachable": true,
+    "scopesValid": true,
+    "responseTime": 142
+  }
+}
+```
+
+Auth failure with refresh retry failed:
+```json
+{
+  "success": false,
+  "data": {
+    "tokenValid": false,
+    "apiReachable": true,
+    "scopesValid": false,
+    "responseTime": 95
+  },
+  "error": "Refresh token invalid or expired; reconnect required"
+}
+```
+
 ## 📄 Files API
 
 ### List Project Files
@@ -724,10 +818,10 @@ All errors result in generic responses to prevent information disclosure:
 - Provider error → "Authentication failed"
 
 **Success Response:**
-Redirects to: `/oauth/success?tenantId={tenantId}&integrationId={integrationId}`
+Redirects to: `/api/v1/oauth/success?tenantId={tenantId}&integrationId={integrationId}`
 
 **Error Response:**
-Redirects to: `/oauth/error?message={encoded_message}`
+Redirects to: `/api/v1/oauth/error?message={encoded_message}`
 
 **Security Monitoring:**
 All callback attempts are logged with comprehensive context:
@@ -1429,6 +1523,3 @@ const project = await api.post('/projects', {
   projectTypeId: 'project-type-id'
 });
 ```
-
----
-*This API reference is automatically generated from the actual implementation and is updated with each release. For the most current interactive documentation, visit `/docs` on your MWAP instance.* 

@@ -65,6 +65,7 @@ import {
   useDeleteIntegration,
   useTokenManagement 
 } from '../hooks';
+import { useCloudProviders } from '../../cloud-providers/hooks';
 import { TokenStatusBadge } from '../components';
 import { formatDistanceToNow, getIntegrationStatusConfig } from '../utils';
 
@@ -78,6 +79,17 @@ const IntegrationDetailsPage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [lastTestResult, setLastTestResult] = useState<{
+    success: boolean;
+    details: {
+      tokenValid: boolean;
+      apiReachable: boolean;
+      scopesValid: boolean;
+      responseTime?: number;
+    };
+    error?: string;
+    timestamp?: string;
+  } | null>(null);
 
   // Data fetching
   const { 
@@ -86,6 +98,13 @@ const IntegrationDetailsPage: React.FC = () => {
     error, 
     refetch 
   } = useIntegration(id!);
+  
+  // Fetch cloud provider details separately
+  const { useCloudProvider } = useCloudProviders();
+  const { 
+    data: provider, 
+    isLoading: isLoadingProvider 
+  } = useCloudProvider(integration?.providerId);
   
   const {
     refreshToken,
@@ -210,39 +229,45 @@ const IntegrationDetailsPage: React.FC = () => {
   const handleRefreshToken = async () => {
     try {
       await refreshToken(id!);
-      notifications.show({
-        title: 'Token Refreshed',
-        message: 'Access token has been refreshed successfully.',
-        color: 'green',
-      });
+      
+      // Refetch integration data to ensure all fields are up-to-date
+      // The useTokenManagement hook updates the cache, but we need fresh data
+      await refetch();
+      
+      // Notification is already shown by useTokenManagement hook
     } catch (error: any) {
-      notifications.show({
-        title: 'Refresh Failed',
-        message: error.message || 'Failed to refresh token.',
-        color: 'red',
-      });
+      // Notification is already shown by useTokenManagement hook
+      console.error('Failed to refresh token:', error);
     }
   };
 
   const handleTestConnection = async () => {
     try {
-      await testConnection(id!);
-      notifications.show({
-        title: 'Connection Test',
-        message: 'Connection test completed. Check the results below.',
-        color: 'blue',
+      const result = await testConnection(id!);
+      setLastTestResult({
+        ...result,
+        timestamp: new Date().toISOString(),
       });
+      
+      // Notification is already shown by useTokenManagement hook
     } catch (error: any) {
-      notifications.show({
-        title: 'Test Failed',
-        message: error.message || 'Connection test failed.',
-        color: 'red',
+      setLastTestResult({
+        success: false,
+        details: {
+          tokenValid: false,
+          apiReachable: false,
+          scopesValid: false,
+        },
+        error: error.message || 'Connection test failed',
+        timestamp: new Date().toISOString(),
       });
+      
+      // Notification is already shown by useTokenManagement hook
     }
   };
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || isLoadingProvider) {
     return (
       <Container size="lg">
         <Stack gap="md">
@@ -277,10 +302,10 @@ const IntegrationDetailsPage: React.FC = () => {
 
   // Get provider icon
   const getProviderIcon = () => {
-    if (integration.provider?.metadata?.iconUrl) {
+    if (provider?.metadata?.iconUrl) {
       return (
         <Avatar
-          src={integration.provider.metadata.iconUrl as string}
+          src={provider.metadata.iconUrl as string}
           size="lg"
           radius="md"
         />
@@ -305,6 +330,49 @@ const IntegrationDetailsPage: React.FC = () => {
       case 'error': return 0;
       default: return 50;
     }
+  };
+
+  // Format expiration date to show months and days
+  const formatExpirationDate = (expiresAt: string | Date): string => {
+    const expiryDate = new Date(expiresAt);
+    const now = new Date();
+    const diffMs = expiryDate.getTime() - now.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffMonths = Math.floor(diffDays / 30);
+    const remainingDays = diffDays % 30;
+    
+    // If expired (negative)
+    if (diffMs < 0) {
+      const absDays = Math.abs(diffDays);
+      const absMonths = Math.floor(absDays / 30);
+      const absRemainingDays = absDays % 30;
+      
+      if (absMonths > 0) {
+        return absRemainingDays > 0 
+          ? `Expired ${absMonths} month${absMonths !== 1 ? 's' : ''} and ${absRemainingDays} day${absRemainingDays !== 1 ? 's' : ''} ago`
+          : `Expired ${absMonths} month${absMonths !== 1 ? 's' : ''} ago`;
+      }
+      return `Expired ${absDays} day${absDays !== 1 ? 's' : ''} ago`;
+    }
+    
+    // If expiring soon (future)
+    if (diffMonths > 0) {
+      return remainingDays > 0
+        ? `In ${diffMonths} month${diffMonths !== 1 ? 's' : ''} and ${remainingDays} day${remainingDays !== 1 ? 's' : ''}`
+        : `In ${diffMonths} month${diffMonths !== 1 ? 's' : ''}`;
+    }
+    
+    if (diffDays > 0) {
+      return `In ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+    }
+    
+    // Less than a day
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours > 0) {
+      return `In ${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+    }
+    
+    return 'Expires very soon';
   };
 
   return (
@@ -372,7 +440,7 @@ const IntegrationDetailsPage: React.FC = () => {
             <Group justify="space-between" mb="sm">
               <div>
                 <Title order={3} mb="xs">
-                  {String(integration.metadata?.displayName || integration.provider?.name || 'Unnamed Integration')}
+                  {String(integration.metadata?.displayName || provider?.name || 'Unnamed Integration')}
                 </Title>
                 <Group gap="sm" mb="xs">
                   <TokenStatusBadge
@@ -380,9 +448,11 @@ const IntegrationDetailsPage: React.FC = () => {
                     tokenHealth={tokenHealth}
                     size="sm"
                   />
-                  <Badge variant="light" size="sm">
-                    {integration.provider?.type}
-                  </Badge>
+                  {provider?.type && (
+                    <Badge variant="light" size="sm">
+                      {provider.type}
+                    </Badge>
+                  )}
                 </Group>
               </div>
               
@@ -483,7 +553,7 @@ const IntegrationDetailsPage: React.FC = () => {
                   Expires
                 </Text>
                 <Text size="sm">
-                  {formatDistanceToNow(new Date(tokenHealth.expiresAt))}
+                  {formatExpirationDate(tokenHealth.expiresAt)}
                 </Text>
               </div>
             )}
@@ -548,62 +618,221 @@ const IntegrationDetailsPage: React.FC = () => {
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
             {/* Connection Status */}
             <Paper withBorder p="md" radius="md">
-              <Group justify="space-between" mb="sm">
+              <Group justify="space-between" mb="md">
                 <Text fw={500}>Connection Status</Text>
-                <ActionIcon
-                  size="sm"
-                  variant="light"
-                  onClick={handleTestConnection}
-                  loading={isTesting}
-                >
-                  <IconTestPipe size={14} />
-                </ActionIcon>
+                <Tooltip label="Test connection">
+                  <Button
+                    size="xs"
+                    variant="light"
+                    leftSection={<IconTestPipe size={14} />}
+                    onClick={handleTestConnection}
+                    loading={isTesting}
+                  >
+                    Test Now
+                  </Button>
+                </Tooltip>
               </Group>
               
-              {/* Connection test results would be displayed here */}
-              <Text size="sm" c="dimmed">
-                Connection testing functionality coming soon
-              </Text>
+              {lastTestResult ? (
+                <Stack gap="sm">
+                  {/* Overall Status */}
+                  <Alert
+                    icon={lastTestResult.success ? <IconCheck size={16} /> : <IconX size={16} />}
+                    color={lastTestResult.success ? 'green' : 'red'}
+                    variant="light"
+                  >
+                    <Group justify="space-between">
+                      <Text size="sm" fw={500}>
+                        {lastTestResult.success ? 'Connection Healthy' : 'Connection Issues Detected'}
+                      </Text>
+                      {lastTestResult.details.responseTime && (
+                        <Badge size="sm" variant="light">
+                          {lastTestResult.details.responseTime}ms
+                        </Badge>
+                      )}
+                    </Group>
+                    {lastTestResult.error && (
+                      <Text size="xs" mt={4}>
+                        {lastTestResult.error}
+                      </Text>
+                    )}
+                  </Alert>
+                  
+                  {/* Detailed Test Results */}
+                  <Stack gap="xs">
+                    <Group justify="space-between">
+                      <Group gap="xs">
+                        {lastTestResult.details.tokenValid ? (
+                          <IconCheck size={16} color="green" />
+                        ) : (
+                          <IconX size={16} color="red" />
+                        )}
+                        <Text size="sm">Token Valid</Text>
+                      </Group>
+                      <Badge 
+                        size="xs" 
+                        color={lastTestResult.details.tokenValid ? 'green' : 'red'}
+                        variant="light"
+                      >
+                        {lastTestResult.details.tokenValid ? 'Pass' : 'Fail'}
+                      </Badge>
+                    </Group>
+                    
+                    <Group justify="space-between">
+                      <Group gap="xs">
+                        {lastTestResult.details.apiReachable ? (
+                          <IconCheck size={16} color="green" />
+                        ) : (
+                          <IconX size={16} color="red" />
+                        )}
+                        <Text size="sm">API Reachable</Text>
+                      </Group>
+                      <Badge 
+                        size="xs" 
+                        color={lastTestResult.details.apiReachable ? 'green' : 'red'}
+                        variant="light"
+                      >
+                        {lastTestResult.details.apiReachable ? 'Pass' : 'Fail'}
+                      </Badge>
+                    </Group>
+                    
+                    <Group justify="space-between">
+                      <Group gap="xs">
+                        {lastTestResult.details.scopesValid ? (
+                          <IconCheck size={16} color="green" />
+                        ) : (
+                          <IconX size={16} color="red" />
+                        )}
+                        <Text size="sm">Scopes Valid</Text>
+                      </Group>
+                      <Badge 
+                        size="xs" 
+                        color={lastTestResult.details.scopesValid ? 'green' : 'red'}
+                        variant="light"
+                      >
+                        {lastTestResult.details.scopesValid ? 'Pass' : 'Fail'}
+                      </Badge>
+                    </Group>
+                  </Stack>
+                  
+                  {/* Test Timestamp */}
+                  {lastTestResult.timestamp && (
+                    <Text size="xs" c="dimmed" ta="right">
+                      Tested {formatDistanceToNow(new Date(lastTestResult.timestamp))} ago
+                    </Text>
+                  )}
+                </Stack>
+              ) : (
+                <Stack gap="sm" align="center" py="md">
+                  <IconTestPipe size={32} color="gray" opacity={0.5} />
+                  <Text size="sm" c="dimmed" ta="center">
+                    No test results available
+                  </Text>
+                  <Text size="xs" c="dimmed" ta="center">
+                    Click "Test Now" to verify connection
+                  </Text>
+                </Stack>
+              )}
             </Paper>
 
             {/* Provider Information */}
             <Paper withBorder p="md" radius="md">
               <Text fw={500} mb="sm">Provider Information</Text>
               
-              <Stack gap="xs">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">Name:</Text>
-                  <Text size="sm">{integration.provider?.name}</Text>
-                </Group>
-                
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">Type:</Text>
-                  <Text size="sm" tt="capitalize">{integration.provider?.type}</Text>
-                </Group>
-                
-                {integration.provider?.description && (
-                  <Group justify="space-between" align="flex-start">
-                    <Text size="sm" c="dimmed">Description:</Text>
-                    <Text size="sm" style={{ textAlign: 'right', maxWidth: '60%' }}>
-                      {integration.provider.description}
+              {provider ? (
+                <Stack gap="xs">
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">Name:</Text>
+                    <Text size="sm">{provider.name}</Text>
+                  </Group>
+                  
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">Type:</Text>
+                    <Text size="sm" tt="capitalize">{provider.type}</Text>
+                  </Group>
+                  
+                  {provider.slug && (
+                    <Group justify="space-between">
+                      <Text size="sm" c="dimmed">Slug:</Text>
+                      <Code>{provider.slug}</Code>
+                    </Group>
+                  )}
+                  
+                  {provider.scopes && provider.scopes.length > 0 && (
+                    <Group justify="space-between" align="flex-start">
+                      <Text size="sm" c="dimmed">Scopes:</Text>
+                      <Stack gap={4} style={{ textAlign: 'right' }}>
+                        {provider.scopes.map((scope, idx) => (
+                          <Badge key={idx} size="xs" variant="light">
+                            {scope}
+                          </Badge>
+                        ))}
+                      </Stack>
+                    </Group>
+                  )}
+                  
+                  {provider.authUrl && (
+                    <Group justify="space-between" align="flex-start">
+                      <Text size="sm" c="dimmed">Auth URL:</Text>
+                      <Text size="xs" style={{ textAlign: 'right', maxWidth: '60%', wordBreak: 'break-all' }}>
+                        {provider.authUrl}
+                      </Text>
+                    </Group>
+                  )}
+                  
+                  {provider.tokenUrl && (
+                    <Group justify="space-between" align="flex-start">
+                      <Text size="sm" c="dimmed">Token URL:</Text>
+                      <Text size="xs" style={{ textAlign: 'right', maxWidth: '60%', wordBreak: 'break-all' }}>
+                        {provider.tokenUrl}
+                      </Text>
+                    </Group>
+                  )}
+                  
+                  {provider.metadata?.apiBaseUrl && (
+                    <Group justify="space-between" align="flex-start">
+                      <Text size="sm" c="dimmed">API Base:</Text>
+                      <Text size="xs" style={{ textAlign: 'right', maxWidth: '60%', wordBreak: 'break-all' }}>
+                        {provider.metadata.apiBaseUrl as string}
+                      </Text>
+                    </Group>
+                  )}
+                  
+                  {provider.metadata?.supportUrl && (
+                    <Group justify="space-between">
+                      <Text size="sm" c="dimmed">Support:</Text>
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        rightSection={<IconExternalLink size={12} />}
+                        onClick={() => window.open(provider.metadata?.supportUrl as string, '_blank')}
+                      >
+                        Documentation
+                      </Button>
+                    </Group>
+                  )}
+                  
+                  <Divider />
+                  
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">Created:</Text>
+                    <Text size="xs" c="dimmed">
+                      {formatDistanceToNow(new Date(provider.createdAt))} ago
                     </Text>
                   </Group>
-                )}
-                
-                {integration.provider?.metadata?.supportUrl ? (
+                  
                   <Group justify="space-between">
-                    <Text size="sm" c="dimmed">Support:</Text>
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      rightSection={<IconExternalLink size={12} />}
-                      onClick={() => window.open(integration.provider?.metadata?.supportUrl as string, '_blank')}
-                    >
-                      Documentation
-                    </Button>
+                    <Text size="sm" c="dimmed">Updated:</Text>
+                    <Text size="xs" c="dimmed">
+                      {formatDistanceToNow(new Date(provider.updatedAt))} ago
+                    </Text>
                   </Group>
-                ) : null}
-              </Stack>
+                </Stack>
+              ) : (
+                <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                  <Text size="sm">Provider information is not available.</Text>
+                </Alert>
+              )}
             </Paper>
           </SimpleGrid>
         </Tabs.Panel>
@@ -868,7 +1097,7 @@ const IntegrationDetailsPage: React.FC = () => {
                     <Group justify="space-between">
                       <Text size="sm">Expires:</Text>
                       <Text size="sm">
-                        {formatDistanceToNow(new Date(tokenHealth.expiresAt))}
+                        {formatExpirationDate(tokenHealth.expiresAt)}
                       </Text>
                     </Group>
                   )}

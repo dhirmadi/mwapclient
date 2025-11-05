@@ -43,6 +43,13 @@ This document serves as the central index for all MWAP Client documentation. Use
 ### 03-Frontend
 - **[README.md](./docs/03-Frontend/README.md)** - Frontend features overview
 - **[integration-management.md](./docs/03-Frontend/integration-management.md)** - Cloud provider integration feature
+ 
+### 10-Features
+- **[projects.md](./docs/10-Features/projects.md)** - Projects feature specification (tenant-scoped projects with types, integrations, and members)
+ - **[tenants.md](./docs/10-Features/tenants.md)** - Tenants feature specification (tenant ownership, settings, integrations scope)
+ - **[integrations.md](./docs/10-Features/integrations.md)** - Integrations feature specification (backend-driven OAuth, health & testing)
+ - **[cloud-providers.md](./docs/10-Features/cloud-providers.md)** - Cloud providers feature specification (admin-managed provider catalog)
+ - **[auth.md](./docs/10-Features/auth.md)** - Authentication feature specification (Auth0 PKCE, roles caching, RBAC)
 
 ### 04-Backend
 - **[README.md](./docs/04-Backend/README.md)** - Backend API overview

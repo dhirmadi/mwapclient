@@ -1,6 +1,5 @@
 import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
@@ -27,7 +26,7 @@ const AllTheProviders: React.FC<AllTheProvidersProps> = ({ children }) => {
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
         <Notifications />
-        <BrowserRouter>{children}</BrowserRouter>
+        {children}
       </MantineProvider>
     </QueryClientProvider>
   );
