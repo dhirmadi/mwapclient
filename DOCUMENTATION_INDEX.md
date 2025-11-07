@@ -76,7 +76,18 @@ This document serves as the central index for all MWAP Client documentation. Use
 - **[contributing.md](./docs/08-Contribution/contributing.md)** - Contribution guidelines
 
 ### 09-Reports-and-History
+- **[README.md](./docs/09-Reports-and-History/README.md)** - Reports index
 - **[project-status.md](./docs/09-Reports-and-History/project-status.md)** - Current status and roadmap
+- **[RBAC_ARCHITECTURE_REVIEW_2025-11-05.md](./docs/09-Reports-and-History/RBAC_ARCHITECTURE_REVIEW_2025-11-05.md)** - Complete RBAC architecture review
+- **[RBAC_REVIEW_EXECUTIVE_SUMMARY.md](./docs/09-Reports-and-History/RBAC_REVIEW_EXECUTIVE_SUMMARY.md)** - Executive summary of RBAC review
+- **[RBAC_ARCHITECTURE_COMPARISON.md](./docs/09-Reports-and-History/RBAC_ARCHITECTURE_COMPARISON.md)** - Current vs proposed architecture comparison
+
+### Requirements
+- **[README.md](./docs/requirements/README.md)** - Requirements documentation index
+- **[rbac-optimization-jwt-custom-claims.md](./docs/requirements/rbac-optimization-jwt-custom-claims.md)** - RBAC optimization implementation requirements
+- **[new-user-first-run-flow-tenant-cloud-integration-project.md](./docs/requirements/new-user-first-run-flow-tenant-cloud-integration-project.md)** - New user onboarding flow
+- **[administration-flow-hub-tenants-projects-cloud-integrations.md](./docs/requirements/administration-flow-hub-tenants-projects-cloud-integrations.md)** - Administration flow
+- **[super-administration-flow-hub-cloud-providers-tenants-project-types-system-ops.md](./docs/requirements/super-administration-flow-hub-cloud-providers-tenants-project-types-system-ops.md)** - Super admin flow
 
 ## 🎯 Documentation by Role
 
